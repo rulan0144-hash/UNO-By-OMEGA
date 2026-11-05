@@ -1,0 +1,807 @@
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNO Multiplayer Real-Time</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka One', cursive;
+            user-select: none;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #1f2937, #030712);
+        }
+        
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Gaya Kartu UNO */
+        .uno-card {
+            width: 80px; height: 116px;
+            border-radius: 8px;
+            border: 4px solid white;
+            display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+            position: relative; overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+            flex-shrink: 0; cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .opponent-card { width: 50px; height: 72px; border-width: 2px; cursor: default; margin-bottom: -30px; }
+        @media (min-width: 768px) {
+            .opponent-card { width: 60px; height: 86px; margin-right: -30px; margin-bottom: 0; }
+        }
+
+        .playable:hover {
+            transform: translateY(-12px);
+            box-shadow: 0 10px 15px rgba(0,0,0,0.6);
+        }
+        .unplayable { filter: brightness(0.6); cursor: not-allowed; }
+
+        .bg-Red { background-color: #ef4444; }
+        .bg-Green { background-color: #22c55e; }
+        .bg-Blue { background-color: #3b82f6; }
+        .bg-Yellow { background-color: #eab308; }
+        .bg-Black { background-color: #111827; }
+
+        /* Oval Dalam Kartu */
+        .uno-card .oval {
+            position: absolute;
+            width: 90%; height: 95%;
+            background-color: white;
+            border-radius: 50% 50% / 60% 60%;
+            transform: rotate(-25deg);
+            z-index: 1;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+        }
+        .uno-card .inner-oval {
+            position: absolute;
+            width: 75%; height: 80%;
+            border-radius: 50% 50% / 60% 60%;
+            transform: rotate(-25deg);
+            z-index: 2;
+        }
+
+        /* Tipografi pada kartu */
+        .text-shadow-sm { text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
+        .val-center { z-index: 3; font-size: 34px; color: white; line-height: 1; text-align: center; }
+        .val-sm-tl { position: absolute; top: 2px; left: 6px; z-index: 3; font-size: 14px; color: white; }
+        .val-sm-br { position: absolute; bottom: 2px; right: 6px; z-index: 3; font-size: 14px; color: white; transform: rotate(180deg); }
+        .val-W { font-size: 16px; letter-spacing: 1px; }
+
+        /* Belakang Kartu */
+        .card-back { background-color: #000; border-color: white; }
+        .card-back .oval { background-color: #ef4444; width: 80%; height: 80%; }
+        .card-back .val-center { color: #facc15; font-size: 22px; transform: rotate(-25deg); letter-spacing: 2px; text-shadow: 2px 2px 0 #b41010; }
+
+        .toast-enter { transform: translateY(100%); opacity: 0; }
+        .toast-show { transform: translateY(0); opacity: 1; }
+    </style>
+</head>
+<body class="text-white h-screen flex flex-col relative w-full overflow-hidden">
+
+    <!-- LAYAR LOADING -->
+    <div id="loading-screen" class="absolute inset-0 bg-gray-900 z-[100] flex flex-col items-center justify-center">
+        <h1 class="text-4xl text-yellow-400 font-bold animate-pulse">Menghubungkan ke Server...</h1>
+    </div>
+
+    <!-- LAYAR LOGIN (NAMA) -->
+    <div id="login-screen" class="hidden absolute inset-0 bg-gray-900 z-[90] flex flex-col items-center justify-center p-6 text-center">
+        <h1 class="text-6xl text-red-500 font-bold mb-6 shadow-black drop-shadow-xl tracking-wider">UNO</h1>
+        <div class="bg-gray-800 p-8 rounded-xl border-4 border-gray-600 shadow-2xl max-w-sm w-full">
+            <h2 class="text-2xl mb-4 font-bold">Masukkan Nama Kamu</h2>
+            <input type="text" id="player-name" class="w-full bg-gray-700 border-2 border-gray-500 rounded-lg py-3 px-4 text-white text-center text-xl font-bold mb-4 focus:outline-none focus:border-green-500" placeholder="Nama Pemain" maxlength="12">
+            <button onclick="saveName()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-full shadow-lg transition active:scale-95 text-xl">Lanjut ▶</button>
+        </div>
+    </div>
+
+    <!-- LAYAR BERANDA (BUAT / GABUNG RUANGAN) -->
+    <div id="home-screen" class="hidden absolute inset-0 bg-gray-900 z-[80] flex flex-col items-center justify-center p-6 text-center">
+        <h1 class="text-6xl text-red-500 font-bold mb-2 shadow-black drop-shadow-xl tracking-wider">UNO</h1>
+        <h2 class="text-xl text-yellow-400 mb-8 font-semibold">Multiplayer Real-Time</h2>
+        
+        <div class="bg-gray-800 p-8 rounded-xl border-4 border-gray-600 shadow-2xl max-w-sm w-full flex flex-col gap-4">
+            <button onclick="createRoom()" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-xl shadow-lg transition active:scale-95 text-xl">Buat Ruangan Baru</button>
+            <div class="flex items-center my-2">
+                <div class="flex-grow border-t border-gray-600"></div>
+                <span class="px-3 text-gray-400 font-bold">ATAU</span>
+                <div class="flex-grow border-t border-gray-600"></div>
+            </div>
+            <input type="text" id="room-code-input" class="w-full bg-gray-700 border-2 border-gray-500 rounded-lg py-3 px-4 text-white text-center text-2xl font-black focus:outline-none focus:border-blue-500 uppercase tracking-widest" placeholder="KODE RUANGAN" maxlength="5">
+            <button onclick="joinRoom()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl shadow-lg transition active:scale-95 text-xl">Gabung Ruangan</button>
+        </div>
+    </div>
+
+    <!-- LAYAR LOBBY -->
+    <div id="lobby-screen" class="hidden absolute inset-0 bg-gray-900 z-[70] flex flex-col items-center p-6 pt-10">
+        <div class="bg-gray-800 p-6 md:p-8 rounded-xl border-4 border-gray-600 shadow-2xl max-w-lg w-full text-center">
+            <h2 class="text-2xl text-gray-300 font-bold mb-2">Kode Ruangan:</h2>
+            <div class="text-5xl md:text-6xl text-yellow-400 font-black tracking-widest mb-6 bg-black/50 p-4 rounded-lg border-2 border-dashed border-yellow-600 select-all" id="lobby-room-code">-----</div>
+            
+            <h3 class="text-xl font-bold mb-4 text-left border-b border-gray-600 pb-2">Pemain (<span id="player-count">1</span>/10)</h3>
+            <ul id="lobby-players" class="flex flex-col gap-2 text-left h-48 overflow-y-auto mb-6 px-2 text-lg font-semibold">
+                <!-- Diisi JS -->
+            </ul>
+
+            <button id="btn-start-game" onclick="startGame()" class="hidden w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-xl shadow-lg transition active:scale-95 text-2xl animate-pulse">Mulai Permainan ▶</button>
+            <p id="waiting-host-msg" class="text-gray-400 italic">Menunggu Host memulai permainan...</p>
+        </div>
+    </div>
+
+    <!-- AREA PERMAINAN -->
+    <div id="game-screen" class="hidden h-full w-full flex flex-col relative">
+        <div id="toast" class="fixed bottom-36 left-1/2 transform -translate-x-1/2 bg-gray-800 border-2 border-red-500 text-white px-6 py-3 rounded-full font-bold shadow-2xl z-50 transition-all duration-300 toast-enter text-center">Notifikasi</div>
+
+        <!-- Modal Pilih Warna -->
+        <div id="color-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden">
+            <div class="bg-gray-800 p-8 rounded-xl border-4 border-gray-600 text-center shadow-2xl">
+                <h2 class="text-3xl mb-6 font-bold">Pilih Warna</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="pickColor('Red')" class="w-24 h-24 bg-red-500 rounded-lg border-4 border-red-700 hover:scale-105 active:scale-95 transition"></button>
+                    <button onclick="pickColor('Blue')" class="w-24 h-24 bg-blue-500 rounded-lg border-4 border-blue-700 hover:scale-105 active:scale-95 transition"></button>
+                    <button onclick="pickColor('Green')" class="w-24 h-24 bg-green-500 rounded-lg border-4 border-green-700 hover:scale-105 active:scale-95 transition"></button>
+                    <button onclick="pickColor('Yellow')" class="w-24 h-24 bg-yellow-500 rounded-lg border-4 border-yellow-700 hover:scale-105 active:scale-95 transition"></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Game Over -->
+        <div id="game-over-modal" class="fixed inset-0 bg-black/95 flex items-center justify-center z-50 hidden p-4">
+            <div class="bg-gray-800 p-6 md:p-10 rounded-xl border-4 border-yellow-500 text-center w-full max-w-lg shadow-[0_0_50px_rgba(234,179,8,0.3)]">
+                <h1 id="winner-text" class="text-4xl md:text-5xl mb-2 text-yellow-400 font-bold">Player Menang!</h1>
+                <p id="score-text" class="text-2xl mb-4 font-black text-green-400">Total Skor: 0 Poin</p>
+                <div class="bg-gray-900 border border-gray-700 rounded-lg p-4 mb-6 text-left max-h-48 overflow-y-auto hide-scrollbar">
+                    <h3 class="text-gray-400 text-sm uppercase tracking-widest font-bold mb-2 border-b border-gray-700 pb-2">Rincian Poin</h3>
+                    <div id="score-breakdown" class="text-sm text-gray-200 space-y-2"></div>
+                </div>
+                <button onclick="leaveRoom()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-full text-xl shadow-lg transition active:scale-95">Kembali ke Beranda</button>
+            </div>
+        </div>
+
+        <!-- Atas: Lawan -->
+        <div class="h-[25%] border-b border-gray-700/50 w-full overflow-x-auto hide-scrollbar pt-2 pb-2 px-4 flex items-end">
+            <div id="opponents-area" class="flex gap-4 md:gap-8 flex-nowrap min-w-max items-end mx-auto justify-center"></div>
+        </div>
+
+        <!-- Tengah: Meja -->
+        <div class="h-[45%] flex flex-row items-center justify-center relative w-full px-4">
+            <div class="absolute left-4 top-4 bottom-4 w-48 md:w-64 bg-black/40 rounded-lg p-3 overflow-y-auto hidden sm:flex flex-col gap-1 hide-scrollbar">
+                <h3 class="text-gray-400 text-sm mb-1 uppercase tracking-wider sticky top-0 bg-gray-900/90 py-1 font-bold flex justify-between"><span>Log</span> <span id="room-code-display" class="text-yellow-400"></span></h3>
+                <div id="logs-container" class="text-xs text-gray-200 flex flex-col gap-1 space-y-1"></div>
+            </div>
+
+            <div class="flex gap-8 items-center justify-center w-full">
+                <div class="flex flex-col items-center">
+                    <div onclick="humanDrawCard()" id="draw-pile-ui" class="uno-card card-back hover:scale-105 hover:shadow-[0_0_15px_rgba(255,255,255,0.3)] transition relative">
+                        <div class="oval flex items-center justify-center"><span class="val-center">UNO</span></div>
+                    </div>
+                    <span class="mt-2 text-xs md:text-sm text-gray-400 bg-black/50 px-3 py-1 rounded-full border border-gray-700"><span id="deck-count" class="font-bold text-white">0</span> Sisa</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <div id="discard-pile-ui" class="relative"></div>
+                    <div id="current-color-badge" class="mt-2 px-4 py-1 rounded-full text-xs md:text-sm font-bold shadow-md bg-gray-700 text-white border-2 border-transparent">Warna: -</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bawah: Pemain -->
+        <div class="h-[30%] flex flex-col items-center justify-start w-full relative bg-gray-800/40 border-t border-gray-700/50 pt-2 pb-4">
+            <div class="w-full max-w-6xl flex justify-between items-center px-4 md:px-6 mb-2">
+                <div class="flex gap-2 md:gap-3 items-center">
+                    <button onclick="pressUno()" id="btn-uno" class="bg-red-600 hover:bg-red-500 text-white font-black text-lg md:text-xl py-2 px-4 md:px-6 rounded-full shadow-[0_0_15px_rgba(239,68,68,0.6)] transition active:scale-95 border-2 border-red-400">UNO!</button>
+                    <button onclick="humanPass()" id="btn-pass" class="hidden bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 md:px-6 rounded-full transition active:scale-95 border-2 border-gray-400 text-sm md:text-base">Lewati</button>
+                </div>
+                <div class="flex flex-col items-end">
+                    <span id="turn-indicator" class="text-lg md:text-2xl font-black text-gray-400 transition-colors">Menunggu...</span>
+                    <span id="direction-indicator" class="text-[10px] md:text-xs text-gray-400 uppercase tracking-widest mt-1">Arah: ▶ Kanan</span>
+                </div>
+            </div>
+            <div id="human-hand-ui" class="flex gap-2 overflow-x-auto w-full max-w-6xl items-center h-full px-4 md:px-6 hide-scrollbar"></div>
+        </div>
+    </div>
+
+    <!-- Firebase Script -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Konfigurasi Sistem
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'demo-uno-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // State Global
+        let currentUser = null;
+        let myName = localStorage.getItem('uno_name') || "";
+        let currentRoomCode = null;
+        let roomUnsubscribe = null;
+        let roomData = null; // Cerminan data Firestore
+        
+        let pendingWildCardIdx = -1;
+        let hasDrawnThisTurn = false;
+        let hasPressedUno = false;
+        
+        const COLORS = ['Red', 'Green', 'Blue', 'Yellow'];
+        const COLOR_NAMES = { 'Red': 'Merah', 'Green': 'Hijau', 'Blue': 'Biru', 'Yellow': 'Kuning' };
+        const ACTIONS = ['Skip', 'Reverse', 'Draw Two'];
+
+        // --- AUTHENTICATION ---
+        async function initAuth() {
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                currentUser = auth.currentUser;
+                
+                document.getElementById('loading-screen').classList.add('hidden');
+                if (!myName) {
+                    document.getElementById('login-screen').classList.remove('hidden');
+                } else {
+                    document.getElementById('home-screen').classList.remove('hidden');
+                }
+            } catch (err) {
+                alert("Gagal koneksi ke server. Coba muat ulang.");
+                console.error(err);
+            }
+        }
+        initAuth();
+
+        // --- EXPOSE TO WINDOW ---
+        window.saveName = () => {
+            const nameInput = document.getElementById('player-name').value.trim();
+            if (nameInput.length < 2) return showToast("Nama minimal 2 huruf!");
+            myName = nameInput;
+            localStorage.setItem('uno_name', myName);
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('home-screen').classList.remove('hidden');
+        };
+
+        window.createRoom = async () => {
+            if (!currentUser) return;
+            const code = Math.random().toString(36).substring(2, 7).toUpperCase();
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', code);
+            
+            const initialData = {
+                hostId: currentUser.uid,
+                status: 'waiting', // waiting, playing, finished
+                players: [{ uid: currentUser.uid, name: myName }],
+                gameState: { deck: [], discardPile: [], hands: {}, turnIndex: 0, direction: 1, currentColor: '', logs: [], unoCalled: {} }
+            };
+
+            await setDoc(roomRef, initialData);
+            joinRoomLogic(code);
+        };
+
+        window.joinRoom = async () => {
+            const code = document.getElementById('room-code-input').value.trim().toUpperCase();
+            if (code.length !== 5) return showToast("Kode ruangan tidak valid!");
+            joinRoomLogic(code);
+        };
+
+        async function joinRoomLogic(code) {
+            if (!currentUser) return;
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', code);
+            const snapshot = await getDoc(roomRef);
+
+            if (!snapshot.exists()) {
+                return showToast("Ruangan tidak ditemukan!");
+            }
+
+            const data = snapshot.data();
+            if (data.status !== 'waiting' && !data.players.some(p => p.uid === currentUser.uid)) {
+                return showToast("Permainan sudah dimulai!");
+            }
+
+            // Tambahkan pemain jika belum ada
+            if (!data.players.some(p => p.uid === currentUser.uid)) {
+                if (data.players.length >= 10) return showToast("Ruangan penuh!");
+                const updatedPlayers = [...data.players, { uid: currentUser.uid, name: myName }];
+                await updateDoc(roomRef, { players: updatedPlayers });
+            }
+
+            currentRoomCode = code;
+            document.getElementById('home-screen').classList.add('hidden');
+            document.getElementById('lobby-screen').classList.remove('hidden');
+            document.getElementById('lobby-room-code').innerText = code;
+
+            subscribeToRoom(code);
+        }
+
+        window.leaveRoom = () => {
+            if (roomUnsubscribe) roomUnsubscribe();
+            currentRoomCode = null;
+            roomData = null;
+            document.getElementById('game-over-modal').classList.add('hidden');
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('lobby-screen').classList.add('hidden');
+            document.getElementById('home-screen').classList.remove('hidden');
+        };
+
+        // --- SINKRONISASI REALTIME ---
+        function subscribeToRoom(code) {
+            if (roomUnsubscribe) roomUnsubscribe();
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', code);
+            
+            roomUnsubscribe = onSnapshot(roomRef, (docSnap) => {
+                if (!docSnap.exists()) {
+                    showToast("Ruangan ditutup.");
+                    leaveRoom();
+                    return;
+                }
+                
+                roomData = docSnap.data();
+                
+                if (roomData.status === 'waiting') {
+                    renderLobby();
+                } else if (roomData.status === 'playing') {
+                    document.getElementById('lobby-screen').classList.add('hidden');
+                    document.getElementById('game-screen').classList.remove('hidden');
+                    renderGame();
+                } else if (roomData.status === 'finished') {
+                    renderGame(); // render state akhir
+                    handleGameOver();
+                }
+            }, (error) => {
+                console.error("Subscription error", error);
+            });
+        }
+
+        function renderLobby() {
+            const listUI = document.getElementById('lobby-players');
+            listUI.innerHTML = '';
+            roomData.players.forEach(p => {
+                let isMe = p.uid === currentUser.uid ? ' (Kamu)' : '';
+                let isHost = p.uid === roomData.hostId ? ' 👑' : '';
+                listUI.innerHTML += `<li class="border-b border-gray-700 py-2">👤 ${p.name}${isMe}${isHost}</li>`;
+            });
+            document.getElementById('player-count').innerText = roomData.players.length;
+
+            const isHost = roomData.hostId === currentUser.uid;
+            if (isHost && roomData.players.length >= 2) {
+                document.getElementById('btn-start-game').classList.remove('hidden');
+                document.getElementById('waiting-host-msg').classList.add('hidden');
+            } else {
+                document.getElementById('btn-start-game').classList.add('hidden');
+                if (roomData.players.length < 2) {
+                    document.getElementById('waiting-host-msg').innerText = "Menunggu pemain lain bergabung...";
+                    document.getElementById('waiting-host-msg').classList.remove('hidden');
+                } else {
+                    document.getElementById('waiting-host-msg').innerText = "Menunggu Host memulai permainan...";
+                    document.getElementById('waiting-host-msg').classList.remove('hidden');
+                }
+            }
+        }
+
+        window.startGame = async () => {
+            if (!currentUser || roomData.hostId !== currentUser.uid) return;
+
+            let deck = buildDeck();
+            shuffle(deck);
+
+            let hands = {};
+            roomData.players.forEach(p => { hands[p.uid] = []; });
+
+            // Bagikan 7 kartu
+            for (let i = 0; i < 7; i++) {
+                roomData.players.forEach(p => { hands[p.uid].push(deck.pop()); });
+            }
+
+            // Kartu pertama harus angka
+            let firstCard = deck.pop();
+            while (firstCard.type !== 'number') {
+                deck.unshift(firstCard);
+                firstCard = deck.pop();
+            }
+
+            let newState = {
+                status: 'playing',
+                gameState: {
+                    deck: deck,
+                    discardPile: [firstCard],
+                    hands: hands,
+                    turnIndex: 0,
+                    direction: 1,
+                    currentColor: firstCard.color,
+                    logs: ["Permainan dimulai!"],
+                    unoCalled: {}
+                }
+            };
+
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomCode);
+            await updateDoc(roomRef, newState);
+        };
+
+        // --- GAME LOGIC HELPER ---
+        function buildDeck() {
+            let d = [];
+            COLORS.forEach(c => {
+                d.push({ type: 'number', color: c, value: '0' });
+                for(let i = 1; i <= 9; i++) {
+                    d.push({ type: 'number', color: c, value: i.toString() });
+                    d.push({ type: 'number', color: c, value: i.toString() });
+                }
+                ACTIONS.forEach(a => {
+                    d.push({ type: 'action', color: c, value: a });
+                    d.push({ type: 'action', color: c, value: a });
+                });
+            });
+            for(let i=0; i<4; i++) {
+                d.push({ type: 'wild', color: 'Black', value: 'Wild' });
+                d.push({ type: 'wild', color: 'Black', value: 'Wild Draw Four' });
+            }
+            d.push({ type: 'wild', color: 'Black', value: 'Wild Shuffle Hands' });
+            for(let i=0; i<3; i++) d.push({ type: 'wild', color: 'Black', value: 'Customizable' });
+            return d;
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function isMyTurn() {
+            if (!roomData || roomData.status !== 'playing') return false;
+            return roomData.players[roomData.gameState.turnIndex].uid === currentUser.uid;
+        }
+
+        function isPlayable(card) {
+            if (card.color === 'Black') return true;
+            const topCard = roomData.gameState.discardPile[roomData.gameState.discardPile.length - 1];
+            return (card.color === roomData.gameState.currentColor || card.value === topCard.value);
+        }
+
+        // --- PLAYER ACTIONS ---
+        window.humanPlayCard = (idx) => {
+            if (!isMyTurn()) return showToast("Bukan giliranmu!");
+            
+            const state = roomData.gameState;
+            const myHand = state.hands[currentUser.uid];
+            const card = myHand[idx];
+
+            if (hasDrawnThisTurn && idx !== myHand.length - 1) return showToast("Hanya bisa memainkan kartu baru!");
+            if (!isPlayable(card)) return showToast("Kartu tidak cocok!");
+
+            if (card.color === 'Black') {
+                pendingWildCardIdx = idx;
+                document.getElementById('color-modal').classList.remove('hidden');
+                return;
+            }
+
+            processPlayCard(idx, card.color);
+        };
+
+        window.pickColor = (color) => {
+            document.getElementById('color-modal').classList.add('hidden');
+            processPlayCard(pendingWildCardIdx, color);
+            pendingWildCardIdx = -1;
+        };
+
+        window.humanDrawCard = () => {
+            if (!isMyTurn() || hasDrawnThisTurn) return;
+            hasDrawnThisTurn = true;
+            
+            let state = JSON.parse(JSON.stringify(roomData.gameState)); // Clone
+            let drawn = extractCards(state, 1)[0];
+            
+            if (drawn) {
+                state.hands[currentUser.uid].push(drawn);
+                state.logs.push(`<b>${myName}</b> mengambil kartu.`);
+                
+                // Cek kalau bisa dimainkan
+                if (!isPlayable(drawn)) {
+                    // Otomatis lewat jika ga bisa dimainkan
+                    state.turnIndex = (state.turnIndex + state.direction + roomData.players.length) % roomData.players.length;
+                    hasDrawnThisTurn = false;
+                } else {
+                    showToast("Mainkan kartu baru, atau tekan Lewati.");
+                }
+                updateRemoteState(state);
+            }
+        };
+
+        window.humanPass = () => {
+            if (!isMyTurn() || !hasDrawnThisTurn) return;
+            let state = JSON.parse(JSON.stringify(roomData.gameState));
+            state.logs.push(`<b>${myName}</b> melewati giliran.`);
+            state.turnIndex = (state.turnIndex + state.direction + roomData.players.length) % roomData.players.length;
+            hasDrawnThisTurn = false;
+            updateRemoteState(state);
+        };
+
+        window.pressUno = () => {
+            if (!roomData || roomData.status !== 'playing') return;
+            let myHand = roomData.gameState.hands[currentUser.uid];
+            if (myHand.length <= 2) {
+                hasPressedUno = true;
+                let state = JSON.parse(JSON.stringify(roomData.gameState));
+                state.unoCalled[currentUser.uid] = true;
+                state.logs.push(`<b class="text-red-500">${myName} berteriak UNO!</b>`);
+                updateRemoteState(state);
+                showToast("Kamu berteriak UNO!");
+                
+                const btn = document.getElementById('btn-uno');
+                btn.classList.add('ring-4', 'ring-white');
+                setTimeout(() => btn.classList.remove('ring-4', 'ring-white'), 1000);
+            } else {
+                showToast("Belum saatnya bilang UNO!");
+            }
+        };
+
+        async function processPlayCard(cardIdx, chosenColor) {
+            let state = JSON.parse(JSON.stringify(roomData.gameState));
+            let myHand = state.hands[currentUser.uid];
+            let card = myHand.splice(cardIdx, 1)[0];
+            
+            state.discardPile.push(card);
+            state.currentColor = chosenColor;
+            
+            let colorStr = card.color !== 'Black' ? card.color : chosenColor;
+            let displayVal = card.value === 'Customizable' ? 'Aturan Bebas' : card.value;
+            state.logs.push(`<b>${myName}</b> mengeluarkan <span class="text-${colorStr.toLowerCase()}-400 font-bold">${displayVal}</span>`);
+
+            // Penalti Lupa UNO (cek SEBELUM tangan jadi 0)
+            if (myHand.length === 1 && !hasPressedUno && !state.unoCalled[currentUser.uid]) {
+                state.logs.push(`⚠️ Lupa bilang UNO! <b>${myName}</b> penalti +2.`);
+                let penalty = extractCards(state, 2);
+                state.hands[currentUser.uid] = state.hands[currentUser.uid].concat(penalty);
+            }
+            if (myHand.length === 0) {
+                 // Menang!
+                 const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomCode);
+                 await updateDoc(roomRef, { status: 'finished', 'gameState.winner': currentUser.uid, gameState: state });
+                 return;
+            }
+
+            hasDrawnThisTurn = false;
+            hasPressedUno = false; // reset flag lokal
+            state.unoCalled[currentUser.uid] = false;
+
+            applyCardEffect(state, card, roomData.players.findIndex(p => p.uid === currentUser.uid));
+            updateRemoteState(state);
+        }
+
+        function extractCards(state, count) {
+            let drawn = [];
+            for (let i = 0; i < count; i++) {
+                if (state.deck.length === 0) {
+                    if (state.discardPile.length <= 1) break;
+                    let top = state.discardPile.pop();
+                    state.deck = state.discardPile;
+                    shuffle(state.deck);
+                    state.discardPile = [top];
+                    state.logs.push("Tumpukan dikocok ulang.");
+                }
+                drawn.push(state.deck.pop());
+            }
+            return drawn;
+        }
+
+        function applyCardEffect(state, card, playerIdx) {
+            let pCount = roomData.players.length;
+            let nextIdx = (playerIdx + state.direction + pCount) % pCount;
+            let nextNextIdx = (nextIdx + state.direction + pCount) % pCount;
+            let nextUid = roomData.players[nextIdx].uid;
+
+            switch(card.value) {
+                case 'Skip':
+                    state.logs.push(`⏩ Giliran dilewati!`);
+                    state.turnIndex = nextNextIdx;
+                    break;
+                case 'Reverse':
+                    if (pCount === 2) {
+                        state.logs.push(`🔄 Putar Balik -> Lewati!`);
+                        state.turnIndex = nextNextIdx;
+                    } else {
+                        state.direction *= -1;
+                        state.logs.push(`🔄 Arah berbalik!`);
+                        state.turnIndex = (playerIdx + state.direction + pCount) % pCount;
+                    }
+                    break;
+                case 'Draw Two':
+                    state.logs.push(`💥 +2 Kartu dan dilewati!`);
+                    state.hands[nextUid] = state.hands[nextUid].concat(extractCards(state, 2));
+                    state.turnIndex = nextNextIdx;
+                    break;
+                case 'Wild Draw Four':
+                    state.logs.push(`💥 +4 Kartu dan dilewati!`);
+                    state.hands[nextUid] = state.hands[nextUid].concat(extractCards(state, 4));
+                    state.turnIndex = nextNextIdx;
+                    break;
+                case 'Wild Shuffle Hands':
+                    state.logs.push(`🌀 SEMUA KARTU DIACAK!`);
+                    let allCards = [];
+                    roomData.players.forEach(p => {
+                        allCards = allCards.concat(state.hands[p.uid]);
+                        state.hands[p.uid] = [];
+                    });
+                    shuffle(allCards);
+                    let dealIdx = nextIdx;
+                    while(allCards.length > 0) {
+                        state.hands[roomData.players[dealIdx].uid].push(allCards.pop());
+                        dealIdx = (dealIdx + state.direction + pCount) % pCount;
+                    }
+                    state.turnIndex = nextIdx;
+                    break;
+                default:
+                    state.turnIndex = nextIdx;
+                    break;
+            }
+        }
+
+        async function updateRemoteState(newState) {
+            if (!currentRoomCode) return;
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomCode);
+            // Batasi log maksimal 30 agar tidak over data limit
+            if (newState.logs.length > 30) newState.logs = newState.logs.slice(-30);
+            await updateDoc(roomRef, { gameState: newState });
+        }
+
+        // --- RENDERING UI PERMAINAN ---
+        function generateCardHTML(card) {
+            let innerClass = `bg-${card.color}`;
+            let shortVal = card.value, displayVal = card.value;
+            let valClass = 'val-center text-shadow-sm';
+
+            if (card.value === 'Skip') { shortVal = '⊘'; displayVal = '⊘'; }
+            else if (card.value === 'Reverse') { shortVal = '⇄'; displayVal = '⇄'; }
+            else if (card.value === 'Draw Two') { shortVal = '+2'; displayVal = '+2'; }
+            else if (card.value === 'Wild') { shortVal = 'W'; displayVal = 'BEBAS'; valClass += ' val-W'; }
+            else if (card.value === 'Wild Draw Four') { shortVal = 'W4'; displayVal = 'W+4'; valClass += ' val-W'; }
+            else if (card.value === 'Wild Shuffle Hands') { shortVal = 'WS'; displayVal = 'ACAK'; valClass += ' val-W'; }
+            else if (card.value === 'Customizable') { shortVal = 'WC'; displayVal = 'KUSTOM'; valClass += ' val-W'; }
+
+            if (card.color === 'Black') innerClass = 'bg-gray-800';
+
+            return `
+                <div class="oval flex items-center justify-center"><div class="inner-oval ${innerClass}"></div></div>
+                <span class="${valClass}">${displayVal}</span>
+                <span class="val-sm-tl text-shadow-sm">${shortVal}</span>
+                <span class="val-sm-br text-shadow-sm">${shortVal}</span>
+            `;
+        }
+
+        function renderGame() {
+            const state = roomData.gameState;
+            document.getElementById('room-code-display').innerText = `[${currentRoomCode}]`;
+            
+            // Render Opponents
+            const oppArea = document.getElementById('opponents-area');
+            oppArea.innerHTML = '';
+            
+            // Urutkan pemaian mulai dari pemain setelah kita (secara visual)
+            let myIdx = roomData.players.findIndex(p => p.uid === currentUser.uid);
+            for(let i=1; i < roomData.players.length; i++) {
+                let pIdx = (myIdx + i) % roomData.players.length;
+                let p = roomData.players[pIdx];
+                let isTurn = state.turnIndex === pIdx;
+                let count = state.hands[p.uid].length;
+                
+                let stackHTML = '';
+                let cardsToShow = Math.min(count, 5);
+                for(let c=0; c<cardsToShow; c++) {
+                    stackHTML += `<div class="uno-card opponent-card card-back absolute left-0" style="margin-left: ${c*5}px; z-index: ${c};"><div class="oval"></div></div>`;
+                }
+
+                oppArea.innerHTML += `
+                    <div class="flex flex-col items-center transition-all px-1 ${isTurn ? 'scale-110' : 'opacity-70'}">
+                        <div class="relative mb-2 w-14 md:w-16 h-20 flex justify-center">
+                            ${stackHTML}
+                            <div class="absolute -bottom-3 z-10 bg-black text-white px-2 py-0.5 rounded-full text-xs font-bold border border-gray-500">${count}</div>
+                        </div>
+                        <span class="mt-4 font-bold text-xs whitespace-nowrap bg-gray-900/80 px-2 py-1 rounded ${isTurn ? 'text-green-400 border border-green-500' : 'text-gray-300'}">${p.name}</span>
+                    </div>
+                `;
+            }
+
+            // Deck & Discard
+            document.getElementById('deck-count').innerText = state.deck.length;
+            const topCard = state.discardPile[state.discardPile.length - 1];
+            if (topCard) {
+                const ui = document.getElementById('discard-pile-ui');
+                ui.innerHTML = `<div class="uno-card bg-${topCard.color === 'Black' ? state.currentColor : topCard.color}">${generateCardHTML(topCard)}</div>`;
+            }
+            
+            const badge = document.getElementById('current-color-badge');
+            const bgC = { 'Red':'bg-red-500', 'Blue':'bg-blue-500', 'Green':'bg-green-500', 'Yellow':'bg-yellow-500' }[state.currentColor] || 'bg-gray-700';
+            badge.className = `mt-2 px-4 py-1 rounded-full text-xs md:text-sm font-bold shadow-md text-white border-2 border-white ${bgC}`;
+            badge.innerText = `Warna: ${COLOR_NAMES[state.currentColor] || state.currentColor}`;
+
+            // Hand
+            const handUI = document.getElementById('human-hand-ui');
+            handUI.innerHTML = '';
+            let myHand = state.hands[currentUser.uid] || [];
+            myHand.forEach((card, idx) => {
+                let isPlay = isMyTurn() && isPlayable(card);
+                if(hasDrawnThisTurn && idx !== myHand.length - 1) isPlay = false;
+
+                let c = document.createElement('div');
+                c.className = `uno-card bg-${card.color} ${isPlay ? 'playable' : 'unplayable'}`;
+                c.onclick = () => humanPlayCard(idx);
+                c.innerHTML = generateCardHTML(card);
+                handUI.appendChild(c);
+            });
+
+            // Turn Indicator & Buttons
+            const btnPass = document.getElementById('btn-pass');
+            if (isMyTurn()) {
+                document.getElementById('turn-indicator').innerText = hasDrawnThisTurn ? "Main atau Lewati!" : "Giliran Kamu!";
+                document.getElementById('turn-indicator').className = "text-lg md:text-2xl font-black text-green-400 animate-pulse";
+                if(hasDrawnThisTurn) btnPass.classList.remove('hidden'); else btnPass.classList.add('hidden');
+            } else {
+                document.getElementById('turn-indicator').innerText = `Giliran ${roomData.players[state.turnIndex].name}`;
+                document.getElementById('turn-indicator').className = "text-lg md:text-2xl font-bold text-yellow-400";
+                btnPass.classList.add('hidden');
+                hasDrawnThisTurn = false; 
+            }
+            document.getElementById('direction-indicator').innerText = state.direction === 1 ? 'Arah: ▶ Kanan' : 'Arah: ◀ Kiri';
+
+            // Logs
+            const logsUI = document.getElementById('logs-container');
+            logsUI.innerHTML = state.logs.map(l => `<div class="border-b border-gray-700 pb-1">${l}</div>`).join('');
+            logsUI.scrollTop = logsUI.scrollHeight;
+        }
+
+        // --- SKOR & GAME OVER ---
+        function calculatePoint(card) {
+            if (card.type === 'number') return parseInt(card.value);
+            if (card.type === 'action') return 20;
+            if (card.value === 'Wild' || card.value === 'Wild Draw Four') return 50;
+            return 40;
+        }
+
+        function handleGameOver() {
+            const state = roomData.gameState;
+            const winnerUid = state.winner;
+            const winnerObj = roomData.players.find(p => p.uid === winnerUid);
+            
+            let totalScore = 0;
+            let breakdownHTML = '';
+            
+            roomData.players.forEach(p => {
+                if (p.uid !== winnerUid) {
+                    let pScore = 0;
+                    state.hands[p.uid].forEach(c => { pScore += calculatePoint(c); });
+                    totalScore += pScore;
+                    breakdownHTML += `
+                        <div class="flex justify-between bg-gray-800 p-2 rounded">
+                            <span><b class="text-white">${p.name}</b> (${state.hands[p.uid].length} Kartu)</span>
+                            <span class="text-red-400 font-bold">+${pScore} pts</span>
+                        </div>`;
+                }
+            });
+            
+            document.getElementById('winner-text').innerText = (winnerUid === currentUser.uid) ? "Kamu Menang!" : `${winnerObj.name} Menang!`;
+            document.getElementById('score-text').innerText = `Total Skor: ${totalScore} Poin`;
+            document.getElementById('score-breakdown').innerHTML = breakdownHTML || '<div class="text-center text-gray-500">Tidak ada sisa poin.</div>';
+            document.getElementById('game-over-modal').classList.remove('hidden');
+        }
+
+        let toastTimeout;
+        window.showToast = (msg) => {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.classList.remove('toast-enter');
+            toast.classList.add('toast-show');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('toast-show');
+                toast.classList.add('toast-enter');
+            }, 3000);
+        };
+
+    </script>
+</body>
+</html>
+```
