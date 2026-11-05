@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -83,6 +82,9 @@
 </head>
 <body class="text-white h-screen flex flex-col relative w-full overflow-hidden">
 
+        <!-- TOAST -->
+    <div id="toast" class="fixed bottom-36 left-1/2 transform -translate-x-1/2 bg-gray-800 border-2 border-red-500 text-white px-6 py-3 rounded-full font-bold shadow-2xl z-[200] transition-all duration-300 toast-enter text-center">Notifikasi</div>
+
     <!-- LAYAR LOADING -->
     <div id="loading-screen" class="absolute inset-0 bg-gray-900 z-[100] flex flex-col items-center justify-center">
         <h1 class="text-4xl text-yellow-400 font-bold animate-pulse">Menghubungkan ke Server...</h1>
@@ -104,6 +106,14 @@
         <h2 class="text-xl text-yellow-400 mb-8 font-semibold">Multiplayer Real-Time</h2>
         
         <div class="bg-gray-800 p-8 rounded-xl border-4 border-gray-600 shadow-2xl max-w-sm w-full flex flex-col gap-4">
+            <div class="flex gap-2">
+                <select id="bot-count" class="bg-gray-700 border-2 border-gray-500 rounded-xl px-3 text-white font-bold text-lg">
+                    <option value="1">1 Lawan</option><option value="2">2 Lawan</option><option value="3" selected>3 Lawan</option><option value="4">4 Lawan</option><option value="5">5 Lawan</option>
+                </select>
+                <button onclick="startLocal()" class="flex-grow bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-bold py-4 rounded-xl shadow-lg transition active:scale-95 text-xl">vs Komputer 🤖</button>
+            </div>
+            <p id="online-status" class="text-xs text-gray-400"></p>
+            <div class="flex items-center my-1"><div class="flex-grow border-t border-gray-600"></div><span class="px-3 text-gray-400 font-bold">ONLINE</span><div class="flex-grow border-t border-gray-600"></div></div>
             <button onclick="createRoom()" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-xl shadow-lg transition active:scale-95 text-xl">Buat Ruangan Baru</button>
             <div class="flex items-center my-2">
                 <div class="flex-grow border-t border-gray-600"></div>
@@ -133,7 +143,6 @@
 
     <!-- AREA PERMAINAN -->
     <div id="game-screen" class="hidden h-full w-full flex flex-col relative">
-        <div id="toast" class="fixed bottom-36 left-1/2 transform -translate-x-1/2 bg-gray-800 border-2 border-red-500 text-white px-6 py-3 rounded-full font-bold shadow-2xl z-50 transition-all duration-300 toast-enter text-center">Notifikasi</div>
 
         <!-- Modal Pilih Warna -->
         <div id="color-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden">
@@ -203,60 +212,77 @@
         </div>
     </div>
 
-    <!-- Firebase Script -->
-    <script type="module">
+        <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Konfigurasi Sistem
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'demo-uno-app';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        // ====== ISI CONFIG FIREBASE KAMU DI SINI (untuk GitHub Pages) ======
+        const MY_FIREBASE_CONFIG = {
+            apiKey: "", authDomain: "", projectId: "",
+            storageBucket: "", messagingSenderId: "", appId: ""
+        };
+        // ====================================================================
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'uno-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : MY_FIREBASE_CONFIG;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const hasFirebase = !!firebaseConfig.apiKey;
+
+        let auth, db;
+        if (hasFirebase) {
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+        }
+        const roomDoc = (code) => doc(db, 'artifacts', appId, 'public', 'data', 'rooms', code);
 
         // State Global
-        let currentUser = null;
+        let fbUser = null;          // user Firebase (online)
+        let currentUser = null;     // user aktif (online = fbUser, lokal = {uid:'local-me'})
         let myName = localStorage.getItem('uno_name') || "";
         let currentRoomCode = null;
         let roomUnsubscribe = null;
-        let roomData = null; // Cerminan data Firestore
-        
+        let roomData = null;
+        let localMode = false;
+        let botTimer = null;
+        let selectedOpp = null;
         let pendingWildCardIdx = -1;
         let hasDrawnThisTurn = false;
-        let hasPressedUno = false;
-        
+
         const COLORS = ['Red', 'Green', 'Blue', 'Yellow'];
         const COLOR_NAMES = { 'Red': 'Merah', 'Green': 'Hijau', 'Blue': 'Biru', 'Yellow': 'Kuning' };
         const ACTIONS = ['Skip', 'Reverse', 'Draw Two'];
+        const LOCAL_UID = 'local-me';
 
-        // --- AUTHENTICATION ---
+        const clone = (o) => JSON.parse(JSON.stringify(o));
+        const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const nameOf = (uid) => esc(roomData.players.find(p => p.uid === uid)?.name || '?');
+        const emptyState = () => ({ deck: [], discardPile: [], hands: {}, turnIndex: 0, direction: 1, currentColor: '', logs: [], unoCalled: {}, catchable: null });
+
+        // --- AUTH (tidak lagi macet jika Firebase belum dikonfigurasi) ---
         async function initAuth() {
-            try {
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                currentUser = auth.currentUser;
-                
-                document.getElementById('loading-screen').classList.add('hidden');
-                if (!myName) {
-                    document.getElementById('login-screen').classList.remove('hidden');
-                } else {
-                    document.getElementById('home-screen').classList.remove('hidden');
-                }
-            } catch (err) {
-                alert("Gagal koneksi ke server. Coba muat ulang.");
-                console.error(err);
+            if (hasFirebase) {
+                try {
+                    const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000));
+                    const login = initialAuthToken ? signInWithCustomToken(auth, initialAuthToken) : signInAnonymously(auth);
+                    await Promise.race([login, timeout]);
+                    fbUser = auth.currentUser;
+                } catch (err) { console.error("Firebase gagal:", err); }
             }
+            document.getElementById('loading-screen').classList.add('hidden');
+            document.getElementById(myName ? 'home-screen' : 'login-screen').classList.remove('hidden');
+            updateOnlineStatus();
         }
         initAuth();
 
-        // --- EXPOSE TO WINDOW ---
+        function updateOnlineStatus() {
+            const el = document.getElementById('online-status');
+            if (!el) return;
+            el.innerText = fbUser ? "🟢 Mode online siap" : "🔴 Mode online tidak aktif (cek firebaseConfig). Mode vs Komputer tetap bisa dimainkan.";
+        }
+
+        // --- NAVIGASI ---
         window.saveName = () => {
             const nameInput = document.getElementById('player-name').value.trim();
             if (nameInput.length < 2) return showToast("Nama minimal 2 huruf!");
@@ -264,21 +290,93 @@
             localStorage.setItem('uno_name', myName);
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('home-screen').classList.remove('hidden');
+            updateOnlineStatus();
         };
 
-        window.createRoom = async () => {
-            if (!currentUser) return;
-            const code = Math.random().toString(36).substring(2, 7).toUpperCase();
-            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', code);
-            
-            const initialData = {
-                hostId: currentUser.uid,
-                status: 'waiting', // waiting, playing, finished
-                players: [{ uid: currentUser.uid, name: myName }],
-                gameState: { deck: [], discardPile: [], hands: {}, turnIndex: 0, direction: 1, currentColor: '', logs: [], unoCalled: {} }
-            };
+        window.leaveRoom = () => {
+            if (roomUnsubscribe) { roomUnsubscribe(); roomUnsubscribe = null; }
+            clearTimeout(botTimer);
+            localMode = false;
+            currentUser = fbUser;
+            currentRoomCode = null;
+            roomData = null;
+            selectedOpp = null;
+            hasDrawnThisTurn = false;
+            ['game-over-modal', 'game-screen', 'lobby-screen', 'color-modal'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById('home-screen').classList.remove('hidden');
+        };
 
-            await setDoc(roomRef, initialData);
+        // --- MODE VS KOMPUTER (lokal, tanpa Firebase) ---
+        window.startLocal = () => {
+            const n = parseInt(document.getElementById('bot-count').value) || 1;
+            localMode = true;
+            currentUser = { uid: LOCAL_UID };
+            const players = [{ uid: LOCAL_UID, name: myName || 'Kamu' }];
+            for (let i = 1; i <= n; i++) players.push({ uid: 'bot' + i, name: 'Komputer ' + i, isBot: true });
+            currentRoomCode = 'LOCAL';
+            roomData = { hostId: LOCAL_UID, status: 'playing', players, gameState: dealGame(players) };
+            hasDrawnThisTurn = false;
+            selectedOpp = null;
+            document.getElementById('home-screen').classList.add('hidden');
+            document.getElementById('game-over-modal').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            renderGame();
+            scheduleBot();
+        };
+
+        function scheduleBot() {
+            clearTimeout(botTimer);
+            if (!localMode || !roomData || roomData.status !== 'playing') return;
+            const cur = roomData.players[roomData.gameState.turnIndex];
+            if (cur.isBot) botTimer = setTimeout(() => botTurn(cur), 1600);
+        }
+
+        function botTurn(bot) {
+            if (!localMode || !roomData || roomData.status !== 'playing') return;
+            const s = clone(roomData.gameState);
+            const uid = bot.uid;
+            if (roomData.players[s.turnIndex].uid !== uid) return;
+
+            // Bot bisa menangkap pemain yang lupa UNO sebelum jalan
+            if (s.catchable && s.catchable !== uid && Math.random() < 0.6) penalize(s, s.catchable, uid);
+            s.catchable = null;
+
+            const top = s.discardPile[s.discardPile.length - 1];
+            const ok = (c) => c.color === 'Black' || c.color === s.currentColor || c.value === top.value;
+            const hand = s.hands[uid];
+            let idx = hand.findIndex(c => c.color !== 'Black' && ok(c));
+            if (idx < 0) idx = hand.findIndex(c => c.color === 'Black');
+            if (idx < 0) {
+                const d = extractCards(s, 1)[0];
+                if (d) {
+                    hand.push(d);
+                    s.logs.push(`<b>${esc(bot.name)}</b> mengambil kartu.`);
+                    if (ok(d)) idx = hand.length - 1;
+                }
+            }
+            if (idx < 0) { advance(s); updateRemoteState(s); return; }
+
+            const card = hand[idx];
+            let color = card.color;
+            if (color === 'Black') {
+                const cnt = {};
+                hand.forEach((c, i) => { if (i !== idx && c.color !== 'Black') cnt[c.color] = (cnt[c.color] || 0) + 1; });
+                color = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0] || COLORS[Math.floor(Math.random() * 4)];
+            }
+            // Bot kadang "lupa" UNO (30%) -> bisa ditangkap pemain
+            const won = playCardOn(s, uid, idx, color, Math.random() < 0.7);
+            updateRemoteState(s, won ? { status: 'finished' } : {});
+        }
+
+        // --- MODE ONLINE ---
+        window.createRoom = async () => {
+            if (!fbUser) return showToast("Mode online belum aktif. Isi firebaseConfig dulu.");
+            currentUser = fbUser; localMode = false;
+            const code = Math.random().toString(36).substring(2, 7).toUpperCase();
+            await setDoc(roomDoc(code), {
+                hostId: fbUser.uid, status: 'waiting',
+                players: [{ uid: fbUser.uid, name: myName }], gameState: emptyState()
+            });
             joinRoomLogic(code);
         };
 
@@ -289,158 +387,85 @@
         };
 
         async function joinRoomLogic(code) {
-            if (!currentUser) return;
-            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', code);
+            if (!fbUser) return showToast("Mode online belum aktif. Isi firebaseConfig dulu.");
+            currentUser = fbUser; localMode = false;
+            const roomRef = roomDoc(code);
             const snapshot = await getDoc(roomRef);
-
-            if (!snapshot.exists()) {
-                return showToast("Ruangan tidak ditemukan!");
-            }
+            if (!snapshot.exists()) return showToast("Ruangan tidak ditemukan!");
 
             const data = snapshot.data();
-            if (data.status !== 'waiting' && !data.players.some(p => p.uid === currentUser.uid)) {
-                return showToast("Permainan sudah dimulai!");
-            }
-
-            // Tambahkan pemain jika belum ada
-            if (!data.players.some(p => p.uid === currentUser.uid)) {
+            const already = data.players.some(p => p.uid === fbUser.uid);
+            if (data.status !== 'waiting' && !already) return showToast("Permainan sudah dimulai!");
+            if (!already) {
                 if (data.players.length >= 10) return showToast("Ruangan penuh!");
-                const updatedPlayers = [...data.players, { uid: currentUser.uid, name: myName }];
-                await updateDoc(roomRef, { players: updatedPlayers });
+                await updateDoc(roomRef, { players: [...data.players, { uid: fbUser.uid, name: myName }] });
             }
 
             currentRoomCode = code;
             document.getElementById('home-screen').classList.add('hidden');
             document.getElementById('lobby-screen').classList.remove('hidden');
             document.getElementById('lobby-room-code').innerText = code;
-
             subscribeToRoom(code);
         }
 
-        window.leaveRoom = () => {
-            if (roomUnsubscribe) roomUnsubscribe();
-            currentRoomCode = null;
-            roomData = null;
-            document.getElementById('game-over-modal').classList.add('hidden');
-            document.getElementById('game-screen').classList.add('hidden');
-            document.getElementById('lobby-screen').classList.add('hidden');
-            document.getElementById('home-screen').classList.remove('hidden');
-        };
-
-        // --- SINKRONISASI REALTIME ---
         function subscribeToRoom(code) {
             if (roomUnsubscribe) roomUnsubscribe();
-            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', code);
-            
-            roomUnsubscribe = onSnapshot(roomRef, (docSnap) => {
-                if (!docSnap.exists()) {
-                    showToast("Ruangan ditutup.");
-                    leaveRoom();
-                    return;
-                }
-                
+            roomUnsubscribe = onSnapshot(roomDoc(code), (docSnap) => {
+                if (!docSnap.exists()) { showToast("Ruangan ditutup."); leaveRoom(); return; }
                 roomData = docSnap.data();
-                
                 if (roomData.status === 'waiting') {
                     renderLobby();
-                } else if (roomData.status === 'playing') {
+                } else {
                     document.getElementById('lobby-screen').classList.add('hidden');
                     document.getElementById('game-screen').classList.remove('hidden');
                     renderGame();
-                } else if (roomData.status === 'finished') {
-                    renderGame(); // render state akhir
-                    handleGameOver();
+                    if (roomData.status === 'finished') handleGameOver();
                 }
-            }, (error) => {
-                console.error("Subscription error", error);
-            });
+            }, (error) => console.error("Subscription error", error));
         }
 
         function renderLobby() {
             const listUI = document.getElementById('lobby-players');
-            listUI.innerHTML = '';
-            roomData.players.forEach(p => {
-                let isMe = p.uid === currentUser.uid ? ' (Kamu)' : '';
-                let isHost = p.uid === roomData.hostId ? ' 👑' : '';
-                listUI.innerHTML += `<li class="border-b border-gray-700 py-2">👤 ${p.name}${isMe}${isHost}</li>`;
-            });
+            listUI.innerHTML = roomData.players.map(p => {
+                const isMe = p.uid === currentUser.uid ? ' (Kamu)' : '';
+                const isHost = p.uid === roomData.hostId ? ' 👑' : '';
+                return `<li class="border-b border-gray-700 py-2">👤 ${esc(p.name)}${isMe}${isHost}</li>`;
+            }).join('');
             document.getElementById('player-count').innerText = roomData.players.length;
 
             const isHost = roomData.hostId === currentUser.uid;
+            const startBtn = document.getElementById('btn-start-game');
+            const msg = document.getElementById('waiting-host-msg');
             if (isHost && roomData.players.length >= 2) {
-                document.getElementById('btn-start-game').classList.remove('hidden');
-                document.getElementById('waiting-host-msg').classList.add('hidden');
+                startBtn.classList.remove('hidden'); msg.classList.add('hidden');
             } else {
-                document.getElementById('btn-start-game').classList.add('hidden');
-                if (roomData.players.length < 2) {
-                    document.getElementById('waiting-host-msg').innerText = "Menunggu pemain lain bergabung...";
-                    document.getElementById('waiting-host-msg').classList.remove('hidden');
-                } else {
-                    document.getElementById('waiting-host-msg').innerText = "Menunggu Host memulai permainan...";
-                    document.getElementById('waiting-host-msg').classList.remove('hidden');
-                }
+                startBtn.classList.add('hidden'); msg.classList.remove('hidden');
+                msg.innerText = roomData.players.length < 2 ? "Menunggu pemain lain bergabung..." : "Menunggu Host memulai permainan...";
             }
         }
 
         window.startGame = async () => {
             if (!currentUser || roomData.hostId !== currentUser.uid) return;
-
-            let deck = buildDeck();
-            shuffle(deck);
-
-            let hands = {};
-            roomData.players.forEach(p => { hands[p.uid] = []; });
-
-            // Bagikan 7 kartu
-            for (let i = 0; i < 7; i++) {
-                roomData.players.forEach(p => { hands[p.uid].push(deck.pop()); });
-            }
-
-            // Kartu pertama harus angka
-            let firstCard = deck.pop();
-            while (firstCard.type !== 'number') {
-                deck.unshift(firstCard);
-                firstCard = deck.pop();
-            }
-
-            let newState = {
-                status: 'playing',
-                gameState: {
-                    deck: deck,
-                    discardPile: [firstCard],
-                    hands: hands,
-                    turnIndex: 0,
-                    direction: 1,
-                    currentColor: firstCard.color,
-                    logs: ["Permainan dimulai!"],
-                    unoCalled: {}
-                }
-            };
-
-            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomCode);
-            await updateDoc(roomRef, newState);
+            await updateDoc(roomDoc(currentRoomCode), { status: 'playing', gameState: dealGame(roomData.players) });
         };
 
-        // --- GAME LOGIC HELPER ---
+        // --- LOGIKA GAME ---
         function buildDeck() {
             let d = [];
             COLORS.forEach(c => {
                 d.push({ type: 'number', color: c, value: '0' });
-                for(let i = 1; i <= 9; i++) {
+                for (let i = 1; i <= 9; i++) {
                     d.push({ type: 'number', color: c, value: i.toString() });
                     d.push({ type: 'number', color: c, value: i.toString() });
                 }
-                ACTIONS.forEach(a => {
-                    d.push({ type: 'action', color: c, value: a });
-                    d.push({ type: 'action', color: c, value: a });
-                });
+                ACTIONS.forEach(a => { d.push({ type: 'action', color: c, value: a }); d.push({ type: 'action', color: c, value: a }); });
             });
-            for(let i=0; i<4; i++) {
+            for (let i = 0; i < 4; i++) {
                 d.push({ type: 'wild', color: 'Black', value: 'Wild' });
                 d.push({ type: 'wild', color: 'Black', value: 'Wild Draw Four' });
             }
             d.push({ type: 'wild', color: 'Black', value: 'Wild Shuffle Hands' });
-            for(let i=0; i<3; i++) d.push({ type: 'wild', color: 'Black', value: 'Customizable' });
+            for (let i = 0; i < 3; i++) d.push({ type: 'wild', color: 'Black', value: 'Customizable' });
             return d;
         }
 
@@ -451,6 +476,17 @@
             }
         }
 
+        function dealGame(players) {
+            const deck = buildDeck();
+            shuffle(deck);
+            const hands = {};
+            players.forEach(p => { hands[p.uid] = []; });
+            for (let i = 0; i < 7; i++) players.forEach(p => hands[p.uid].push(deck.pop()));
+            let first = deck.pop();
+            while (first.type !== 'number') { deck.unshift(first); first = deck.pop(); }
+            return { ...emptyState(), deck, discardPile: [first], hands, currentColor: first.color, logs: ["Permainan dimulai!"] };
+        }
+
         function isMyTurn() {
             if (!roomData || roomData.status !== 'playing') return false;
             return roomData.players[roomData.gameState.turnIndex].uid === currentUser.uid;
@@ -458,118 +494,26 @@
 
         function isPlayable(card) {
             if (card.color === 'Black') return true;
-            const topCard = roomData.gameState.discardPile[roomData.gameState.discardPile.length - 1];
-            return (card.color === roomData.gameState.currentColor || card.value === topCard.value);
+            const st = roomData.gameState;
+            const topCard = st.discardPile[st.discardPile.length - 1];
+            return card.color === st.currentColor || card.value === topCard.value;
         }
 
-        // --- PLAYER ACTIONS ---
-        window.humanPlayCard = (idx) => {
-            if (!isMyTurn()) return showToast("Bukan giliranmu!");
-            
-            const state = roomData.gameState;
-            const myHand = state.hands[currentUser.uid];
-            const card = myHand[idx];
+        function advance(state) {
+            const n = roomData.players.length;
+            state.turnIndex = (state.turnIndex + state.direction + n) % n;
+        }
 
-            if (hasDrawnThisTurn && idx !== myHand.length - 1) return showToast("Hanya bisa memainkan kartu baru!");
-            if (!isPlayable(card)) return showToast("Kartu tidak cocok!");
+        // Kartu > 2 membatalkan status "sudah UNO"
+        function normalizeUno(state) {
+            Object.keys(state.hands).forEach(u => { if (state.hands[u].length > 2) state.unoCalled[u] = false; });
+        }
 
-            if (card.color === 'Black') {
-                pendingWildCardIdx = idx;
-                document.getElementById('color-modal').classList.remove('hidden');
-                return;
-            }
-
-            processPlayCard(idx, card.color);
-        };
-
-        window.pickColor = (color) => {
-            document.getElementById('color-modal').classList.add('hidden');
-            processPlayCard(pendingWildCardIdx, color);
-            pendingWildCardIdx = -1;
-        };
-
-        window.humanDrawCard = () => {
-            if (!isMyTurn() || hasDrawnThisTurn) return;
-            hasDrawnThisTurn = true;
-            
-            let state = JSON.parse(JSON.stringify(roomData.gameState)); // Clone
-            let drawn = extractCards(state, 1)[0];
-            
-            if (drawn) {
-                state.hands[currentUser.uid].push(drawn);
-                state.logs.push(`<b>${myName}</b> mengambil kartu.`);
-                
-                // Cek kalau bisa dimainkan
-                if (!isPlayable(drawn)) {
-                    // Otomatis lewat jika ga bisa dimainkan
-                    state.turnIndex = (state.turnIndex + state.direction + roomData.players.length) % roomData.players.length;
-                    hasDrawnThisTurn = false;
-                } else {
-                    showToast("Mainkan kartu baru, atau tekan Lewati.");
-                }
-                updateRemoteState(state);
-            }
-        };
-
-        window.humanPass = () => {
-            if (!isMyTurn() || !hasDrawnThisTurn) return;
-            let state = JSON.parse(JSON.stringify(roomData.gameState));
-            state.logs.push(`<b>${myName}</b> melewati giliran.`);
-            state.turnIndex = (state.turnIndex + state.direction + roomData.players.length) % roomData.players.length;
-            hasDrawnThisTurn = false;
-            updateRemoteState(state);
-        };
-
-        window.pressUno = () => {
-            if (!roomData || roomData.status !== 'playing') return;
-            let myHand = roomData.gameState.hands[currentUser.uid];
-            if (myHand.length <= 2) {
-                hasPressedUno = true;
-                let state = JSON.parse(JSON.stringify(roomData.gameState));
-                state.unoCalled[currentUser.uid] = true;
-                state.logs.push(`<b class="text-red-500">${myName} berteriak UNO!</b>`);
-                updateRemoteState(state);
-                showToast("Kamu berteriak UNO!");
-                
-                const btn = document.getElementById('btn-uno');
-                btn.classList.add('ring-4', 'ring-white');
-                setTimeout(() => btn.classList.remove('ring-4', 'ring-white'), 1000);
-            } else {
-                showToast("Belum saatnya bilang UNO!");
-            }
-        };
-
-        async function processPlayCard(cardIdx, chosenColor) {
-            let state = JSON.parse(JSON.stringify(roomData.gameState));
-            let myHand = state.hands[currentUser.uid];
-            let card = myHand.splice(cardIdx, 1)[0];
-            
-            state.discardPile.push(card);
-            state.currentColor = chosenColor;
-            
-            let colorStr = card.color !== 'Black' ? card.color : chosenColor;
-            let displayVal = card.value === 'Customizable' ? 'Aturan Bebas' : card.value;
-            state.logs.push(`<b>${myName}</b> mengeluarkan <span class="text-${colorStr.toLowerCase()}-400 font-bold">${displayVal}</span>`);
-
-            // Penalti Lupa UNO (cek SEBELUM tangan jadi 0)
-            if (myHand.length === 1 && !hasPressedUno && !state.unoCalled[currentUser.uid]) {
-                state.logs.push(`⚠️ Lupa bilang UNO! <b>${myName}</b> penalti +2.`);
-                let penalty = extractCards(state, 2);
-                state.hands[currentUser.uid] = state.hands[currentUser.uid].concat(penalty);
-            }
-            if (myHand.length === 0) {
-                 // Menang!
-                 const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomCode);
-                 await updateDoc(roomRef, { status: 'finished', 'gameState.winner': currentUser.uid, gameState: state });
-                 return;
-            }
-
-            hasDrawnThisTurn = false;
-            hasPressedUno = false; // reset flag lokal
-            state.unoCalled[currentUser.uid] = false;
-
-            applyCardEffect(state, card, roomData.players.findIndex(p => p.uid === currentUser.uid));
-            updateRemoteState(state);
+        function penalize(state, uid, byUid) {
+            state.hands[uid] = state.hands[uid].concat(extractCards(state, 2));
+            state.unoCalled[uid] = false;
+            state.catchable = null;
+            state.logs.push(`🚨 <b>${nameOf(byUid)}</b> menangkap <b>${nameOf(uid)}</b> yang lupa UNO! +2 kartu.`);
         }
 
         function extractCards(state, count) {
@@ -577,7 +521,7 @@
             for (let i = 0; i < count; i++) {
                 if (state.deck.length === 0) {
                     if (state.discardPile.length <= 1) break;
-                    let top = state.discardPile.pop();
+                    const top = state.discardPile.pop();
                     state.deck = state.discardPile;
                     shuffle(state.deck);
                     state.discardPile = [top];
@@ -588,13 +532,44 @@
             return drawn;
         }
 
-        function applyCardEffect(state, card, playerIdx) {
-            let pCount = roomData.players.length;
-            let nextIdx = (playerIdx + state.direction + pCount) % pCount;
-            let nextNextIdx = (nextIdx + state.direction + pCount) % pCount;
-            let nextUid = roomData.players[nextIdx].uid;
+        // Dipakai manusia & bot. Return true jika pemain menang.
+        function playCardOn(state, uid, cardIdx, chosenColor, callUno) {
+            const players = roomData.players;
+            const hand = state.hands[uid];
+            const card = hand.splice(cardIdx, 1)[0];
+            state.catchable = null;
+            state.discardPile.push(card);
+            state.currentColor = chosenColor;
 
-            switch(card.value) {
+            const colorStr = card.color !== 'Black' ? card.color : chosenColor;
+            const displayVal = card.value === 'Customizable' ? 'Aturan Bebas' : card.value;
+            state.logs.push(`<b>${nameOf(uid)}</b> mengeluarkan <span class="text-${colorStr.toLowerCase()}-400 font-bold">${displayVal}</span>`);
+
+            if (hand.length === 0) { state.winner = uid; return true; }
+
+            if (hand.length === 1) {
+                if (callUno) {
+                    state.unoCalled[uid] = true;
+                    state.logs.push(`<b class="text-red-500">${nameOf(uid)} berteriak UNO!</b>`);
+                }
+                if (!state.unoCalled[uid]) {
+                    state.catchable = uid; // bisa ditangkap sampai ada pemain lain bertindak
+                    state.logs.push(`⚠️ <b>${nameOf(uid)}</b> sisa 1 kartu tapi belum bilang UNO!`);
+                }
+            } else {
+                state.unoCalled[uid] = false;
+            }
+            applyCardEffect(state, card, players.findIndex(p => p.uid === uid));
+            return false;
+        }
+
+        function applyCardEffect(state, card, playerIdx) {
+            const pCount = roomData.players.length;
+            const nextIdx = (playerIdx + state.direction + pCount) % pCount;
+            const nextNextIdx = (nextIdx + state.direction + pCount) % pCount;
+            const nextUid = roomData.players[nextIdx].uid;
+
+            switch (card.value) {
                 case 'Skip':
                     state.logs.push(`⏩ Giliran dilewati!`);
                     state.turnIndex = nextNextIdx;
@@ -619,36 +594,136 @@
                     state.hands[nextUid] = state.hands[nextUid].concat(extractCards(state, 4));
                     state.turnIndex = nextNextIdx;
                     break;
-                case 'Wild Shuffle Hands':
+                case 'Wild Shuffle Hands': {
                     state.logs.push(`🌀 SEMUA KARTU DIACAK!`);
-                    let allCards = [];
-                    roomData.players.forEach(p => {
-                        allCards = allCards.concat(state.hands[p.uid]);
-                        state.hands[p.uid] = [];
-                    });
-                    shuffle(allCards);
+                    let all = [];
+                    roomData.players.forEach(p => { all = all.concat(state.hands[p.uid]); state.hands[p.uid] = []; });
+                    shuffle(all);
                     let dealIdx = nextIdx;
-                    while(allCards.length > 0) {
-                        state.hands[roomData.players[dealIdx].uid].push(allCards.pop());
+                    while (all.length > 0) {
+                        state.hands[roomData.players[dealIdx].uid].push(all.pop());
                         dealIdx = (dealIdx + state.direction + pCount) % pCount;
                     }
                     state.turnIndex = nextIdx;
                     break;
+                }
                 default:
                     state.turnIndex = nextIdx;
-                    break;
             }
         }
 
-        async function updateRemoteState(newState) {
+        async function updateRemoteState(newState, extra = {}) {
             if (!currentRoomCode) return;
-            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomCode);
-            // Batasi log maksimal 30 agar tidak over data limit
             if (newState.logs.length > 30) newState.logs = newState.logs.slice(-30);
-            await updateDoc(roomRef, { gameState: newState });
+            normalizeUno(newState);
+            if (localMode) {
+                roomData = { ...roomData, ...extra, gameState: newState };
+                renderGame();
+                if (roomData.status === 'finished') handleGameOver(); else scheduleBot();
+                return;
+            }
+            await updateDoc(roomDoc(currentRoomCode), { gameState: newState, ...extra });
         }
 
-        // --- RENDERING UI PERMAINAN ---
+        // --- AKSI PEMAIN ---
+        window.humanPlayCard = (idx) => {
+            if (!isMyTurn()) return showToast("Bukan giliranmu!");
+            const myHand = roomData.gameState.hands[currentUser.uid];
+            const card = myHand[idx];
+            if (hasDrawnThisTurn && idx !== myHand.length - 1) return showToast("Hanya bisa memainkan kartu baru!");
+            if (!isPlayable(card)) return showToast("Kartu tidak cocok!");
+            if (card.color === 'Black') {
+                pendingWildCardIdx = idx;
+                document.getElementById('color-modal').classList.remove('hidden');
+                return;
+            }
+            processPlayCard(idx, card.color);
+        };
+
+        window.pickColor = (color) => {
+            document.getElementById('color-modal').classList.add('hidden');
+            processPlayCard(pendingWildCardIdx, color);
+            pendingWildCardIdx = -1;
+        };
+
+        async function processPlayCard(idx, color) {
+            const s = clone(roomData.gameState);
+            // callUno=false: pemain harus menekan tombol UNO sendiri (boleh sebelum/sesudah main)
+            const won = playCardOn(s, currentUser.uid, idx, color, false);
+            hasDrawnThisTurn = false;
+            await updateRemoteState(s, won ? { status: 'finished' } : {});
+        }
+
+        window.humanDrawCard = () => {
+            if (!isMyTurn() || hasDrawnThisTurn) return;
+            const s = clone(roomData.gameState);
+            const me = currentUser.uid;
+            s.catchable = null;
+            const drawn = extractCards(s, 1)[0];
+            if (!drawn) { advance(s); s.logs.push(`<b>${nameOf(me)}</b> tidak bisa mengambil kartu.`); updateRemoteState(s); return; }
+
+            s.hands[me].push(drawn);
+            s.logs.push(`<b>${nameOf(me)}</b> mengambil kartu.`);
+            if (!isPlayable(drawn)) {
+                advance(s);
+                hasDrawnThisTurn = false;
+            } else {
+                hasDrawnThisTurn = true;
+                showToast("Mainkan kartu baru, atau tekan Lewati.");
+            }
+            updateRemoteState(s);
+        };
+
+        window.humanPass = () => {
+            if (!isMyTurn() || !hasDrawnThisTurn) return;
+            const s = clone(roomData.gameState);
+            s.catchable = null;
+            s.logs.push(`<b>${nameOf(currentUser.uid)}</b> melewati giliran.`);
+            advance(s);
+            hasDrawnThisTurn = false;
+            updateRemoteState(s);
+        };
+
+        // UNO aman: sisa 2 kartu & ada yang cocok, atau sisa 1 kartu
+        function canCallUno(state) {
+            const hand = state.hands[currentUser.uid] || [];
+            if (state.unoCalled[currentUser.uid]) return false;
+            return hand.length === 1 || (hand.length === 2 && hand.some(isPlayable));
+        }
+
+        window.pressUno = () => {
+            if (!roomData || roomData.status !== 'playing') return;
+            const s = clone(roomData.gameState);
+            const me = currentUser.uid;
+            if (s.unoCalled[me]) return showToast("Kamu sudah aman 👍");
+            if (!canCallUno(s)) {
+                return showToast(s.hands[me].length === 2 ? "Belum ada kartu yang cocok untuk dimainkan!" : "Belum saatnya bilang UNO!");
+            }
+            s.unoCalled[me] = true;
+            if (s.catchable === me) s.catchable = null;
+            s.logs.push(`<b class="text-red-500">${nameOf(me)} berteriak UNO!</b>`);
+            updateRemoteState(s);
+            showToast("Kamu berteriak UNO!");
+        };
+
+        // Ketuk profil lawan -> tombol UNO muncul (jika sisa 1 kartu)
+        window.toggleOpp = (uid) => {
+            selectedOpp = selectedOpp === uid ? null : uid;
+            renderGame();
+        };
+
+        window.catchPlayer = (uid) => {
+            selectedOpp = null;
+            const s = clone(roomData.gameState);
+            if (s.catchable !== uid || s.unoCalled[uid]) {
+                renderGame();
+                return showToast("Terlambat, atau dia sudah bilang UNO!");
+            }
+            penalize(s, uid, currentUser.uid);
+            updateRemoteState(s);
+        };
+
+        // --- RENDER ---
         function generateCardHTML(card) {
             let innerClass = `bg-${card.color}`;
             let shortVal = card.value, displayVal = card.value;
@@ -674,80 +749,84 @@
 
         function renderGame() {
             const state = roomData.gameState;
-            document.getElementById('room-code-display').innerText = `[${currentRoomCode}]`;
-            
-            // Render Opponents
+            const me = currentUser.uid;
+            document.getElementById('room-code-display').innerText = localMode ? '[vs Komputer]' : `[${currentRoomCode}]`;
+
+            // Lawan
             const oppArea = document.getElementById('opponents-area');
             oppArea.innerHTML = '';
-            
-            // Urutkan pemaian mulai dari pemain setelah kita (secara visual)
-            let myIdx = roomData.players.findIndex(p => p.uid === currentUser.uid);
-            for(let i=1; i < roomData.players.length; i++) {
-                let pIdx = (myIdx + i) % roomData.players.length;
-                let p = roomData.players[pIdx];
-                let isTurn = state.turnIndex === pIdx;
-                let count = state.hands[p.uid].length;
-                
+            const myIdx = roomData.players.findIndex(p => p.uid === me);
+            for (let i = 1; i < roomData.players.length; i++) {
+                const pIdx = (myIdx + i) % roomData.players.length;
+                const p = roomData.players[pIdx];
+                const isTurn = state.turnIndex === pIdx;
+                const count = state.hands[p.uid].length;
+
                 let stackHTML = '';
-                let cardsToShow = Math.min(count, 5);
-                for(let c=0; c<cardsToShow; c++) {
-                    stackHTML += `<div class="uno-card opponent-card card-back absolute left-0" style="margin-left: ${c*5}px; z-index: ${c};"><div class="oval"></div></div>`;
+                for (let c = 0; c < Math.min(count, 5); c++) {
+                    stackHTML += `<div class="uno-card opponent-card card-back absolute left-0" style="margin-left: ${c * 5}px; z-index: ${c};"><div class="oval"></div></div>`;
                 }
+                const calledBadge = (count === 1 && state.unoCalled[p.uid]) ? `<div class="absolute top-0 -left-4 z-20 bg-green-600 text-[10px] px-1 rounded border border-white">UNO ✓</div>` : '';
+                const catchBtn = (selectedOpp === p.uid && count === 1)
+                    ? `<button onclick="event.stopPropagation(); catchPlayer('${p.uid}')" class="absolute top-0 -right-7 z-20 bg-red-600 border-2 border-white rounded-full text-xs font-black px-2 py-1 animate-bounce shadow-lg">UNO!</button>` : '';
 
                 oppArea.innerHTML += `
-                    <div class="flex flex-col items-center transition-all px-1 ${isTurn ? 'scale-110' : 'opacity-70'}">
+                    <div onclick="toggleOpp('${p.uid}')" class="flex flex-col items-center transition-all px-1 cursor-pointer ${isTurn ? 'scale-110' : 'opacity-70'}">
                         <div class="relative mb-2 w-14 md:w-16 h-20 flex justify-center">
                             ${stackHTML}
                             <div class="absolute -bottom-3 z-10 bg-black text-white px-2 py-0.5 rounded-full text-xs font-bold border border-gray-500">${count}</div>
+                            ${calledBadge}${catchBtn}
                         </div>
-                        <span class="mt-4 font-bold text-xs whitespace-nowrap bg-gray-900/80 px-2 py-1 rounded ${isTurn ? 'text-green-400 border border-green-500' : 'text-gray-300'}">${p.name}</span>
-                    </div>
-                `;
+                        <span class="mt-4 font-bold text-xs whitespace-nowrap bg-gray-900/80 px-2 py-1 rounded ${isTurn ? 'text-green-400 border border-green-500' : 'text-gray-300'} ${selectedOpp === p.uid ? 'ring-2 ring-red-400' : ''}">${esc(p.name)}</span>
+                    </div>`;
             }
 
-            // Deck & Discard
+            // Tumpukan
             document.getElementById('deck-count').innerText = state.deck.length;
             const topCard = state.discardPile[state.discardPile.length - 1];
             if (topCard) {
-                const ui = document.getElementById('discard-pile-ui');
-                ui.innerHTML = `<div class="uno-card bg-${topCard.color === 'Black' ? state.currentColor : topCard.color}">${generateCardHTML(topCard)}</div>`;
+                document.getElementById('discard-pile-ui').innerHTML =
+                    `<div class="uno-card bg-${topCard.color === 'Black' ? state.currentColor : topCard.color}">${generateCardHTML(topCard)}</div>`;
             }
-            
             const badge = document.getElementById('current-color-badge');
-            const bgC = { 'Red':'bg-red-500', 'Blue':'bg-blue-500', 'Green':'bg-green-500', 'Yellow':'bg-yellow-500' }[state.currentColor] || 'bg-gray-700';
+            const bgC = { 'Red': 'bg-red-500', 'Blue': 'bg-blue-500', 'Green': 'bg-green-500', 'Yellow': 'bg-yellow-500' }[state.currentColor] || 'bg-gray-700';
             badge.className = `mt-2 px-4 py-1 rounded-full text-xs md:text-sm font-bold shadow-md text-white border-2 border-white ${bgC}`;
             badge.innerText = `Warna: ${COLOR_NAMES[state.currentColor] || state.currentColor}`;
 
-            // Hand
+            // Tangan
             const handUI = document.getElementById('human-hand-ui');
             handUI.innerHTML = '';
-            let myHand = state.hands[currentUser.uid] || [];
+            const myHand = state.hands[me] || [];
             myHand.forEach((card, idx) => {
                 let isPlay = isMyTurn() && isPlayable(card);
-                if(hasDrawnThisTurn && idx !== myHand.length - 1) isPlay = false;
-
-                let c = document.createElement('div');
+                if (hasDrawnThisTurn && idx !== myHand.length - 1) isPlay = false;
+                const c = document.createElement('div');
                 c.className = `uno-card bg-${card.color} ${isPlay ? 'playable' : 'unplayable'}`;
                 c.onclick = () => humanPlayCard(idx);
                 c.innerHTML = generateCardHTML(card);
                 handUI.appendChild(c);
             });
 
-            // Turn Indicator & Buttons
+            // Tombol UNO: berdenyut saat sudah boleh ditekan
+            const btnUno = document.getElementById('btn-uno');
+            btnUno.classList.toggle('animate-pulse', canCallUno(state));
+            btnUno.classList.toggle('opacity-50', !!state.unoCalled[me]);
+
+            // Giliran
             const btnPass = document.getElementById('btn-pass');
+            const ti = document.getElementById('turn-indicator');
             if (isMyTurn()) {
-                document.getElementById('turn-indicator').innerText = hasDrawnThisTurn ? "Main atau Lewati!" : "Giliran Kamu!";
-                document.getElementById('turn-indicator').className = "text-lg md:text-2xl font-black text-green-400 animate-pulse";
-                if(hasDrawnThisTurn) btnPass.classList.remove('hidden'); else btnPass.classList.add('hidden');
+                ti.innerText = hasDrawnThisTurn ? "Main atau Lewati!" : "Giliran Kamu!";
+                ti.className = "text-lg md:text-2xl font-black text-green-400 animate-pulse";
+                btnPass.classList.toggle('hidden', !hasDrawnThisTurn);
             } else {
-                document.getElementById('turn-indicator').innerText = `Giliran ${roomData.players[state.turnIndex].name}`;
-                document.getElementById('turn-indicator').className = "text-lg md:text-2xl font-bold text-yellow-400";
+                ti.innerText = `Giliran ${roomData.players[state.turnIndex].name}`;
+                ti.className = "text-lg md:text-2xl font-bold text-yellow-400";
                 btnPass.classList.add('hidden');
-                hasDrawnThisTurn = false; 
+                hasDrawnThisTurn = false;
             }
             document.getElementById('direction-indicator').innerText = state.direction === 1 ? 'Arah: ▶ Kanan' : 'Arah: ◀ Kiri';
 
-            // Logs
             const logsUI = document.getElementById('logs-container');
             logsUI.innerHTML = state.logs.map(l => `<div class="border-b border-gray-700 pb-1">${l}</div>`).join('');
             logsUI.scrollTop = logsUI.scrollHeight;
@@ -765,24 +844,21 @@
             const state = roomData.gameState;
             const winnerUid = state.winner;
             const winnerObj = roomData.players.find(p => p.uid === winnerUid);
-            
-            let totalScore = 0;
-            let breakdownHTML = '';
-            
+            let totalScore = 0, breakdownHTML = '';
+
             roomData.players.forEach(p => {
                 if (p.uid !== winnerUid) {
-                    let pScore = 0;
-                    state.hands[p.uid].forEach(c => { pScore += calculatePoint(c); });
+                    const pScore = state.hands[p.uid].reduce((a, c) => a + calculatePoint(c), 0);
                     totalScore += pScore;
                     breakdownHTML += `
                         <div class="flex justify-between bg-gray-800 p-2 rounded">
-                            <span><b class="text-white">${p.name}</b> (${state.hands[p.uid].length} Kartu)</span>
+                            <span><b class="text-white">${esc(p.name)}</b> (${state.hands[p.uid].length} Kartu)</span>
                             <span class="text-red-400 font-bold">+${pScore} pts</span>
                         </div>`;
                 }
             });
-            
-            document.getElementById('winner-text').innerText = (winnerUid === currentUser.uid) ? "Kamu Menang!" : `${winnerObj.name} Menang!`;
+
+            document.getElementById('winner-text').innerText = (winnerUid === currentUser.uid) ? "Kamu Menang!" : `${winnerObj ? winnerObj.name : '?'} Menang!`;
             document.getElementById('score-text').innerText = `Total Skor: ${totalScore} Poin`;
             document.getElementById('score-breakdown').innerHTML = breakdownHTML || '<div class="text-center text-gray-500">Tidak ada sisa poin.</div>';
             document.getElementById('game-over-modal').classList.remove('hidden');
@@ -800,8 +876,6 @@
                 toast.classList.add('toast-enter');
             }, 3000);
         };
-
     </script>
 </body>
 </html>
-```
