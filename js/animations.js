@@ -1,5 +1,5 @@
 import { S } from './state.js';
-import { generateCardHTML, pileRot } from './ui.js';
+import { generateCardHTML, pileRot, renderGame } from './ui.js';
 
 // Semua animasi permainan. Dipicu oleh daftar peristiwa (state.fx) yang dicatat di rules.js,
 // jadi semua pemain online melihat animasi yang sama.
@@ -34,6 +34,49 @@ let queue = Promise.resolve();
 let pending = 0;
 export const whenIdle = () => queue;
 export const isBusy = () => pending > 0;   // true selama ada animasi berjalan/antre
+
+// ---- Penahan tampilan: kartu baru baru "muncul" setelah animasinya berjalan ----
+// transit = kartu yang sedang dalam perjalanan ke pemain (belum boleh terlihat)
+// frozenHand / shuffleCounts = kartu lama yang tetap ditampilkan sampai animasi Acak mengumpulkannya
+const hold = { transitMe: 0, transit: {}, frozenHand: null, shuffleCounts: null };
+let seenHand = null, seenCounts = {}, cur = null;
+export const frozenHand = () => hold.frozenHand;
+
+export function shownCount(uid, actual) {
+    if (hold.shuffleCounts && hold.shuffleCounts[uid] !== undefined) return hold.shuffleCounts[uid];
+    return Math.max(0, actual - (hold.transit[uid] || 0));
+}
+
+// Sembunyikan kartu di tangan yang belum "tiba"
+export function applyHold() {
+    const hand = $('human-hand-ui');
+    if (!hand) return;
+    const kids = [...hand.children];
+    const hideFrom = hold.frozenHand ? kids.length : kids.length - hold.transitMe;
+    kids.forEach((k, i) => { k.style.visibility = i >= hideFrom ? 'hidden' : ''; });
+}
+
+// Satu kartu sudah tiba di tujuan
+function land(uid) {
+    if (!cur) return;
+    if (uid === S.currentUser?.uid) {
+        if (hold.transitMe > 0) hold.transitMe--;
+        cur.me--;
+        applyHold();
+    } else {
+        hold.transit[uid] = Math.max(0, (hold.transit[uid] || 0) - 1);
+        cur.opp[uid] = (cur.opp[uid] || 0) - 1;
+        if (S.roomData) renderGame();
+    }
+}
+
+// Daftar animasi selesai: lepas semua penahan yang tersisa
+function finish(c) {
+    hold.transitMe = Math.max(0, hold.transitMe - Math.max(0, c.me));
+    Object.keys(c.opp).forEach(u => { hold.transit[u] = Math.max(0, (hold.transit[u] || 0) - Math.max(0, c.opp[u])); });
+    if (c.shuffle) { hold.frozenHand = null; hold.shuffleCounts = null; }
+    restore();
+}
 
 function rectOf(el) {
     if (!el) return null;
@@ -134,20 +177,16 @@ async function play(ev) {
     if (ev.card.color === 'Black') flash(ev.color);
 }
 
-// Kartu ditarik: terbang dari tumpukan ke tangan / profil pemain
+// Kartu ditarik: terbang dari tumpukan ke tangan / profil pemain, kartu baru muncul saat tiba
 async function draw({ uid, n }) {
     const deck = rectOf($('draw-pile-ui'));
     const count = Math.min(n, 6);
+    const mine = uid === S.currentUser?.uid;
+    const kids = mine ? [...$('human-hand-ui').children] : [];
     const jobs = [];
-    if (uid === S.currentUser?.uid) {
-        const kids = [...$('human-hand-ui').children].slice(-n).slice(0, count);
-        kids.forEach(k => { k.style.visibility = 'hidden'; });
-        kids.forEach((k, i) => jobs.push(
-            fly(BACK, deck, clampRect(rectOf(k)), { delay: i * 220 }).then(() => { k.style.visibility = ''; })
-        ));
-    } else {
-        const to = posOfPlayer(uid);
-        for (let i = 0; i < count; i++) jobs.push(fly(BACK, deck, to, { delay: i * 220 }));
+    for (let i = 0; i < count; i++) {
+        const to = mine ? (clampRect(rectOf(kids[kids.length - n + i])) || posOfPlayer(uid)) : posOfPlayer(uid);
+        jobs.push(fly(BACK, deck, to, { delay: i * 220 }).then(() => land(uid)));
     }
     await Promise.all(jobs);
 }
@@ -172,7 +211,7 @@ async function deal(state) {
     if (pile) { pile.style.visibility = ''; pile.classList.add('fx-pop-in'); setTimeout(() => pile.classList.remove('fx-pop-in'), 500); }
 }
 
-// Kartu Acak: semua kartu di tangan dikumpulkan ke tengah, dikocok, lalu dibagikan kembali
+// Kartu Acak: tangan lama dikumpulkan ke tengah, dikocok, lalu kartu baru dibagikan satu per satu
 async function shuffleAnim(state) {
     const me = S.currentUser?.uid;
     const dk = rectOf($('draw-pile-ui'));
@@ -181,20 +220,26 @@ async function shuffleAnim(state) {
     const mid = { left: (d.x + p.x) / 2 - 40, top: (d.y + p.y) / 2 - 58, width: 80, height: 116 };
     const jitter = () => ({ ...mid, left: mid.left + rnd(16), top: mid.top + rnd(12) });
 
-    const items = [];
-    const kids = [...$('human-hand-ui').children];
-    kids.slice(0, 10).forEach(k => items.push({ rect: clampRect(rectOf(k)), el: k, mine: true }));
-    kids.forEach(k => { k.style.visibility = 'hidden'; });
-    Object.keys(state.hands).filter(u => u !== me).forEach(u => {
-        const st = $('stack-' + u);
-        if (!st) return;
-        const r = rectOf(st);
-        for (let i = 0; i < Math.min(state.hands[u].length, 4); i++) items.push({ rect: r, el: st });
-        st.style.visibility = 'hidden';
-    });
+    // daftar kartu yang sedang terlihat di layar, lalu disembunyikan (digantikan kartu terbang)
+    const collect = () => {
+        const items = [];
+        const kids = [...$('human-hand-ui').children];
+        kids.slice(0, 10).forEach(k => items.push({ rect: clampRect(rectOf(k)), el: k, mine: true }));
+        kids.forEach(k => { k.style.visibility = 'hidden'; });
+        Object.keys(state.hands).filter(u => u !== me).forEach(u => {
+            const st = $('stack-' + u);
+            if (!st) return;
+            const r = rectOf(st);
+            const n = Math.min(shownCount(u, state.hands[u].length), 4);
+            for (let i = 0; i < n; i++) items.push({ rect: r, el: st });
+            st.style.visibility = 'hidden';
+        });
+        return items;
+    };
 
-    // 1. kumpulkan ke tengah
-    await Promise.all(items.map((it, i) => fly(BACK, it.rect, jitter(), { dur: 800, delay: (i % 12) * 80, rot: rnd(24) })));
+    // 1. kumpulkan kartu lama ke tengah
+    const out = collect();
+    await Promise.all(out.map((it, i) => fly(BACK, it.rect, jitter(), { dur: 800, delay: (i % 12) * 80, rot: rnd(24) })));
 
     // 2. kocok
     const g = document.createElement('div');
@@ -212,23 +257,25 @@ async function shuffleAnim(state) {
     await sleep(2000);
     g.remove();
 
-    // 3. bagikan kembali
-    await Promise.all(items.map((it, i) => fly(BACK, jitter(), it.rect, { dur: 800, delay: (i % 12) * 80, rot: rnd(24) })
+    // 3. tampilkan tangan baru (tersembunyi), lalu bagikan: kartu muncul saat tiba
+    hold.frozenHand = null;
+    hold.shuffleCounts = null;
+    if (S.roomData) renderGame();
+    const back = collect();
+    await Promise.all(back.map((it, i) => fly(BACK, jitter(), it.rect, { dur: 800, delay: (i % 12) * 80, rot: rnd(24) })
         .then(() => { if (it.mine) it.el.style.visibility = ''; })));
-    items.forEach(it => { it.el.style.visibility = ''; });
 }
 
 function restore() {
-    document.querySelectorAll('[id^="stack-"]').forEach(s => { s.style.visibility = ''; });
     const pile = $('discard-pile-ui');
     if (pile) pile.style.visibility = '';
     const top = document.querySelector('.pile-top');
     if (top) top.style.visibility = '';
-    const hand = $('human-hand-ui');
-    if (hand) [...hand.children].forEach(k => { k.style.visibility = ''; });
+    if (S.roomData && S.roomData.gameState) renderGame();   // tampilan akhir sesuai state sebenarnya
 }
 
-async function run(list, state) {
+async function run(list, state, c) {
+    cur = c;
     for (const ev of list) {
         if (ev.t === 'deal') await deal(state);
         else if (ev.t === 'play') await play(ev);
@@ -241,8 +288,14 @@ async function run(list, state) {
     }
 }
 
-// Dipanggil setiap selesai renderGame(); memutar animasi baru satu kali saja
+// Dipanggil di awal renderGame(); memutar animasi baru satu kali saja
 export function handleFx(state) {
+    const me = S.currentUser?.uid;
+    const prevHand = seenHand, prevCounts = seenCounts;
+    seenHand = (state.hands[me] || []).slice();
+    seenCounts = {};
+    Object.keys(state.hands).forEach(u => { seenCounts[u] = state.hands[u].length; });
+
     const f = state.fx;
     if (!f || !f.list) return;
     if (S.fxRoom !== S.currentRoomCode) { S.fxRoom = S.currentRoomCode; S.lastFxId = null; }
@@ -251,9 +304,23 @@ export function handleFx(state) {
     S.lastFxId = f.id;
     // Masuk ke game yang sedang berjalan: jangan putar animasi lama
     if (firstRender && !f.list.some(e => e.t === 'deal')) return;
+
+    // Tahan tampilan kartu yang akan datang sampai animasinya berjalan
+    const c = { me: 0, opp: {}, shuffle: false };
+    f.list.forEach(ev => {
+        if (ev.t === 'draw') {
+            if (ev.uid === me) { hold.transitMe += ev.n; c.me += ev.n; }
+            else { hold.transit[ev.uid] = (hold.transit[ev.uid] || 0) + ev.n; c.opp[ev.uid] = (c.opp[ev.uid] || 0) + ev.n; }
+        } else if (ev.t === 'shuffle') {
+            c.shuffle = true;
+            hold.frozenHand = prevHand;
+            hold.shuffleCounts = { ...prevCounts };
+        }
+    });
+
     pending++;
     queue = queue
-        .then(() => Promise.race([run(f.list, state), new Promise(r => setTimeout(r, 20000))]))  // pengaman anti macet
+        .then(() => Promise.race([run(f.list, state, c), new Promise(r => setTimeout(r, 25000))]))  // pengaman anti macet
         .catch(e => console.error('fx', e))
-        .then(() => { restore(); pending--; });
+        .then(() => { finish(c); pending--; });
 }

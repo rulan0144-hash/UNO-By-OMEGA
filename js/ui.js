@@ -4,7 +4,7 @@ import { S, esc } from './state.js';
 import { firebaseConfig } from './firebase.js';
 import { calculatePoint } from './deck.js';
 import { canCallUno, isMyTurn, isPlayable } from './rules.js';
-import { handleFx } from './animations.js';
+import { applyHold, frozenHand, handleFx, shownCount } from './animations.js';
 
 export function updateOnlineStatus() {
     const el = document.getElementById('online-status');
@@ -83,6 +83,7 @@ export function generateCardHTML(card) {
 export function renderGame() {
     const state = S.roomData.gameState;
     const me = S.currentUser.uid;
+    handleFx(state);   // mencatat animasi baru & menahan tampilan kartu yang akan datang
     document.getElementById('room-code-display').innerText = S.localMode ? '[vs Komputer]' : `[${S.currentRoomCode}]`;
 
     // Lawan
@@ -93,7 +94,7 @@ export function renderGame() {
         const pIdx = (myIdx + i) % S.roomData.players.length;
         const p = S.roomData.players[pIdx];
         const isTurn = state.turnIndex === pIdx;
-        const count = state.hands[p.uid].length;
+        const count = shownCount(p.uid, state.hands[p.uid].length);
 
         let stackHTML = '';
         for (let c = 0; c < Math.min(count, 5); c++) {
@@ -137,7 +138,7 @@ export function renderGame() {
     // Tangan
     const handUI = document.getElementById('human-hand-ui');
     handUI.innerHTML = '';
-    const myHand = state.hands[me] || [];
+    const myHand = frozenHand() || state.hands[me] || [];
     myHand.forEach((card, idx) => {
         let isPlay = isMyTurn() && isPlayable(card);
         if (S.hasDrawnThisTurn && idx !== myHand.length - 1) isPlay = false;
@@ -172,7 +173,7 @@ export function renderGame() {
     logsUI.innerHTML = state.logs.map(l => `<div class="border-b border-gray-700 pb-1">${l}</div>`).join('');
     logsUI.scrollTop = logsUI.scrollHeight;
 
-    handleFx(state);
+    applyHold();
     syncTimer(state);
 }
 
