@@ -28,7 +28,7 @@ export function scheduleBot() {
     clearTimeout(S.botTimer);
     if (!S.localMode || !S.roomData || S.roomData.status !== 'playing') return;
     const cur = S.roomData.players[S.roomData.gameState.turnIndex];
-    if (cur.isBot) S.botTimer = setTimeout(() => whenIdle().then(() => botTurn(cur)), 900);
+    if (cur.isBot) S.botTimer = setTimeout(() => whenIdle().then(() => botTurn(cur)), 1200);
 }
 
 export function botTurn(bot) {
