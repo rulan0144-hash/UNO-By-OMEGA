@@ -97,6 +97,7 @@
             <h2 class="text-2xl mb-4 font-bold">Masukkan Nama Kamu</h2>
             <input type="text" id="player-name" class="w-full bg-gray-700 border-2 border-gray-500 rounded-lg py-3 px-4 text-white text-center text-xl font-bold mb-4 focus:outline-none focus:border-green-500" placeholder="Nama Pemain" maxlength="12">
             <button onclick="saveName()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-full shadow-lg transition active:scale-95 text-xl">Lanjut ▶</button>
+            <button id="btn-cancel-name" onclick="cancelName()" class="hidden w-full mt-3 bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-full transition active:scale-95">Batal</button>
         </div>
     </div>
 
@@ -104,6 +105,10 @@
     <div id="home-screen" class="hidden absolute inset-0 bg-gray-900 z-[80] flex flex-col items-center justify-center p-6 text-center">
         <h1 class="text-6xl text-red-500 font-bold mb-2 shadow-black drop-shadow-xl tracking-wider">UNO</h1>
         <h2 class="text-xl text-yellow-400 mb-8 font-semibold">Multiplayer Real-Time</h2>
+        <div class="flex items-center gap-3 mb-6 -mt-4">
+    <span class="text-gray-300">Halo, <b id="home-name" class="text-white"></b></span>
+    <button onclick="changeName()" class="bg-gray-700 hover:bg-gray-600 text-white text-sm font-bold py-1 px-3 rounded-full border border-gray-500 transition active:scale-95">✏️ Ganti Nama</button>
+</div>
         
         <div class="bg-gray-800 p-8 rounded-xl border-4 border-gray-600 shadow-2xl max-w-sm w-full flex flex-col gap-4">
             <div class="flex gap-2">
@@ -276,6 +281,7 @@
             }
             document.getElementById('loading-screen').classList.add('hidden');
             document.getElementById(myName ? 'home-screen' : 'login-screen').classList.remove('hidden');
+            updateHomeName();
             updateOnlineStatus();
         }
         initAuth();
@@ -287,15 +293,35 @@
         }
 
         // --- NAVIGASI ---
-        window.saveName = () => {
-            const nameInput = document.getElementById('player-name').value.trim();
-            if (nameInput.length < 2) return showToast("Nama minimal 2 huruf!");
-            myName = nameInput;
-            localStorage.setItem('uno_name', myName);
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('home-screen').classList.remove('hidden');
-            updateOnlineStatus();
-        };
+window.saveName = () => {
+    const nameInput = document.getElementById('player-name').value.trim();
+    if (nameInput.length < 2) return showToast("Nama minimal 2 huruf!");
+    myName = nameInput;
+    localStorage.setItem('uno_name', myName);
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('btn-cancel-name').classList.add('hidden');
+    document.getElementById('home-screen').classList.remove('hidden');
+    updateHomeName();
+    updateOnlineStatus();
+};
+
+window.changeName = () => {
+    document.getElementById('player-name').value = myName;
+    document.getElementById('btn-cancel-name').classList.remove('hidden');
+    document.getElementById('home-screen').classList.add('hidden');
+    document.getElementById('login-screen').classList.remove('hidden');
+};
+
+window.cancelName = () => {
+    document.getElementById('btn-cancel-name').classList.add('hidden');
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('home-screen').classList.remove('hidden');
+};
+
+function updateHomeName() {
+    const el = document.getElementById('home-name');
+    if (el) el.innerText = myName;
+}
 
         window.leaveRoom = () => {
             if (roomUnsubscribe) { roomUnsubscribe(); roomUnsubscribe = null; }
