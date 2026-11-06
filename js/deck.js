@@ -16,9 +16,8 @@ export function buildDeck() {
         d.push({ type: 'wild', color: 'Black', value: 'Wild' });
         d.push({ type: 'wild', color: 'Black', value: 'Wild Draw Four' });
     }
-    d.push({ type: 'wild', color: 'Black', value: 'Wild Shuffle Hands' });
-    for (let i = 0; i < 3; i++) d.push({ type: 'wild', color: 'Black', value: 'Customizable' });
-    return d;
+    for (let i = 0; i < 4; i++) d.push({ type: 'wild', color: 'Black', value: 'Wild Shuffle Hands' });
+        return d;
 }
 
 export function shuffle(array) {
