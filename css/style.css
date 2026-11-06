@@ -1,0 +1,132 @@
+body {
+    font-family: 'Fredoka One', cursive;
+    user-select: none;
+    overflow: hidden;
+    background: radial-gradient(circle at center, #1f2937, #030712);
+}
+
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Gaya Kartu UNO */
+.uno-card {
+    width: 80px; height: 116px;
+    border-radius: 8px;
+    border: 4px solid white;
+    display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+    flex-shrink: 0; cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.opponent-card { width: 50px; height: 72px; border-width: 2px; cursor: default; margin-bottom: -30px; }
+@media (min-width: 768px) {
+    .opponent-card { width: 60px; height: 86px; margin-right: -30px; margin-bottom: 0; }
+}
+
+.playable:hover {
+    transform: translateY(-12px);
+    box-shadow: 0 10px 15px rgba(0,0,0,0.6);
+}
+.unplayable { filter: brightness(0.6); cursor: not-allowed; }
+
+.bg-Red { background-color: #ef4444; }
+.bg-Green { background-color: #22c55e; }
+.bg-Blue { background-color: #3b82f6; }
+.bg-Yellow { background-color: #eab308; }
+.bg-Black { background-color: #111827; }
+
+/* Oval Dalam Kartu */
+.uno-card .oval {
+    position: absolute;
+    width: 90%; height: 95%;
+    background-color: white;
+    border-radius: 50% 50% / 60% 60%;
+    transform: rotate(-25deg);
+    z-index: 1;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+}
+.uno-card .inner-oval {
+    position: absolute;
+    width: 75%; height: 80%;
+    border-radius: 50% 50% / 60% 60%;
+    transform: rotate(-25deg);
+    z-index: 2;
+}
+
+/* Tipografi pada kartu */
+.text-shadow-sm { text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
+.val-center { z-index: 3; font-size: 34px; color: white; line-height: 1; text-align: center; }
+.val-sm-tl { position: absolute; top: 2px; left: 6px; z-index: 3; font-size: 14px; color: white; }
+.val-sm-br { position: absolute; bottom: 2px; right: 6px; z-index: 3; font-size: 14px; color: white; transform: rotate(180deg); }
+.val-W { font-size: 16px; letter-spacing: 1px; }
+
+/* Belakang Kartu */
+.card-back { background-color: #000; border-color: white; }
+.card-back .oval { background-color: #ef4444; width: 80%; height: 80%; }
+.card-back .val-center { color: #facc15; font-size: 22px; transform: rotate(-25deg); letter-spacing: 2px; text-shadow: 2px 2px 0 #b41010; }
+
+.toast-enter { transform: translateY(100%); opacity: 0; }
+.toast-show { transform: translateY(0); opacity: 1; }
+    
+/* ===== ANIMASI ===== */
+.fly-card { position: fixed; width: 80px; height: 116px; z-index: 300; pointer-events: none; will-change: transform; }
+.fly-card .uno-card { cursor: default; }
+
+/* Tulisan besar di tengah (UNO!, SKIP, REVERSE, +2, +4, WILD) */
+.fx-banner {
+    position: fixed; left: 50%; top: 42%; z-index: 400; pointer-events: none;
+    font-size: clamp(56px, 16vw, 150px); line-height: 1; white-space: nowrap; text-align: center;
+    font-weight: 900; letter-spacing: 2px;
+    animation: fx-pop 1s cubic-bezier(.2, .9, .3, 1.2) forwards;
+    text-shadow: 0 6px 0 rgba(0,0,0,.45), 0 0 40px currentColor;
+}
+.fx-banner small { display: block; font-size: .22em; color: #fff; text-shadow: 0 2px 0 #000; margin-top: 6px; letter-spacing: 0; }
+.fx-uno     { color: #ef4444; -webkit-text-stroke: 4px #fff; paint-order: stroke fill; }
+.fx-skip    { color: #60a5fa; }
+.fx-reverse { color: #34d399; }
+.fx-draw    { color: #facc15; }
+.fx-draw4   { color: #c084fc; }
+.fx-wild {
+    background: linear-gradient(90deg, #ef4444, #eab308, #22c55e, #3b82f6);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-shadow: none; filter: drop-shadow(0 5px 0 rgba(0,0,0,.5));
+}
+@keyframes fx-pop {
+    0%   { opacity: 0; transform: translate(-50%,-50%) scale(.2) rotate(-10deg); }
+    22%  { opacity: 1; transform: translate(-50%,-50%) scale(1.25) rotate(3deg); }
+    38%  { transform: translate(-50%,-50%) scale(1) rotate(0deg); }
+    80%  { opacity: 1; transform: translate(-50%,-50%) scale(1.04); }
+    100% { opacity: 0; transform: translate(-50%,-50%) scale(1.3); }
+}
+
+/* Palu di profil */
+.fx-hammer, .fx-boom { position: fixed; z-index: 400; pointer-events: none; font-size: 64px; line-height: 1; }
+.fx-hammer { transform-origin: 85% 90%; animation: fx-hammer .9s ease-in forwards; }
+@keyframes fx-hammer {
+    0%   { opacity: 0; transform: translateY(-70px) rotate(-85deg) scale(.5); }
+    35%  { opacity: 1; transform: translateY(-40px) rotate(-45deg) scale(1.1); }
+    50%  { transform: translateY(-44px) rotate(-60deg) scale(1.1); }
+    62%  { transform: translateY(8px) rotate(25deg) scale(1.1); }
+    100% { opacity: 0; transform: translateY(8px) rotate(25deg) scale(1); }
+}
+.fx-boom { opacity: 0; animation: fx-boom .5s .55s ease-out forwards; }
+@keyframes fx-boom {
+    0%   { opacity: 1; transform: scale(.3); }
+    60%  { opacity: 1; transform: scale(1.6); }
+    100% { opacity: 0; transform: scale(2); }
+}
+.fx-shake { animation: fx-shake .4s linear; }
+@keyframes fx-shake {
+    0%, 100% { translate: 0 0; }
+    20% { translate: -8px 0; } 40% { translate: 8px 0; } 60% { translate: -6px 0; } 80% { translate: 6px 0; }
+}
+
+/* Kartu teratas muncul */
+.fx-pop-in { animation: fx-pop-in .35s ease-out; }
+@keyframes fx-pop-in { 0% { transform: scale(.6); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+    .fx-banner, .fx-hammer, .fx-boom, .fx-shake, .fx-pop-in { animation-duration: .01s; }
+}
