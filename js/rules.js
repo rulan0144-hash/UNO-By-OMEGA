@@ -16,6 +16,7 @@ export function isPlayable(card) {
 export function advance(state) {
     const n = S.roomData.players.length;
     state.turnIndex = (state.turnIndex + state.direction + n) % n;
+    state.turnNo = (state.turnNo || 0) + 1;
 }
 
 // Kartu > 2 membatalkan status "sudah UNO"
@@ -42,7 +43,7 @@ export function playCardOn(state, uid, cardIdx, chosenColor, callUno) {
     state.currentColor = chosenColor;
 
     const colorStr = card.color !== 'Black' ? card.color : chosenColor;
-    const displayVal = card.value === 'Customizable' ? 'Aturan Bebas' : card.value;
+    const displayVal = card.value === 'Wild Shuffle Hands' ? 'Acak Kartu' : card.value;
     state.logs.push(`<b>${nameOf(uid)}</b> mengeluarkan <span class="text-${colorStr.toLowerCase()}-400 font-bold">${displayVal}</span>`);
 
     if (hand.length === 0) { state.winner = uid; return true; }
@@ -70,7 +71,7 @@ export function applyCardEffect(state, card, playerIdx) {
     const nextNextIdx = (nextIdx + state.direction + pCount) % pCount;
     const nextUid = S.roomData.players[nextIdx].uid;
     if (card.value === 'Wild') fx(state, { t: 'banner', k: 'wild' });
-    if (card.value === 'Customizable') fx(state, { t: 'banner', k: 'custom' });
+    state.turnNo = (state.turnNo || 0) + 1;
 
     switch (card.value) {
         case 'Skip':
@@ -105,6 +106,7 @@ export function applyCardEffect(state, card, playerIdx) {
         case 'Wild Shuffle Hands': {
             state.logs.push(`🌀 SEMUA KARTU DIACAK!`);
                     fx(state, { t: 'banner', k: 'shuffle' });
+                    fx(state, { t: 'shuffle' });
             let all = [];
             S.roomData.players.forEach(p => { all = all.concat(state.hands[p.uid]); state.hands[p.uid] = []; });
             shuffle(all);
