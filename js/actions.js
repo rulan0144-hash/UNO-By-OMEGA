@@ -1,6 +1,7 @@
+import { isBusy } from './animations.js';
 import { S, cloneState, fx, nameOf } from './state.js';
 import { roomDoc, updateDoc } from './firebase.js';
-import { extractCards } from './deck.js';
+import { calculatePoint, extractCards } from './deck.js';
 import { advance, canCallUno, isMyTurn, isPlayable, normalizeUno, penalize, playCardOn } from './rules.js';
 import { scheduleBot } from './local.js';
 import { handleGameOver, renderGame } from './ui.js';
@@ -20,6 +21,7 @@ export async function updateRemoteState(newState, extra = {}) {
 
 // --- AKSI PEMAIN ---
 window.humanPlayCard = (idx) => {
+    if (isBusy()) return showToast("Tunggu animasi selesai...");
     if (!isMyTurn()) return showToast("Bukan giliranmu!");
     const myHand = S.roomData.gameState.hands[S.currentUser.uid];
     const card = myHand[idx];
@@ -50,6 +52,7 @@ export async function processPlayCard(idx, color) {
 }
 
 window.humanDrawCard = () => {
+    if (isBusy()) return showToast("Tunggu animasi selesai...");
     if (!isMyTurn() || S.hasDrawnThisTurn) return;
     const s = cloneState();
     const me = S.currentUser.uid;
@@ -71,6 +74,7 @@ window.humanDrawCard = () => {
 };
 
 window.humanPass = () => {
+    if (isBusy()) return showToast("Tunggu animasi selesai...");
     if (!isMyTurn() || !S.hasDrawnThisTurn) return;
     const s = cloneState();
     s.catchable = null;
@@ -81,6 +85,7 @@ window.humanPass = () => {
 };
 
 window.pressUno = () => {
+    if (isBusy()) return showToast("Tunggu animasi selesai...");
     if (!S.roomData || S.roomData.status !== 'playing') return;
     const s = cloneState();
     const me = S.currentUser.uid;
@@ -103,6 +108,7 @@ window.toggleOpp = (uid) => {
 };
 
 window.catchPlayer = (uid) => {
+    if (isBusy()) return showToast("Tunggu animasi selesai...");
     S.selectedOpp = null;
     const s = cloneState();
     if (s.catchable !== uid || s.unoCalled[uid]) {
@@ -112,3 +118,53 @@ window.catchPlayer = (uid) => {
     penalize(s, uid, S.currentUser.uid);
     updateRemoteState(s);
 };
+
+// Waktu giliran habis: otomatis mainkan kartu cocok dengan poin terkecil;
+// kalau tidak ada yang cocok, ambil 1 kartu dari deck lalu giliran berpindah
+export function timeoutTurn(uid) {
+    if (!S.roomData || S.roomData.status !== 'playing') return;
+    if (S.roomData.players[S.roomData.gameState.turnIndex].uid !== uid) return;
+    const s = cloneState();
+    const mine = uid === S.currentUser.uid;
+    const hand = s.hands[uid];
+    const drew = mine && S.hasDrawnThisTurn;
+
+    // pilih kartu yang bisa dimainkan dengan poin terkecil (setelah menarik, hanya kartu barunya)
+    let best = -1;
+    hand.forEach((c, i) => {
+        if (drew && i !== hand.length - 1) return;
+        if (!isPlayable(c)) return;
+        if (best < 0 || calculatePoint(c) < calculatePoint(hand[best])) best = i;
+    });
+
+    if (mine) {
+        S.hasDrawnThisTurn = false;
+        S.pendingWildCardIdx = -1;
+        document.getElementById('color-modal').classList.add('hidden');
+    }
+
+    if (best >= 0) {
+        const card = hand[best];
+        let color = card.color;
+        if (color === 'Black') {   // pilih warna yang paling banyak di tangan
+            const cnt = {};
+            hand.forEach((c, i) => { if (i !== best && c.color !== 'Black') cnt[c.color] = (cnt[c.color] || 0) + 1; });
+            color = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0] || 'Red';
+        }
+        s.logs.push(`Waktu habis! <b>${nameOf(uid)}</b> otomatis memainkan kartu poin terkecil.`);
+        if (mine) showToast("Waktu habis! Kartu terkecil dimainkan otomatis.");
+        const won = playCardOn(s, uid, best, color, false);
+        updateRemoteState(s, won ? { status: 'finished' } : {});
+        return;
+    }
+
+    s.catchable = null;
+    if (!drew) {
+        const got = extractCards(s, 1);
+        if (got.length) { s.hands[uid].push(got[0]); fx(s, { t: 'draw', uid, n: 1 }); }
+    }
+    s.logs.push(`Waktu habis! <b>${nameOf(uid)}</b> tidak punya kartu cocok, ambil dari deck.`);
+    if (mine) showToast("Waktu habis! Tidak ada kartu cocok, ambil dari deck.");
+    advance(s);
+    updateRemoteState(s);
+}
