@@ -1,3 +1,4 @@
+import { syncTimer } from './timer.js';
 import { COLOR_NAMES } from './config.js';
 import { S, esc } from './state.js';
 import { firebaseConfig } from './firebase.js';
@@ -67,7 +68,7 @@ export function generateCardHTML(card) {
     else if (card.value === 'Wild') { shortVal = 'W'; displayVal = 'BEBAS'; valClass += ' val-W'; }
     else if (card.value === 'Wild Draw Four') { shortVal = 'W4'; displayVal = 'W+4'; valClass += ' val-W'; }
     else if (card.value === 'Wild Shuffle Hands') { shortVal = 'WS'; displayVal = 'ACAK'; valClass += ' val-W'; }
-    else if (card.value === 'Customizable') { shortVal = 'WC'; displayVal = 'KUSTOM'; valClass += ' val-W'; }
+    
 
     if (card.color === 'Black') innerClass = 'bg-gray-800';
 
@@ -117,8 +118,16 @@ export function renderGame() {
     document.getElementById('deck-count').innerText = state.deck.length;
     const topCard = state.discardPile[state.discardPile.length - 1];
     if (topCard) {
-        document.getElementById('discard-pile-ui').innerHTML =
-            `<div class="uno-card bg-${topCard.color === 'Black' ? state.currentColor : topCard.color}">${generateCardHTML(topCard)}</div>`;
+        const pile = state.discardPile, n = pile.length;
+        let stack = '';
+        // kartu di bawahnya tetap terlihat (maks. 4 kartu sebelumnya)
+        for (let i = Math.max(0, n - 5); i < n - 1; i++) {
+            const c = pile[i];
+            stack += `<div class="uno-card bg-${c.color}" style="position:absolute;left:0;top:0;transform:translate(${((i * 29) % 9) - 4}px,${((i * 17) % 7) - 3}px) rotate(${pileRot(i)}deg)">${generateCardHTML(c)}</div>`;
+        }
+        const topBg = topCard.color === 'Black' ? state.currentColor : topCard.color;
+        stack += `<div class="uno-card pile-top bg-${topBg}" style="position:absolute;left:0;top:0;transform:rotate(${pileRot(n - 1)}deg)">${generateCardHTML(topCard)}</div>`;
+        document.getElementById('discard-pile-ui').innerHTML = `<div style="position:relative;width:80px;height:116px">${stack}</div>`;
     }
     const badge = document.getElementById('current-color-badge');
     const bgC = { 'Red': 'bg-red-500', 'Blue': 'bg-blue-500', 'Green': 'bg-green-500', 'Yellow': 'bg-yellow-500' }[state.currentColor] || 'bg-gray-700';
@@ -164,6 +173,7 @@ export function renderGame() {
     logsUI.scrollTop = logsUI.scrollHeight;
 
     handleFx(state);
+    syncTimer(state);
 }
 
 export function handleGameOver() {
@@ -203,3 +213,6 @@ window.showToast = (msg) => {
         toast.classList.add('toast-enter');
     }, 3000);
 };
+
+// Kemiringan tetap tiap kartu di tumpukan buangan
+export function pileRot(i) { return ((i * 53) % 17) - 8; }
