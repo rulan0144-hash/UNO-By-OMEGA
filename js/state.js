@@ -22,7 +22,7 @@ export const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<
 
 export const nameOf = (uid) => esc(S.roomData.players.find(p => p.uid === uid)?.name || '?');
 
-export const emptyState = () => ({ deck: [], discardPile: [], hands: {}, turnIndex: 0, direction: 1, currentColor: '', logs: [], unoCalled: {}, catchable: null });
+export const emptyState = () => ({ deck: [], discardPile: [], hands: {}, turnIndex: 0, direction: 1, currentColor: '', logs: [], unoCalled: {}, catchable: null, turnNo: 0 });
 
 // Salin gameState + buka daftar animasi baru
 export function cloneState() {
