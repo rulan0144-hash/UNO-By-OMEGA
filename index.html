@@ -145,6 +145,27 @@
         </div>
     </div>
 
-        <script type="module" src="js/main.js"></script>
+        <script>
+        // Penjaga: tampilkan penyebab jelas di layar jika file JS gagal dimuat
+        (function () {
+            function show(msg) {
+                var box = document.querySelector('#loading-screen h1');
+                if (!box) return;
+                box.classList.remove('animate-pulse');
+                box.className = 'text-xl text-red-400 font-bold text-center px-6';
+                box.innerText = msg;
+            }
+            window.addEventListener('error', function (e) {
+                var t = e.target;
+                if (t && t.src) show('Gagal memuat file: ' + t.src.split('/').slice(-2).join('/') + '\n(cek apakah file ada di folder yang benar)');
+                else if (e.message) show('Error: ' + e.message);
+            }, true);
+            setTimeout(function () {
+                var ls = document.getElementById('loading-screen');
+                if (ls && !ls.classList.contains('hidden')) show('Belum berhasil memuat. Pastikan folder js/ dan css/ ada di GitHub, lalu tekan Ctrl+F5.');
+            }, 8000);
+        })();
+    </script>
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>
