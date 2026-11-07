@@ -72,6 +72,7 @@
                 <!-- Diisi JS -->
             </ul>
 
+            <button id="btn-lobby-back" onclick="leaveLobby()" class="w-full mb-3 bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-4 rounded-xl transition active:scale-95 text-lg">◀ Kembali</button>
             <button id="btn-start-game" onclick="startGame()" class="hidden w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-xl shadow-lg transition active:scale-95 text-2xl animate-pulse">Mulai Permainan ▶</button>
             <p id="waiting-host-msg" class="text-gray-400 italic">Menunggu Host memulai permainan...</p>
         </div>
@@ -79,6 +80,20 @@
 
     <!-- AREA PERMAINAN -->
     <div id="game-screen" class="hidden h-full w-full flex flex-col relative casino">
+
+        <!-- Tombol menu (jeda / keluar) -->
+        <button id="btn-menu" onclick="openMenu()" class="menu-btn" aria-label="Menu">❚❚</button>
+
+        <!-- Menu Jeda -->
+        <div id="pause-modal" class="pause-modal hidden">
+            <div class="pause-box">
+                <h2 id="pause-title" class="pause-title">Jeda</h2>
+                <p id="pause-note" class="pause-note"></p>
+                <button onclick="resumeGame()" class="pause-btn pause-resume">▶ Lanjutkan</button>
+                <button id="btn-restart" onclick="restartLocal()" class="pause-btn pause-restart">↻ Mulai Ulang</button>
+                <button onclick="exitGame()" class="pause-btn pause-exit">◀ Keluar ke Beranda</button>
+            </div>
+        </div>
 
         <!-- Modal Pilih Warna -->
         <div id="color-modal" class="cp-modal hidden">
