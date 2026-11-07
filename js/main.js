@@ -2,6 +2,7 @@
 import './actions.js';
 import './local.js';
 import './online.js';
+import './pause.js';
 import { preloadCards, applyScale } from './config.js';
 
 preloadCards();

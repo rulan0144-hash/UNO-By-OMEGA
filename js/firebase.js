@@ -1,8 +1,8 @@
 // Koneksi Firebase. Isi config di bagian MY_FIREBASE_CONFIG.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-export { signInAnonymously, signInWithCustomToken, doc, setDoc, getDoc, updateDoc, onSnapshot };
+import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+export { signInAnonymously, signInWithCustomToken, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot };
 
 // ====== ISI CONFIG FIREBASE KAMU DI SINI (untuk GitHub Pages) ======
 export const MY_FIREBASE_CONFIG = {

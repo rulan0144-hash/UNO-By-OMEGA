@@ -9,6 +9,7 @@ import { whenIdle } from './animations.js';
 // --- MODE VS KOMPUTER (lokal, tanpa Firebase) ---
 window.startLocal = () => {
     const n = parseInt(document.getElementById('bot-count').value) || 1;
+    if (window.stopTimerHook) window.stopTimerHook();   // permainan baru: hitungan 15 detik mulai dari awal
     S.localMode = true;
     S.currentUser = { uid: LOCAL_UID };
     const players = [{ uid: LOCAL_UID, name: S.myName || 'Kamu' }];
@@ -26,13 +27,13 @@ window.startLocal = () => {
 
 export function scheduleBot() {
     clearTimeout(S.botTimer);
-    if (!S.localMode || !S.roomData || S.roomData.status !== 'playing') return;
+    if (!S.localMode || S.paused || !S.roomData || S.roomData.status !== 'playing') return;
     const cur = S.roomData.players[S.roomData.gameState.turnIndex];
     if (cur.isBot) S.botTimer = setTimeout(() => whenIdle().then(() => botTurn(cur)), 1200);
 }
 
 export function botTurn(bot) {
-    if (!S.localMode || !S.roomData || S.roomData.status !== 'playing') return;
+    if (!S.localMode || S.paused || !S.roomData || S.roomData.status !== 'playing') return;
     const s = cloneState();
     const uid = bot.uid;
     if (S.roomData.players[s.turnIndex].uid !== uid) return;

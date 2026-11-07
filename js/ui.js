@@ -54,7 +54,9 @@ window.leaveRoom = () => {
     S.roomData = null;
     S.selectedOpp = null;
     S.hasDrawnThisTurn = false;
-    ['game-over-modal', 'game-screen', 'lobby-screen', 'color-modal'].forEach(id => document.getElementById(id).classList.add('hidden'));
+    S.paused = false;
+    if (window.stopTimerHook) window.stopTimerHook();
+    ['pause-modal', 'game-over-modal', 'game-screen', 'lobby-screen', 'color-modal'].forEach(id => document.getElementById(id).classList.add('hidden'));
     document.getElementById('home-screen').classList.remove('hidden');
 };
 

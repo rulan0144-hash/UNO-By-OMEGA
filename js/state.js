@@ -9,6 +9,7 @@ export const S = {
     localMode: false,
     botTimer: null,
     selectedOpp: null,
+    paused: false,
     pendingWildCardIdx: -1,
     hasDrawnThisTurn: false,
     pendingFrom: null,     // posisi kartu yang baru dimainkan (untuk animasi)

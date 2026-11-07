@@ -5,7 +5,7 @@ import { timeoutTurn } from './actions.js';
 
 // Batas waktu 15 detik per giliran. Hitungan baru mulai setelah animasi selesai.
 export const TURN_SECONDS = 15;
-let tick = null, deadline = 0, key = '', firedKey = '';
+let tick = null, deadline = 0, key = '', firedKey = '', leftAtPause = null, startAfterResume = null;
 
 function setBar(frac, secs) {
     const bar = document.getElementById('turn-bar');
@@ -19,7 +19,7 @@ function setBar(frac, secs) {
 
 export function stopTimer() {
     clearInterval(tick);
-    tick = null; key = '';
+    tick = null; key = ''; leftAtPause = null; startAfterResume = null;
     setBar(1, TURN_SECONDS);
 }
 
@@ -32,10 +32,26 @@ export function syncTimer(state) {
     setBar(1, TURN_SECONDS);
     whenIdle().then(() => {
         if (key !== k) return;
-        deadline = Date.now() + TURN_SECONDS * 1000;
-        tick = setInterval(() => onTick(k), 200);
-        onTick(k);
+        const begin = () => {
+            deadline = Date.now() + TURN_SECONDS * 1000;
+            tick = setInterval(() => onTick(k), 200);
+            onTick(k);
+        };
+        if (S.paused) startAfterResume = begin; else begin();   // sedang dijeda: mulai setelah dilanjutkan
     });
+}
+
+// Jeda: hentikan hitungan dan simpan sisa waktu
+export function pauseTimer() {
+    if (tick) { leftAtPause = Math.max(0, deadline - Date.now()); clearInterval(tick); tick = null; }
+}
+export function resumeTimer() {
+    if (startAfterResume) { const f = startAfterResume; startAfterResume = null; f(); return; }
+    if (leftAtPause !== null && key) {
+        const k = key;
+        deadline = Date.now() + leftAtPause; leftAtPause = null;
+        tick = setInterval(() => onTick(k), 200);
+    }
 }
 
 function onTick(k) {

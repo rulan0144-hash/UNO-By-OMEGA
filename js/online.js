@@ -1,5 +1,5 @@
 import { S, emptyState, esc } from './state.js';
-import { firebaseConfig, getDoc, onSnapshot, roomDoc, setDoc, updateDoc } from './firebase.js';
+import { firebaseConfig, getDoc, onSnapshot, roomDoc, setDoc, updateDoc, deleteDoc } from './firebase.js';
 import { dealGame } from './deck.js';
 import { handleGameOver, renderGame } from './ui.js';
 
@@ -82,4 +82,18 @@ export function renderLobby() {
 window.startGame = async () => {
     if (!S.currentUser || S.roomData.hostId !== S.currentUser.uid) return;
     await updateDoc(roomDoc(S.currentRoomCode), { status: 'playing', gameState: dealGame(S.roomData.players) });
+};
+
+// Tombol kembali (lobi / menu game): keluar dari ruangan online dan kembali ke beranda.
+// Host keluar -> ruangan ditutup; pemain biasa saat lobi -> namanya dihapus dari daftar.
+window.leaveLobby = async (fromGame = false) => {
+    const code = S.currentRoomCode, data = S.roomData, me = S.currentUser && S.currentUser.uid;
+    if (S.roomUnsubscribe) { S.roomUnsubscribe(); S.roomUnsubscribe = null; }   // berhenti mendengar dulu agar tidak memanggil leaveRoom dua kali
+    if (code && data && !S.localMode && me) {
+        try {
+            if (data.hostId === me && data.status === 'waiting') await deleteDoc(roomDoc(code));
+            else if (data.status === 'waiting') await updateDoc(roomDoc(code), { players: data.players.filter(p => p.uid !== me) });
+        } catch (e) { console.error('keluar ruangan', e); }
+    }
+    window.leaveRoom();
 };
