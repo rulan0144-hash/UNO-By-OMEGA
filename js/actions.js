@@ -30,7 +30,7 @@ window.humanPlayCard = (idx) => {
     if (S.hasDrawnThisTurn && idx !== myHand.length - 1) return showToast("Hanya bisa memainkan kartu baru!");
     if (!isPlayable(card)) { sfx('nope'); return showToast("Kartu tidak cocok!"); }
             // simpan posisi kartu di tangan untuk animasi terbang ke tumpukan
-            S.pendingFrom = (() => { const el = document.getElementById('human-hand-ui').children[idx]; if (!el) return null; const r = el.getBoundingClientRect(); return { left: r.left, top: r.top, width: r.width, height: r.height }; })();
+            S.pendingFrom = (() => { const el = document.getElementById('human-hand-ui').children[idx]; if (!el) return null; const r = el.getBoundingClientRect(); const w = el.offsetWidth, h = el.offsetHeight; return { left: r.left + r.width / 2 - w / 2, top: r.top + r.height / 2 - h / 2, width: w, height: h }; })();
     if (card.color === 'Black') {
         S.pendingWildCardIdx = idx;
         document.getElementById('color-modal').classList.remove('hidden');
@@ -134,9 +134,9 @@ export function timeoutTurn(uid) {
     if (S.roomData.players[S.roomData.gameState.turnIndex].uid !== uid) return;
     if (S.roomData.gameState.pending) {   // waktu habis saat harus menjawab +4: ambil kartu
         const sp = cloneState();
-        resolvePending(sp, uid, 'draw');
+        const wonP = resolvePending(sp, uid, 'draw');
         if (uid === S.currentUser.uid) { hideChallenge(); showToast("Waktu habis! Kamu mengambil kartu."); }
-        updateRemoteState(sp);
+        updateRemoteState(sp, wonP ? { status: 'finished' } : {});
         return;
     }
     const s = cloneState();
@@ -190,7 +190,7 @@ window.challengeAction = (choice) => {
     if (!isMyTurn() || !S.roomData.gameState.pending) return;
     hideChallenge();
     const s = cloneState();
-    resolvePending(s, S.currentUser.uid, choice);
-    updateRemoteState(s);
+    const won = resolvePending(s, S.currentUser.uid, choice);
+    updateRemoteState(s, won ? { status: 'finished' } : {});
 };
 

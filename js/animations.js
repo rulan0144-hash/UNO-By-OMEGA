@@ -74,6 +74,10 @@ function finish(c) {
 function rectOf(el) {
     if (!el) return null;
     const r = el.getBoundingClientRect();
+    if (el.classList && el.classList.contains('fan-card')) {   // kartu di tangan (diputar): pakai ukuran asli
+        const w = el.offsetWidth, h = el.offsetHeight;
+        return { left: r.left + r.width / 2 - w / 2, top: r.top + r.height / 2 - h / 2, width: w, height: h };
+    }
     return { left: r.left, top: r.top, width: r.width, height: r.height };
 }
 const center = (r) => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
@@ -189,7 +193,8 @@ async function hammer(uid) {
     b.className = 'fx-boom'; b.innerHTML = '<img src="img/effects/boom.png" alt="">';
     b.style.left = (cx - 42) + 'px'; b.style.top = (r.top - 8) + 'px';
     document.body.append(h, b);
-    sfx('catch', reduce ? 0 : 0.85);   // bunyi "buk" tepat saat palu menghantam
+    sfx('swing');                      // palu terayun saat profil diketuk
+    sfx('catch', reduce ? 0 : 0.93);   // "bonk" palu tepat saat menghantam, lalu kata "Caught!"
     setTimeout(() => target && target.classList.add('fx-shake'), reduce ? 0 : 930);
     setTimeout(() => { h.remove(); b.remove(); target && target.classList.remove('fx-shake'); }, reduce ? 0 : 1600);
     await sleep(1600);

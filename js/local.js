@@ -45,8 +45,8 @@ export function botTurn(bot) {
 
     // Ada +4 yang harus dijawab: ambil kartu atau tantang
     if (s.pending) {
-        resolvePending(s, uid, Math.random() < 0.78 ? 'draw' : 'challenge');   // sekitar 22% menantang
-        updateRemoteState(s);
+        const wonP = resolvePending(s, uid, Math.random() < 0.78 ? 'draw' : 'challenge');   // sekitar 22% menantang
+        updateRemoteState(s, wonP ? { status: 'finished' } : {});
         return;
     }
 

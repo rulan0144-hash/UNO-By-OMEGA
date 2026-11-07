@@ -54,9 +54,12 @@ export function playCardOn(state, uid, cardIdx, chosenColor, callUno) {
     const displayVal = card.value === 'Wild Shuffle Hands' ? 'Acak Kartu' : card.value;
     state.logs.push(`<b>${nameOf(uid)}</b> mengeluarkan <span class="text-${colorStr.toLowerCase()}-400 font-bold">${displayVal}</span>`);
 
-    if (hand.length === 0) { state.winner = uid; return true; }
-
-    if (hand.length === 1) {
+    // Kartu terakhir: efeknya tetap berjalan (+2/+4 dibagikan, Acak membagi ulang semua kartu).
+    // Menang baru ditetapkan SESUDAH efek, kalau tangannya masih kosong.
+    const emptied = hand.length === 0;
+    if (emptied) {
+        state.unoCalled[uid] = false;
+    } else if (hand.length === 1) {
         if (callUno) {
             state.unoCalled[uid] = true;
             fx(state, { t: 'uno', uid });
@@ -70,6 +73,19 @@ export function playCardOn(state, uid, cardIdx, chosenColor, callUno) {
         state.unoCalled[uid] = false;
     }
     applyCardEffect(state, card, players.findIndex(p => p.uid === uid), prevColor);
+    if (emptied) {
+        if (state.pending) { state.pendingWinner = uid; return false; }   // +4 terakhir: menunggu jawaban pemain berikutnya
+        if (state.hands[uid].length === 0) { state.winner = uid; return true; }
+        state.logs.push(`🌀 Kartu <b>${nameOf(uid)}</b> bertambah lagi karena efek kartu terakhir, permainan lanjut!`);
+    }
+    return false;
+}
+
+// Setelah +4 terakhir dijawab: menang jika tangan pemainnya masih kosong. Return true jika permainan selesai.
+function checkPendingWin(state) {
+    const w = state.pendingWinner;
+    state.pendingWinner = null;
+    if (w && state.hands[w] && state.hands[w].length === 0) { state.winner = w; return true; }
     return false;
 }
 
@@ -150,7 +166,7 @@ export function giveCards(state, uid, n) {
 // Jawaban atas +4: 'draw' = ambil kartu, 'challenge' = tantang pemain yang memainkan +4
 export function resolvePending(state, uid, choice) {
     const p = state.pending;
-    if (!p) return;
+    if (!p) return false;
     state.pending = null;
     state.catchable = null;
     if (choice === 'challenge') {
@@ -170,4 +186,5 @@ export function resolvePending(state, uid, choice) {
         giveCards(state, uid, p.total);
         advance(state);
     }
+    return checkPendingWin(state);
 }

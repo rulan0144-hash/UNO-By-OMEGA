@@ -1,5 +1,5 @@
 import { syncChallenge } from './challenge.js';
-import { BACK_SRC, cardSrc, imgTag } from './config.js';
+import { BACK_SRC, cardSrc, imgTag, getScale } from './config.js';
 import { syncTimer } from './timer.js';
 import { COLOR_NAMES } from './config.js';
 import { S, esc } from './state.js';
@@ -143,10 +143,16 @@ export function renderGame() {
         if (S.hasDrawnThisTurn && idx !== myHand.length - 1) isPlay = false;
         const c = document.createElement('div');
         c.className = `uno-card ${isPlay ? 'playable' : 'unplayable'}`;
-        c.onclick = () => humanPlayCard(idx);
+        c.onclick = () => tapCard(idx);
+        c.addEventListener('pointerdown', (e) => startDrag(e, idx, c));
         c.innerHTML = generateCardHTML(card);
         handUI.appendChild(c);
     });
+    // pilihan kartu yang masih berlaku (kartunya sama) tetap terangkat; kalau tidak, dibatalkan
+    const sc = S.selCard;
+    if (S.selIdx >= 0 && !(sc && myHand[S.selIdx] && myHand[S.selIdx].color === sc.color && myHand[S.selIdx].value === sc.value)) S.selIdx = -1;
+    layoutHand();
+    markSelected();
 
     // Profil saya (avatar + bingkai)
     const meP = S.roomData.players.find(p => p.uid === me);
@@ -186,6 +192,111 @@ export function renderGame() {
     syncTimer(state);
     syncChallenge(state);
 }
+
+// ---- Kartu di tangan seperti dipegang di dunia nyata (kipas) ----
+// Semua kartu bertumpu pada satu titik putar di bawah tangan lalu diputar bergantian membentuk kipas;
+// kartu berikutnya menutupi kartu sebelumnya sehingga yang terlihat pojok kiri-atas (angka/aksi).
+// Ketuk sekali = kartu terangkat; ketuk kartu yang terangkat = dimainkan.
+export function layoutHand() {
+    const h = document.getElementById('human-hand-ui');
+    if (!h) return;
+    const kids = [...h.children];
+    if (!kids.length) return;
+    const cs = getComputedStyle(h);
+    const W = h.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const r0 = kids[0].getBoundingClientRect();
+    const w = kids[0].offsetWidth, ch = kids[0].offsetHeight;
+    if (!W || !w) return;
+    const n = kids.length;
+    const R = 1.5 * ch;                                   // jarak titik putar di bawah kartu
+    const MAX_TOTAL = 52 * Math.PI / 180;                 // sudut kipas terlebar
+    let step = 0;                                         // jarak antar kartu (px, setinggi tengah kartu)
+    if (n > 1) {
+        step = Math.min(0.5 * w, Math.max(0.1 * w, (W - 1.45 * w) / (n - 1)));
+        // sudut per kartu: jarak tengah kartu ~ (R + ch/2) * sudut
+        var dth = Math.min(step / (R + ch / 2), MAX_TOTAL / (n - 1));
+    }
+    h.style.setProperty('--pivot', R + 'px');
+    h.style.justifyContent = 'center';
+    kids.forEach((k, i) => {
+        const deg = n > 1 ? ((i - (n - 1) / 2) * dth) * 180 / Math.PI : 0;
+        k.classList.add('fan-card');
+        k.style.setProperty('--rot', deg.toFixed(2) + 'deg');
+        k.style.marginLeft = i ? (-w) + 'px' : '0';       // semua kartu bertumpuk di satu titik, lalu diputar
+    });
+}
+
+function markSelected() {
+    const h = document.getElementById('human-hand-ui');
+    if (!h) return;
+    [...h.children].forEach((k, i) => k.classList.toggle('selected', i === S.selIdx));
+}
+
+// Seret kartu ke atas ke arah tumpukan di tengah meja, lepas = kartu diturunkan.
+// Seret pendek lalu lepas = kartu kembali ke tangan.
+let drag = null, justDragged = false;
+
+function overPile(e) {
+    const pile = document.getElementById('discard-pile-ui');
+    const r = pile && pile.getBoundingClientRect();
+    const near = r && e.clientX > r.left - 40 && e.clientX < r.right + 40 && e.clientY > r.top - 40 && e.clientY < r.bottom + 40;
+    return !!near || (drag && drag.dy < -70 * getScale());
+}
+
+function startDrag(e, idx, el) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    drag = { idx, el, x0: e.clientX, y0: e.clientY, dy: 0, moved: false, id: e.pointerId };
+}
+
+function endDrag(e, cancel) {
+    if (!drag || (e && e.pointerId !== drag.id)) return;
+    const d = drag; drag = null;
+    const pile = document.getElementById('discard-pile-ui');
+    if (pile) pile.classList.remove('drop-ready');
+    if (!d.moved) return;
+    justDragged = true; setTimeout(() => { justDragged = false; }, 50);
+    const drop = !cancel && d.ready;
+    if (drop && d.el.isConnected) { S.selIdx = -1; humanPlayCard(d.idx); }   // posisi kartu dibaca dulu untuk animasi terbang
+    d.el.classList.remove('dragging');
+    d.el.style.transform = '';
+    markSelected();
+}
+
+window.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    if (!drag.el.isConnected) { drag = null; return; }
+    const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
+    if (!drag.moved) {
+        if (Math.hypot(dx, dy) < 12) return;
+        if (Math.abs(dx) > Math.abs(dy) * 1.5) { drag = null; return; }   // geser mendatar bukan menurunkan kartu
+        drag.moved = true;
+        S.selIdx = -1; markSelected();
+        drag.el.classList.add('dragging');
+    }
+    drag.dy = dy;
+    drag.el.style.transform = `translate(${dx}px, ${dy}px) rotate(var(--rot, 0deg))`;
+    drag.ready = overPile(e);
+    const pile = document.getElementById('discard-pile-ui');
+    if (pile) pile.classList.toggle('drop-ready', !!drag.ready);
+}, { passive: true });
+window.addEventListener('pointerup', (e) => endDrag(e, false));
+window.addEventListener('pointercancel', (e) => endDrag(e, true));
+
+function tapCard(idx) {
+    if (justDragged) return;
+    if (S.selIdx === idx) { S.selIdx = -1; markSelected(); humanPlayCard(idx); return; }
+    const hand = S.roomData && S.roomData.gameState.hands[S.currentUser.uid];
+    const frozen = frozenHand();
+    S.selIdx = idx;
+    S.selCard = (frozen || hand || [])[idx] || null;
+    markSelected();
+}
+
+window.addEventListener('resize', () => requestAnimationFrame(layoutHand));
+window.addEventListener('orientationchange', () => setTimeout(layoutHand, 200));
+document.addEventListener('click', (e) => {
+    if (S.selIdx >= 0 && !(e.target.closest && e.target.closest('#human-hand-ui'))) { S.selIdx = -1; markSelected(); }
+});
 
 export function handleGameOver() {
     const state = S.roomData.gameState;

@@ -14,7 +14,9 @@ export const S = {
     hasDrawnThisTurn: false,
     pendingFrom: null,     // posisi kartu yang baru dimainkan (untuk animasi)
     lastFxId: null,        // id animasi terakhir yang sudah diputar
-    fxRoom: null
+    fxRoom: null,
+    selIdx: -1,            // indeks kartu di tangan yang sedang terangkat (ketuk sekali)
+    selCard: null
 };
 
 export const clone = (o) => JSON.parse(JSON.stringify(o));

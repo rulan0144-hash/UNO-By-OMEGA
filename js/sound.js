@@ -131,12 +131,17 @@ const SFX = {
         noise({ t: 0.1, dur: 0.3, vol: 0.1, type: 'highpass', f: 6000 });
     },
 
-    // tertangkap lupa UNO: palu + "wah-wah"
+    // palu: terayun (desis naik), lalu "bonk" kayu + dentuman saat menghantam; setelah itu terdengar kata "Caught!"
+    swing() {
+        noise({ dur: 0.85, vol: 0.14, f: 400, f2: 2800, q: 1.5 });
+        tone({ f: 260, f2: 900, type: 'triangle', dur: 0.8, vol: 0.05 });
+    },
     catch() {
-        duck(1.4);
-        tone({ f: 140, f2: 45, type: 'sine', dur: 0.3, vol: 0.6 });
-        noise({ dur: 0.12, vol: 0.5, type: 'lowpass', f: 1800 });
-        tone({ f: 320, f2: 140, type: 'triangle', dur: 0.12, vol: 0.3 });
+        duck(1.6);
+        tone({ f: 900, f2: 320, type: 'square', dur: 0.07, vol: 0.35, filter: { f: 2200 } });
+        tone({ f: 1500, f2: 500, type: 'triangle', dur: 0.06, vol: 0.25 });
+        tone({ f: 140, f2: 45, type: 'sine', dur: 0.3, vol: 0.7 });
+        noise({ dur: 0.12, vol: 0.55, type: 'lowpass', f: 2200 });
     },
 
     // kartu aksi
@@ -237,7 +242,7 @@ const VOICE = {
     draw4: ['Draw four!', 1.1, 1.0, 0.05],
     draw6: ['Draw six!', 1.0, 0.95, 0.05],
     uno: ['Uno!', 1.3, 1.0, 0.1],
-    catch: ['Caught!', 1.1, 1.05, 1.0],
+    catch: ['Caught!', 1.1, 1.05, 0.5],
     c_Red: ['Red', 1.1, 1.0, 0],
     c_Yellow: ['Yellow', 1.1, 1.0, 0],
     c_Blue: ['Blue', 1.1, 1.0, 0],
@@ -282,12 +287,18 @@ export function sayAsync(text = 'Uno game!') {
 export function sfx(name, delay = 0, arg) {
     try {
         if (VOICE[name]) { const [t, p, r, d] = VOICE[name]; speak(t, p, r, d + delay); }
-        if (cfg.mute || cfg.sfx <= 0 || !ensure() || ctx.state !== 'running' || !SFX[name]) return;
-        if (delay > 0) setTimeout(() => { try { SFX[name](arg); } catch (e) { /* abaikan */ } }, delay * 1000);
-        else SFX[name](arg);
-        if (VIBE[name] && navigator.vibrate) setTimeout(() => { try { navigator.vibrate(VIBE[name]); } catch (e) { /* abaikan */ } }, delay * 1000);
+        if (cfg.mute || cfg.sfx <= 0 || !ensure() || !SFX[name]) return;
+        const play = () => {
+            if (delay > 0) setTimeout(() => { try { SFX[name](arg); } catch (e) { /* abaikan */ } }, delay * 1000);
+            else SFX[name](arg);
+            if (VIBE[name] && navigator.vibrate) setTimeout(() => { try { navigator.vibrate(VIBE[name]); } catch (e) { /* abaikan */ } }, delay * 1000);
+        };
+        if (ctx.state === 'running') play();
+        else if (ctx.state === 'suspended') ctx.resume().then(() => { if (ctx.state === 'running') play(); }).catch(() => {});   // belum aktif: aktifkan dulu lalu bunyikan
     } catch (e) { /* suara tidak boleh merusak permainan */ }
 }
+
+export const soundStatus = () => ({ ctx: ctx ? ctx.state : 'belum dibuat', speech: 'speechSynthesis' in window, voices: ('speechSynthesis' in window) ? speechSynthesis.getVoices().length : 0, mute: cfg.mute, sfx: cfg.sfx });
 
 // ---------------------------------------------------------------- musik latar
 // Tempo 126 bpm, 16 birama (30 detik), nada dasar C mayor: I - vi - IV - V ...
