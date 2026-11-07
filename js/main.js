@@ -2,6 +2,9 @@
 import './actions.js';
 import './local.js';
 import './online.js';
+import { preloadCards } from './config.js';
+
+preloadCards();   // muat semua gambar kartu lebih dulu
 import { S } from './state.js';
 import { auth, hasFirebase, initialAuthToken, signInAnonymously, signInWithCustomToken } from './firebase.js';
 import { updateHomeName, updateOnlineStatus } from './ui.js';

@@ -1,3 +1,4 @@
+import { BACK_SRC, imgTag } from './config.js';
 import { S } from './state.js';
 import { generateCardHTML, pileRot, renderGame } from './ui.js';
 
@@ -8,7 +9,7 @@ const reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motio
 const $ = (id) => document.getElementById(id);
 const sleep = (ms) => new Promise(r => setTimeout(r, reduce ? 0 : ms));
 const rnd = (a) => (Math.random() * 2 - 1) * a;
-const BACK = '<div class="uno-card card-back"><div class="oval"><span class="val-center">UNO</span></div></div>';
+const BACK = `<div class="uno-card">${imgTag(BACK_SRC)}</div>`;
 const HEX = { Red: '#ef4444', Green: '#22c55e', Blue: '#3b82f6', Yellow: '#eab308' };
 
 // Gambar buatan sendiri (SVG), bukan emoji
@@ -116,9 +117,8 @@ function fly(html, from, to, { dur = 700, delay = 0, rot = 0 } = {}) {
     return anim.finished.catch(() => {}).then(() => el.remove());
 }
 
-function faceHTML(card, color) {
-    const bg = card.color === 'Black' ? color : card.color;
-    return `<div class="uno-card bg-${bg}">${generateCardHTML(card)}</div>`;
+function faceHTML(card) {
+    return `<div class="uno-card">${generateCardHTML(card)}</div>`;
 }
 
 // Layar berkedip dengan warna yang dipilih
@@ -172,7 +172,7 @@ async function play(ev) {
     const top = document.querySelector('.pile-top');
     if (top) top.style.visibility = 'hidden';
     const n = S.roomData?.gameState.discardPile.length || 1;
-    await fly(faceHTML(ev.card, ev.color), from, discardRect(), { dur: 700, rot: pileRot(n - 1) });
+    await fly(faceHTML(ev.card), from, discardRect(), { dur: 700, rot: pileRot(n - 1) });
     if (top) top.style.visibility = '';
     if (ev.card.color === 'Black') flash(ev.color);
 }

@@ -1,3 +1,4 @@
+import { BACK_SRC, cardSrc, imgTag } from './config.js';
 import { syncTimer } from './timer.js';
 import { COLOR_NAMES } from './config.js';
 import { S, esc } from './state.js';
@@ -58,26 +59,7 @@ window.leaveRoom = () => {
 
 // --- RENDER ---
 export function generateCardHTML(card) {
-    let innerClass = `bg-${card.color}`;
-    let shortVal = card.value, displayVal = card.value;
-    let valClass = 'val-center text-shadow-sm';
-
-    if (card.value === 'Skip') { shortVal = '⊘'; displayVal = '⊘'; }
-    else if (card.value === 'Reverse') { shortVal = '⇄'; displayVal = '⇄'; }
-    else if (card.value === 'Draw Two') { shortVal = '+2'; displayVal = '+2'; }
-    else if (card.value === 'Wild') { shortVal = 'W'; displayVal = 'BEBAS'; valClass += ' val-W'; }
-    else if (card.value === 'Wild Draw Four') { shortVal = 'W4'; displayVal = 'W+4'; valClass += ' val-W'; }
-    else if (card.value === 'Wild Shuffle Hands') { shortVal = 'WS'; displayVal = 'ACAK'; valClass += ' val-W'; }
-    
-
-    if (card.color === 'Black') innerClass = 'bg-gray-800';
-
-    return `
-        <div class="oval flex items-center justify-center"><div class="inner-oval ${innerClass}"></div></div>
-        <span class="${valClass}">${displayVal}</span>
-        <span class="val-sm-tl text-shadow-sm">${shortVal}</span>
-        <span class="val-sm-br text-shadow-sm">${shortVal}</span>
-    `;
+    return imgTag(cardSrc(card));
 }
 
 export function renderGame() {
@@ -98,7 +80,7 @@ export function renderGame() {
 
         let stackHTML = '';
         for (let c = 0; c < Math.min(count, 5); c++) {
-            stackHTML += `<div class="uno-card opponent-card card-back absolute left-0" style="margin-left: ${c * 5}px; z-index: ${c};"><div class="oval"><span class="val-center">UNO</span></div></div>`;
+        stackHTML += `<div class="uno-card opponent-card st-${c}">${imgTag(BACK_SRC)}</div>`;
         }
         const calledBadge = (count === 1 && state.unoCalled[p.uid]) ? `<div class="absolute top-0 -left-4 z-20 bg-green-600 text-[10px] px-1 rounded border border-white">UNO ✓</div>` : '';
         const catchBtn = (S.selectedOpp === p.uid && count === 1)
@@ -123,12 +105,12 @@ export function renderGame() {
         let stack = '';
         // kartu di bawahnya tetap terlihat (maks. 4 kartu sebelumnya)
         for (let i = Math.max(0, n - 5); i < n - 1; i++) {
-            const c = pile[i];
-            stack += `<div class="uno-card bg-${c.color}" style="position:absolute;left:0;top:0;transform:translate(${((i * 29) % 9) - 4}px,${((i * 17) % 7) - 3}px) rotate(${pileRot(i)}deg)">${generateCardHTML(c)}</div>`;
+            stack += `<div class="uno-card pile-card" style="--dx:${((i * 29) % 9) - 4}px;--dy:${((i * 17) % 7) - 3}px;--rot:${pileRot(i)}deg">${generateCardHTML(pile[i])}</div>`;
         }
-        const topBg = topCard.color === 'Black' ? state.currentColor : topCard.color;
-        stack += `<div class="uno-card pile-top bg-${topBg}" style="position:absolute;left:0;top:0;transform:rotate(${pileRot(n - 1)}deg)">${generateCardHTML(topCard)}</div>`;
-        document.getElementById('discard-pile-ui').innerHTML = `<div style="position:relative;width:80px;height:116px">${stack}</div>`;
+        // kartu hitam (Wild): warna yang dipilih ditandai dengan cahaya di sekelilingnya
+        const glow = topCard.color === 'Black' ? ' glow-' + state.currentColor : '';
+        stack += `<div class="uno-card pile-card pile-top${glow}" style="--dx:0px;--dy:0px;--rot:${pileRot(n - 1)}deg">${generateCardHTML(topCard)}</div>`;
+        document.getElementById('discard-pile-ui').innerHTML = `<div class="pile-wrap">${stack}</div>`;
     }
     const badge = document.getElementById('current-color-badge');
     const bgC = { 'Red': 'bg-red-500', 'Blue': 'bg-blue-500', 'Green': 'bg-green-500', 'Yellow': 'bg-yellow-500' }[state.currentColor] || 'bg-gray-700';
@@ -143,7 +125,7 @@ export function renderGame() {
         let isPlay = isMyTurn() && isPlayable(card);
         if (S.hasDrawnThisTurn && idx !== myHand.length - 1) isPlay = false;
         const c = document.createElement('div');
-        c.className = `uno-card bg-${card.color} ${isPlay ? 'playable' : 'unplayable'}`;
+        c.className = `uno-card ${isPlay ? 'playable' : 'unplayable'}`;
         c.onclick = () => humanPlayCard(idx);
         c.innerHTML = generateCardHTML(card);
         handUI.appendChild(c);
