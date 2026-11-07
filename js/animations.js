@@ -1,4 +1,4 @@
-import { BACK_SRC, COLOR_NAMES, imgTag } from './config.js';
+import { BACK_SRC, COLOR_NAMES, imgTag, getScale } from './config.js';
 import { S } from './state.js';
 import { generateCardHTML, pileRot, renderGame } from './ui.js';
 
@@ -86,7 +86,8 @@ function discardRect() {
 function posOfPlayer(uid) {
     if (uid === S.currentUser?.uid) {
         const h = rectOf($('human-hand-ui'));
-        return h && { left: h.left + h.width / 2 - 40, top: h.top + 4, width: 80, height: 116 };
+        const k = getScale();
+        return h && { left: h.left + h.width / 2 - 40 * k, top: h.top + 4, width: 80 * k, height: 116 * k };
     }
     return rectOf($('stack-' + uid));
 }
@@ -305,7 +306,7 @@ function ghostCard(ev) {
     if (!from) return null;
     const el = document.createElement('div');
     el.className = 'fly-card';
-    el.innerHTML = faceHTML(ev.card);
+    el.innerHTML = mine ? faceHTML(ev.card) : BACK;   // kartu lawan baru menghadap depan setelah efek
     const a = center(from);
     el.style.left = (a.x - 40) + 'px';
     el.style.top = (a.y - 58) + 'px';
