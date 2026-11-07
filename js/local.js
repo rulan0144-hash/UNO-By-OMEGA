@@ -1,7 +1,7 @@
 import { COLORS, LOCAL_UID } from './config.js';
 import { S, cloneState, esc, fx } from './state.js';
 import { dealGame, extractCards } from './deck.js';
-import { advance, penalize, playCardOn } from './rules.js';
+import { advance, penalize, playCardOn, resolvePending } from './rules.js';
 import { updateRemoteState } from './actions.js';
 import { renderGame } from './ui.js';
 import { whenIdle } from './animations.js';
@@ -40,6 +40,13 @@ export function botTurn(bot) {
     // Bot bisa menangkap pemain yang lupa UNO sebelum jalan
     if (s.catchable && s.catchable !== uid && Math.random() < 0.6) penalize(s, s.catchable, uid);
     s.catchable = null;
+
+    // Ada +4 yang harus dijawab: ambil kartu atau tantang
+    if (s.pending) {
+        resolvePending(s, uid, Math.random() < 0.78 ? 'draw' : 'challenge');   // sekitar 22% menantang
+        updateRemoteState(s);
+        return;
+    }
 
     const top = s.discardPile[s.discardPile.length - 1];
     const ok = (c) => c.color === 'Black' || c.color === s.currentColor || c.value === top.value;

@@ -1,4 +1,4 @@
-import { BACK_SRC, imgTag } from './config.js';
+import { BACK_SRC, COLOR_NAMES, imgTag } from './config.js';
 import { S } from './state.js';
 import { generateCardHTML, pileRot, renderGame } from './ui.js';
 
@@ -12,23 +12,14 @@ const rnd = (a) => (Math.random() * 2 - 1) * a;
 const BACK = `<div class="uno-card">${imgTag(BACK_SRC)}</div>`;
 const HEX = { Red: '#ef4444', Green: '#22c55e', Blue: '#3b82f6', Yellow: '#eab308' };
 
-// Gambar buatan sendiri (SVG), bukan emoji
-const ICONS = {
-    skip: '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round"><circle cx="50" cy="50" r="38"/><line x1="23" y1="77" x2="77" y2="23"/></svg>',
-    reverse: '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"><path d="M10 34H70"/><path d="M62 16L90 34L62 52" fill="currentColor"/><path d="M90 68H30"/><path d="M38 50L10 68L38 86" fill="currentColor"/></svg>',
-    shuffle: '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 30H28C48 30 52 70 72 70H80"/><path d="M8 70H28C48 70 52 30 72 30H80"/><path d="M78 16L96 30L78 44" fill="currentColor"/><path d="M78 56L96 70L78 84" fill="currentColor"/></svg>'
-};
-const HAMMER_SVG = '<svg viewBox="0 0 100 100"><rect x="44" y="30" width="12" height="66" rx="5" fill="#c68a4b" stroke="#5b3a1a" stroke-width="3"/><path d="M47 40V90M52 36V92" stroke="#a36d33" stroke-width="1.5"/><rect x="10" y="6" width="80" height="36" rx="9" fill="#a8652a" stroke="#4a2a10" stroke-width="3"/><rect x="20" y="6" width="9" height="36" fill="#6e3f17"/><rect x="71" y="6" width="9" height="36" fill="#6e3f17"/><path d="M34 14H66M34 22H66M34 30H66" stroke="#c98a4a" stroke-width="2" stroke-linecap="round"/></svg>';
-const BOOM_SVG = '<svg viewBox="0 0 100 100"><polygon points="50,2 61,32 92,20 72,46 98,60 66,66 70,98 50,76 30,98 34,66 2,60 28,46 8,20 39,32" fill="#facc15" stroke="#f97316" stroke-width="4" stroke-linejoin="round"/><circle cx="50" cy="52" r="12" fill="#fff"/></svg>';
-
+// Gambar efek (PNG) ada di img/effects/
 const BANNERS = {
-    uno:     { t: 'UNO!',    c: 'fx-uno' },
-    skip:    { t: 'SKIP',    c: 'fx-skip', i: 'skip' },
-    reverse: { t: 'REVERSE', c: 'fx-reverse', i: 'reverse' },
-    draw2:   { t: '+2',      c: 'fx-draw' },
-    draw4:   { t: '+4',      c: 'fx-draw4' },
-    wild:    { t: 'WILD',    c: 'fx-wild' },
-    shuffle: { t: 'ACAK',    c: 'fx-acak', i: 'shuffle' }
+    uno:     { img: 'uno' },
+    skip:    { img: 'skip' },
+    reverse: { img: 'reverse' },
+    draw2:   { img: 'draw2' },
+    draw4:   { img: 'draw4' },
+    shuffle: { img: 'shuffle' }
 };
 
 let queue = Promise.resolve();
@@ -132,18 +123,51 @@ function flash(color) {
     setTimeout(() => f.classList.remove('on'), 1100);
 }
 
-// Tulisan besar di tengah layar
-async function banner(k, uid) {
+// Gambar besar di tengah layar (UNO!, Skip, Reverse, +2, +4, Acak)
+async function banner(k, uid, ev) {
     const b = BANNERS[k];
     if (!b) return;
     const el = document.createElement('div');
-    el.className = 'fx-banner ' + b.c;
-    el.innerHTML = (b.i ? ICONS[b.i] : '') + '<span>' + b.t + '</span>';
+    el.className = 'fx-img-banner';
+    el.innerHTML = `<img src="img/effects/${b.img}.png" alt="">`;
     const p = uid && S.roomData?.players.find(x => x.uid === uid);
     if (p) { const s = document.createElement('small'); s.textContent = p.name; el.appendChild(s); }
     document.body.appendChild(el);
     setTimeout(() => el.remove(), reduce ? 0 : 1600);
     await sleep(k === 'uno' ? 1500 : 1300);
+}
+
+// Pemilih warna Wild: empat balok berputar, lalu warna pilihan menonjol
+async function wildPicker(color) {
+    const el = document.createElement('div');
+    el.className = 'fx-picker';
+    el.innerHTML = '<img class="fx-picker-img fx-picker-spin" src="img/effects/wild-spin.png" alt=""><div class="fx-picker-name"></div>';
+    document.body.appendChild(el);
+    await sleep(900);
+    const img = el.querySelector('img');
+    img.classList.remove('fx-picker-spin');
+    img.src = `img/effects/wild-${color}.png`;
+    img.classList.add('fx-picker-pop');
+    const name = el.querySelector('.fx-picker-name');
+    name.textContent = COLOR_NAMES[color] || color;
+    name.className = 'fx-picker-name fx-pn-' + color;
+    await sleep(1100);
+    el.classList.add('fx-picker-out');
+    setTimeout(() => el.remove(), reduce ? 0 : 400);
+    await sleep(350);
+}
+
+// Hasil tantangan +4: BENAR / SALAH
+async function challengeFx(ev) {
+    const el = document.createElement('div');
+    el.className = 'fx-banner ' + (ev.ok ? 'fx-ok' : 'fx-fail');
+    el.innerHTML = `<span>${ev.ok ? 'BENAR!' : 'SALAH!'}</span>`;
+    const p = S.roomData?.players.find(x => x.uid === ev.by);
+    const t = S.roomData?.players.find(x => x.uid === ev.target);
+    if (p && t) { const s = document.createElement('small'); s.textContent = `${p.name} menantang ${t.name}`; el.appendChild(s); }
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), reduce ? 0 : 1600);
+    await sleep(1400);
 }
 
 // Palu kayu menghantam profil pemain yang lupa UNO
@@ -153,10 +177,10 @@ async function hammer(uid) {
     const r = rectOf(target) || { left: window.innerWidth / 2 - 40, top: window.innerHeight / 2, width: 80, height: 80 };
     const cx = r.left + r.width / 2;
     const h = document.createElement('div');
-    h.className = 'fx-hammer'; h.innerHTML = HAMMER_SVG;
+    h.className = 'fx-hammer'; h.innerHTML = '<img src="img/effects/hammer.png" alt="">';
     h.style.left = (cx - 46) + 'px'; h.style.top = (r.top - 80) + 'px';
     const b = document.createElement('div');
-    b.className = 'fx-boom'; b.innerHTML = BOOM_SVG;
+    b.className = 'fx-boom'; b.innerHTML = '<img src="img/effects/boom.png" alt="">';
     b.style.left = (cx - 42) + 'px'; b.style.top = (r.top - 8) + 'px';
     document.body.append(h, b);
     setTimeout(() => target && target.classList.add('fx-shake'), reduce ? 0 : 930);
@@ -279,8 +303,10 @@ async function run(list, state, c) {
     for (const ev of list) {
         if (ev.t === 'deal') await deal(state);
         else if (ev.t === 'play') await play(ev);
-        else if (ev.t === 'banner') await banner(ev.k);
+        else if (ev.t === 'banner') await banner(ev.k, undefined, ev);
         else if (ev.t === 'shuffle') await shuffleAnim(state);
+        else if (ev.t === 'picker') await wildPicker(ev.color);
+        else if (ev.t === 'challenge') await challengeFx(ev);
         else if (ev.t === 'uno') await banner('uno', ev.uid);
         else if (ev.t === 'catch') await hammer(ev.uid);
         else if (ev.t === 'draw') await draw(ev);

@@ -1,3 +1,4 @@
+import { syncChallenge } from './challenge.js';
 import { BACK_SRC, cardSrc, imgTag } from './config.js';
 import { syncTimer } from './timer.js';
 import { COLOR_NAMES } from './config.js';
@@ -87,13 +88,14 @@ export function renderGame() {
             ? `<button onclick="event.stopPropagation(); catchPlayer('${p.uid}')" class="absolute top-0 -right-7 z-20 bg-red-600 border-2 border-white rounded-full text-xs font-black px-2 py-1 animate-bounce shadow-lg">UNO!</button>` : '';
 
         oppArea.innerHTML += `
-            <div id="prof-${p.uid}" onclick="toggleOpp('${p.uid}')" class="flex flex-col items-center transition-all px-1 cursor-pointer ${isTurn ? 'scale-110' : 'opacity-70'}">
-                <div id="stack-${p.uid}" class="relative mb-2 w-14 md:w-16 h-20 flex justify-center">
+            <div id="prof-${p.uid}" onclick="toggleOpp('${p.uid}')" class="opp-profile ${isTurn ? 'is-turn' : ''}">
+                <div id="stack-${p.uid}" class="opp-stack">
                     ${stackHTML}
-                    <div class="absolute -bottom-3 z-10 bg-black text-white px-2 py-0.5 rounded-full text-xs font-bold border border-gray-500">${count}</div>
+                    <div class="count-badge">${count}</div>
                     ${calledBadge}${catchBtn}
                 </div>
-                <span class="mt-4 font-bold text-xs whitespace-nowrap bg-gray-900/80 px-2 py-1 rounded ${isTurn ? 'text-green-400 border border-green-500' : 'text-gray-300'} ${S.selectedOpp === p.uid ? 'ring-2 ring-red-400' : ''}">${esc(p.name)}</span>
+                <div class="opp-avatar">${avatarHTML(p, isTurn, 'opp')}</div>
+                <span class="name-tag ${isTurn ? 'name-turn' : ''} ${S.selectedOpp === p.uid ? 'ring-2 ring-red-400' : ''}">${esc(p.name)}</span>
             </div>`;
     }
 
@@ -131,6 +133,11 @@ export function renderGame() {
         handUI.appendChild(c);
     });
 
+    // Profil saya (avatar + bingkai)
+    const meP = S.roomData.players.find(p => p.uid === me);
+    const meAv = document.getElementById('me-avatar');
+    if (meAv && meP) meAv.innerHTML = avatarHTML(meP, isMyTurn(), 'me');
+
     // Tombol UNO: berdenyut saat sudah boleh ditekan
     const btnUno = document.getElementById('btn-uno');
     btnUno.classList.toggle('animate-pulse', canCallUno(state));
@@ -140,7 +147,7 @@ export function renderGame() {
     const btnPass = document.getElementById('btn-pass');
     const ti = document.getElementById('turn-indicator');
     if (isMyTurn()) {
-        ti.innerText = S.hasDrawnThisTurn ? "Main atau Lewati!" : "Giliran Kamu!";
+        ti.innerText = state.pending ? "Jawab tantangan +4!" : (S.hasDrawnThisTurn ? "Main atau Lewati!" : "Giliran Kamu!");
         ti.className = "text-lg md:text-2xl font-black text-green-400 animate-pulse";
         btnPass.classList.toggle('hidden', !S.hasDrawnThisTurn);
     } else {
@@ -149,7 +156,9 @@ export function renderGame() {
         btnPass.classList.add('hidden');
         S.hasDrawnThisTurn = false;
     }
-    document.getElementById('direction-indicator').innerText = state.direction === 1 ? 'Arah: ▶ Kanan' : 'Arah: ◀ Kiri';
+    document.getElementById('direction-indicator').innerText = state.direction === 1 ? 'Searah jarum jam' : 'Berlawanan jarum jam';
+    const ring = document.getElementById('dir-ring');
+    if (ring) ring.classList.toggle('ccw', state.direction !== 1);
 
     const logsUI = document.getElementById('logs-container');
     logsUI.innerHTML = state.logs.map(l => `<div class="border-b border-gray-700 pb-1">${l}</div>`).join('');
@@ -157,6 +166,7 @@ export function renderGame() {
 
     applyHold();
     syncTimer(state);
+    syncChallenge(state);
 }
 
 export function handleGameOver() {
@@ -199,3 +209,13 @@ window.showToast = (msg) => {
 
 // Kemiringan tetap tiap kartu di tumpukan buangan
 export function pileRot(i) { return ((i * 53) % 17) - 8; }
+
+// Avatar huruf + bingkai (emas bercahaya untuk pemain yang sedang jalan)
+function avatarHTML(p, active, size) {
+    const name = String(p.name).trim();
+    const initial = p.isBot ? 'K' + ((name.match(/\d+$/) || [''])[0]) : (name.charAt(0).toUpperCase() || '?');
+    let h = 0;
+    for (const ch of String(p.uid)) h = (h * 31 + ch.charCodeAt(0)) % 360;
+    return `<div class="avatar avatar-${size} ${active ? 'avatar-active' : ''}"><div class="avatar-face" style="--h:${h}">${esc(initial)}</div>` +
+        `<img class="avatar-frame" src="img/ui/${active ? 'frame-gold' : 'frame-silver'}.png" alt="" draggable="false"></div>`;
+}

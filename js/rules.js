@@ -7,8 +7,9 @@ export function isMyTurn() {
 }
 
 export function isPlayable(card) {
-    if (card.color === 'Black') return true;
     const st = S.roomData.gameState;
+    if (st.pending) return false;   // ada +4 menunggu jawaban: belum boleh main kartu
+    if (card.color === 'Black') return true;
     const topCard = st.discardPile[st.discardPile.length - 1];
     return card.color === st.currentColor || card.value === topCard.value;
 }
@@ -37,9 +38,11 @@ export function playCardOn(state, uid, cardIdx, chosenColor, callUno) {
     const players = S.roomData.players;
     const hand = state.hands[uid];
     const card = hand.splice(cardIdx, 1)[0];
+    const prevColor = state.currentColor;   // warna sebelum kartu ini (dipakai untuk tantangan +4)
     state.catchable = null;
     state.discardPile.push(card);
     fx(state, { t: 'play', uid, card, color: chosenColor });
+    if (card.color === 'Black') fx(state, { t: 'picker', color: chosenColor });
     state.currentColor = chosenColor;
 
     const colorStr = card.color !== 'Black' ? card.color : chosenColor;
@@ -61,16 +64,15 @@ export function playCardOn(state, uid, cardIdx, chosenColor, callUno) {
     } else {
         state.unoCalled[uid] = false;
     }
-    applyCardEffect(state, card, players.findIndex(p => p.uid === uid));
+    applyCardEffect(state, card, players.findIndex(p => p.uid === uid), prevColor);
     return false;
 }
 
-export function applyCardEffect(state, card, playerIdx) {
+export function applyCardEffect(state, card, playerIdx, prevColor) {
     const pCount = S.roomData.players.length;
     const nextIdx = (playerIdx + state.direction + pCount) % pCount;
     const nextNextIdx = (nextIdx + state.direction + pCount) % pCount;
     const nextUid = S.roomData.players[nextIdx].uid;
-    if (card.value === 'Wild') fx(state, { t: 'banner', k: 'wild' });
     state.turnNo = (state.turnNo || 0) + 1;
 
     switch (card.value) {
@@ -97,12 +99,14 @@ export function applyCardEffect(state, card, playerIdx) {
             giveCards(state, nextUid, 2);
             state.turnIndex = nextNextIdx;
             break;
-        case 'Wild Draw Four':
-            state.logs.push(`💥 +4 Kartu dan dilewati!`);
-                    fx(state, { t: 'banner', k: 'draw4' });
-            giveCards(state, nextUid, 4);
-            state.turnIndex = nextNextIdx;
+        case 'Wild Draw Four': {
+            // +4 tidak langsung dibagikan: pemain berikutnya memilih menantang atau ambil kartu
+            state.pending = { total: 4, by: S.roomData.players[playerIdx].uid, prevColor };
+            state.logs.push(`+4 dimainkan! ${nameOf(nextUid)} boleh menantang atau ambil kartu.`);
+            fx(state, { t: 'banner', k: 'draw4' });
+            state.turnIndex = nextIdx;
             break;
+        }
         case 'Wild Shuffle Hands': {
             state.logs.push(`🌀 SEMUA KARTU DIACAK!`);
                     fx(state, { t: 'banner', k: 'shuffle' });
@@ -136,4 +140,29 @@ export function giveCards(state, uid, n) {
     state.hands[uid] = state.hands[uid].concat(got);
     if (got.length) fx(state, { t: 'draw', uid, n: got.length });
     return got.length;
+}
+
+// Jawaban atas +4: 'draw' = ambil kartu, 'challenge' = tantang pemain yang memainkan +4
+export function resolvePending(state, uid, choice) {
+    const p = state.pending;
+    if (!p) return;
+    state.pending = null;
+    state.catchable = null;
+    if (choice === 'challenge') {
+        const guilty = state.hands[p.by].some(c => c.color === p.prevColor);   // masih punya kartu warna sebelumnya?
+        fx(state, { t: 'challenge', by: uid, target: p.by, ok: guilty, color: p.prevColor });
+        if (guilty) {
+            state.logs.push(`<b>${nameOf(uid)}</b> menantang <b>${nameOf(p.by)}</b>: BENAR! ${nameOf(p.by)} ambil ${p.total} kartu.`);
+            giveCards(state, p.by, p.total);
+            state.turnNo = (state.turnNo || 0) + 1;   // penantang main seperti biasa
+        } else {
+            state.logs.push(`<b>${nameOf(uid)}</b> menantang <b>${nameOf(p.by)}</b>: SALAH! ${nameOf(uid)} ambil ${p.total + 2} kartu.`);
+            giveCards(state, uid, p.total + 2);
+            advance(state);
+        }
+    } else {
+        state.logs.push(`<b>${nameOf(uid)}</b> mengambil ${p.total} kartu.`);
+        giveCards(state, uid, p.total);
+        advance(state);
+    }
 }

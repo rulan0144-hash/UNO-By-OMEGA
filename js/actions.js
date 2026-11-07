@@ -2,7 +2,8 @@ import { isBusy } from './animations.js';
 import { S, cloneState, fx, nameOf } from './state.js';
 import { roomDoc, updateDoc } from './firebase.js';
 import { calculatePoint, extractCards } from './deck.js';
-import { advance, canCallUno, isMyTurn, isPlayable, normalizeUno, penalize, playCardOn } from './rules.js';
+import { advance, canCallUno, isMyTurn, isPlayable, normalizeUno, penalize, playCardOn, resolvePending } from './rules.js';
+import { hideChallenge } from './challenge.js';
 import { scheduleBot } from './local.js';
 import { handleGameOver, renderGame } from './ui.js';
 
@@ -52,6 +53,7 @@ export async function processPlayCard(idx, color) {
 }
 
 window.humanDrawCard = () => {
+    if (S.roomData && S.roomData.gameState.pending) return showToast("Jawab dulu: ambil kartu atau tantang.");
     if (isBusy()) return showToast("Tunggu animasi selesai...");
     if (!isMyTurn() || S.hasDrawnThisTurn) return;
     const s = cloneState();
@@ -74,6 +76,7 @@ window.humanDrawCard = () => {
 };
 
 window.humanPass = () => {
+    if (S.roomData && S.roomData.gameState.pending) return showToast("Jawab dulu: ambil kartu atau tantang.");
     if (isBusy()) return showToast("Tunggu animasi selesai...");
     if (!isMyTurn() || !S.hasDrawnThisTurn) return;
     const s = cloneState();
@@ -124,6 +127,13 @@ window.catchPlayer = (uid) => {
 export function timeoutTurn(uid) {
     if (!S.roomData || S.roomData.status !== 'playing') return;
     if (S.roomData.players[S.roomData.gameState.turnIndex].uid !== uid) return;
+    if (S.roomData.gameState.pending) {   // waktu habis saat harus menjawab +4: ambil kartu
+        const sp = cloneState();
+        resolvePending(sp, uid, 'draw');
+        if (uid === S.currentUser.uid) { hideChallenge(); showToast("Waktu habis! Kamu mengambil kartu."); }
+        updateRemoteState(sp);
+        return;
+    }
     const s = cloneState();
     const mine = uid === S.currentUser.uid;
     const hand = s.hands[uid];
@@ -168,3 +178,14 @@ export function timeoutTurn(uid) {
     advance(s);
     updateRemoteState(s);
 }
+
+// Jawaban atas kartu +4: 'draw' (ambil kartu) atau 'challenge' (tantang)
+window.challengeAction = (choice) => {
+    if (isBusy()) return showToast("Tunggu animasi selesai...");
+    if (!isMyTurn() || !S.roomData.gameState.pending) return;
+    hideChallenge();
+    const s = cloneState();
+    resolvePending(s, S.currentUser.uid, choice);
+    updateRemoteState(s);
+};
+
