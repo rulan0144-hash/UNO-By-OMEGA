@@ -31,5 +31,6 @@ export function applyScale() {
     const h = window.innerHeight, w = window.innerWidth;
     const s = Math.max(0.42, Math.min(1.2, (h - 20) / 830, w / 360));
     document.documentElement.style.setProperty('--s', s.toFixed(3));
+    document.documentElement.style.setProperty('--app-h', h + 'px');   // 100vh di Chrome HP lebih tinggi dari layar terlihat
     document.documentElement.classList.toggle('compact', s < 0.65);   // jendela sangat kecil: sembunyikan info tambahan
 }

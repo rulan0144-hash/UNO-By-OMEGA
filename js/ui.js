@@ -180,7 +180,6 @@ export function renderGame() {
         btnPass.classList.add('hidden');
         S.hasDrawnThisTurn = false;
     }
-    document.getElementById('direction-indicator').innerText = state.direction === 1 ? 'Searah jarum jam' : 'Berlawanan jarum jam';
     const ring = document.getElementById('dir-ring');
     if (ring) ring.classList.toggle('ccw', state.direction !== 1);
 
