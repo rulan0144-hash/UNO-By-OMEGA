@@ -10,7 +10,7 @@ import { handleGameOver, renderGame } from './ui.js';
 export async function updateRemoteState(newState, extra = {}) {
     if (!S.currentRoomCode) return;
     if (newState.logs.length > 30) newState.logs = newState.logs.slice(-30);
-    normalizeUno(newState);
+    normalizeUno(newState, S.roomData && S.roomData.gameState && S.roomData.gameState.hands);
     if (S.localMode) {
         S.roomData = { ...S.roomData, ...extra, gameState: newState };
         renderGame();
@@ -99,7 +99,6 @@ window.humanPass = () => {
 };
 
 window.pressUno = () => {
-    if (isBusy()) return showToast("Tunggu animasi selesai...");
     if (!S.roomData || S.roomData.status !== 'playing') return;
     const s = cloneState();
     const me = S.currentUser.uid;
@@ -115,19 +114,11 @@ window.pressUno = () => {
     showToast("Kamu berteriak UNO!");
 };
 
-// Ketuk profil lawan -> tombol UNO muncul (jika sisa 1 kartu)
-window.toggleOpp = (uid) => {
-    S.selectedOpp = S.selectedOpp === uid ? null : uid;
-    renderGame();
-};
-
+// Ketuk profil lawan yang bertanda palu -> langsung tertangkap (tanpa menunggu animasi)
 window.catchPlayer = (uid) => {
-    if (isBusy()) return showToast("Tunggu animasi selesai...");
-    S.selectedOpp = null;
     const s = cloneState();
     if (s.catchable !== uid || s.unoCalled[uid]) {
-        renderGame();
-        return showToast("Terlambat, atau dia sudah bilang UNO!");
+        return showToast("Tidak bisa ditangkap (sudah UNO atau terlambat).");
     }
     penalize(s, uid, S.currentUser.uid);
     updateRemoteState(s);
