@@ -298,9 +298,57 @@ function restore() {
     if (S.roomData && S.roomData.gameState) renderGame();   // tampilan akhir sesuai state sebenarnya
 }
 
+// Kartu "bayangan" yang diam di posisi asal selama efeknya tampil (kartu belum diletakkan)
+function ghostCard(ev) {
+    const mine = ev.uid === S.currentUser?.uid;
+    const from = (mine && S.pendingFrom) || posOfPlayer(ev.uid);
+    if (!from) return null;
+    const el = document.createElement('div');
+    el.className = 'fly-card';
+    el.innerHTML = faceHTML(ev.card);
+    const a = center(from);
+    el.style.left = (a.x - 40) + 'px';
+    el.style.top = (a.y - 58) + 'px';
+    el.style.transform = `scale(${from.width / 80})`;
+    document.body.appendChild(el);
+    return el;
+}
+
+// Urutan tampil: efek kartu (banner / pemilih warna) dulu, baru kartunya diletakkan.
+// Mengembalikan daftar baru; peristiwa 'play' yang didahului efek diberi tanda preFx.
+function effectsFirst(list) {
+    const out = [];
+    for (let i = 0; i < list.length; i++) {
+        const ev = list[i];
+        if (ev.t !== 'play') { out.push(ev); continue; }
+        let k = i + 1;
+        const pre = [], between = [];
+        while (k < list.length && list[k].t === 'picker') pre.push(list[k++]);
+        while (k < list.length && list[k].t === 'uno') between.push(list[k++]);   // UNO bisa terselip
+        while (k < list.length && list[k].t === 'banner') pre.push(list[k++]);
+        out.push(...pre, { ...ev, preFx: pre.length > 0 }, ...between);
+        i = k - 1;
+    }
+    return out;
+}
+
 async function run(list, state, c) {
     cur = c;
-    for (const ev of list) {
+    let ghost = null;
+    const ordered = effectsFirst(list);
+    for (let i = 0; i < ordered.length; i++) {
+        const ev = ordered[i];
+        // Efek tampil lebih dulu: kartu belum diletakkan, jadi tahan kartu bayangan di posisi asal
+        if (!ghost && (ev.t === 'picker' || ev.t === 'banner')) {
+            const pl = ordered.slice(i).find(e => e.t === 'play' && e.preFx);
+            const between = ordered.slice(0, i).some(e => e.t === 'play');   // efek sesudah kartu (mis. banner tanpa pre)
+            if (pl && !between) {
+                const top = document.querySelector('.pile-top');
+                if (top) top.style.visibility = 'hidden';
+                ghost = ghostCard(pl);
+            }
+        }
+        if (ev.t === 'play' && ghost) { ghost.remove(); ghost = null; }
         if (ev.t === 'deal') await deal(state);
         else if (ev.t === 'play') await play(ev);
         else if (ev.t === 'banner') await banner(ev.k, undefined, ev);
@@ -312,6 +360,7 @@ async function run(list, state, c) {
         else if (ev.t === 'draw') await draw(ev);
         await sleep(150);   // jeda singkat antar animasi
     }
+    if (ghost) ghost.remove();
 }
 
 // Dipanggil di awal renderGame(); memutar animasi baru satu kali saja
