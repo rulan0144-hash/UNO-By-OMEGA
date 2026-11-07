@@ -3,9 +3,13 @@ import './actions.js';
 import './local.js';
 import './online.js';
 import './pause.js';
+import './sound.js';
+import { sfx } from './sound.js';
 import { preloadCards, applyScale } from './config.js';
 
 preloadCards();
+// bunyi "klik" untuk semua tombol (kecuali tombol suara, yang punya bunyi sendiri)
+document.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('button'); if (b && !b.dataset.nosfx) sfx('click'); });
 applyScale();
 window.addEventListener('resize', applyScale);
 window.addEventListener('orientationchange', applyScale);   // muat semua gambar kartu lebih dulu

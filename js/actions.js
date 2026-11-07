@@ -6,6 +6,7 @@ import { advance, canCallUno, isMyTurn, isPlayable, normalizeUno, penalize, play
 import { hideChallenge } from './challenge.js';
 import { scheduleBot } from './local.js';
 import { handleGameOver, renderGame } from './ui.js';
+import { sfx } from './sound.js';
 
 export async function updateRemoteState(newState, extra = {}) {
     if (!S.currentRoomCode) return;
@@ -27,7 +28,7 @@ window.humanPlayCard = (idx) => {
     const myHand = S.roomData.gameState.hands[S.currentUser.uid];
     const card = myHand[idx];
     if (S.hasDrawnThisTurn && idx !== myHand.length - 1) return showToast("Hanya bisa memainkan kartu baru!");
-    if (!isPlayable(card)) return showToast("Kartu tidak cocok!");
+    if (!isPlayable(card)) { sfx('nope'); return showToast("Kartu tidak cocok!"); }
             // simpan posisi kartu di tangan untuk animasi terbang ke tumpukan
             S.pendingFrom = (() => { const el = document.getElementById('human-hand-ui').children[idx]; if (!el) return null; const r = el.getBoundingClientRect(); return { left: r.left, top: r.top, width: r.width, height: r.height }; })();
     if (card.color === 'Black') {

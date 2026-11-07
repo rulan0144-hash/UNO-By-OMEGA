@@ -6,7 +6,8 @@ import { S, esc } from './state.js';
 import { firebaseConfig } from './firebase.js';
 import { calculatePoint } from './deck.js';
 import { canCallUno, isMyTurn, isPlayable } from './rules.js';
-import { applyHold, frozenHand, handleFx, shownCount } from './animations.js';
+import { applyHold, frozenHand, handleFx, shownCount, whenIdle } from './animations.js';
+import { sfx, sayAsync, startMusic, stopMusic } from './sound.js';
 
 export function updateOnlineStatus() {
     const el = document.getElementById('online-status');
@@ -55,6 +56,8 @@ window.leaveRoom = () => {
     S.selectedOpp = null;
     S.hasDrawnThisTurn = false;
     S.paused = false;
+    S.winSoundKey = null; S.winShown = null;
+    stopMusic();
     if (window.stopTimerHook) window.stopTimerHook();
     ['pause-modal', 'game-over-modal', 'game-screen', 'lobby-screen', 'color-modal'].forEach(id => document.getElementById(id).classList.add('hidden'));
     document.getElementById('home-screen').classList.remove('hidden');
@@ -68,6 +71,7 @@ export function generateCardHTML(card) {
 export function renderGame() {
     const state = S.roomData.gameState;
     const me = S.currentUser.uid;
+    if (S.roomData.status === 'playing') startMusic();   // musik latar (aman dipanggil berulang)
     handleFx(state);   // mencatat animasi baru & menahan tampilan kartu yang akan datang
     document.getElementById('room-code-display').innerText = S.localMode ? '[vs Komputer]' : `[${S.currentRoomCode}]`;
 
@@ -204,7 +208,19 @@ export function handleGameOver() {
     document.getElementById('winner-text').innerText = (winnerUid === S.currentUser.uid) ? "Kamu Menang!" : `${winnerObj ? winnerObj.name : '?'} Menang!`;
     document.getElementById('score-text').innerText = `Total Skor: ${totalScore} Poin`;
     document.getElementById('score-breakdown').innerHTML = breakdownHTML || '<div class="text-center text-gray-500">Tidak ada sisa poin.</div>';
-    document.getElementById('game-over-modal').classList.remove('hidden');
+
+    // Urutan: animasi kartu terakhir selesai -> terdengar "UNO game!" -> layar poin muncul + nada menang/kalah
+    const key = S.currentRoomCode + ':' + (state.turnNo || 0) + ':' + winnerUid;
+    if (S.winShown === key) { document.getElementById('game-over-modal').classList.remove('hidden'); return; }
+    if (S.winSoundKey === key) return;
+    S.winSoundKey = key;
+    stopMusic(0.4);
+    whenIdle().then(() => sayAsync('Uno game!')).then(() => {
+        if (S.winSoundKey !== key || !S.roomData || S.roomData.status !== 'finished') return;   // pemain sudah keluar
+        S.winShown = key;
+        document.getElementById('game-over-modal').classList.remove('hidden');
+        sfx(winnerUid === S.currentUser.uid ? 'win' : 'lose');
+    });
 }
 
 let toastTimeout;

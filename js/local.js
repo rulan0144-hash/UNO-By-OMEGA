@@ -10,6 +10,7 @@ import { whenIdle } from './animations.js';
 window.startLocal = () => {
     const n = parseInt(document.getElementById('bot-count').value) || 1;
     if (window.stopTimerHook) window.stopTimerHook();   // permainan baru: hitungan 15 detik mulai dari awal
+    S.winSoundKey = null; S.winShown = null;
     S.localMode = true;
     S.currentUser = { uid: LOCAL_UID };
     const players = [{ uid: LOCAL_UID, name: S.myName || 'Kamu' }];

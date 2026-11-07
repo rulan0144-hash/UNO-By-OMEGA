@@ -2,10 +2,11 @@ import { S } from './state.js';
 import { whenIdle } from './animations.js';
 import { isMyTurn } from './rules.js';
 import { timeoutTurn } from './actions.js';
+import { sfx } from './sound.js';
 
 // Batas waktu 15 detik per giliran. Hitungan baru mulai setelah animasi selesai.
 export const TURN_SECONDS = 15;
-let tick = null, deadline = 0, key = '', firedKey = '', leftAtPause = null, startAfterResume = null;
+let tick = null, deadline = 0, key = '', firedKey = '', leftAtPause = null, startAfterResume = null, lastTickSec = -1;
 
 function setBar(frac, secs) {
     const bar = document.getElementById('turn-bar');
@@ -34,6 +35,8 @@ export function syncTimer(state) {
         if (key !== k) return;
         const begin = () => {
             deadline = Date.now() + TURN_SECONDS * 1000;
+            lastTickSec = -1;
+            if (isMyTurn() && !S.paused) sfx('turn');   // "ting-ting": giliranmu
             tick = setInterval(() => onTick(k), 200);
             onTick(k);
         };
@@ -57,7 +60,9 @@ export function resumeTimer() {
 function onTick(k) {
     if (key !== k || !S.roomData || S.roomData.status !== 'playing') { stopTimer(); return; }
     const left = deadline - Date.now();
-    setBar(Math.max(0, left) / (TURN_SECONDS * 1000), Math.ceil(Math.max(0, left) / 1000));
+    const sec = Math.ceil(Math.max(0, left) / 1000);
+    setBar(Math.max(0, left) / (TURN_SECONDS * 1000), sec);
+    if (isMyTurn() && !S.paused && sec <= 5 && sec >= 1 && sec !== lastTickSec) { lastTickSec = sec; sfx('tick', 0, sec === 1 ? 1 : 0); }   // hitungan 5 detik terakhir
     if (left > 0 || firedKey === k) return;
     const cur = S.roomData.players[S.roomData.gameState.turnIndex];
     if (cur.isBot) return;                                   // bot jalan sendiri

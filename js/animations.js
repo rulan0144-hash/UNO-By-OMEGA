@@ -1,6 +1,7 @@
 import { BACK_SRC, COLOR_NAMES, imgTag, getScale } from './config.js';
 import { S } from './state.js';
 import { generateCardHTML, pileRot, renderGame } from './ui.js';
+import { sfx } from './sound.js';
 
 // Semua animasi permainan. Dipicu oleh daftar peristiwa (state.fx) yang dicatat di rules.js,
 // jadi semua pemain online melihat animasi yang sama.
@@ -128,6 +129,7 @@ function flash(color) {
 async function banner(k, uid, ev) {
     const b = BANNERS[k];
     if (!b) return;
+    if (k !== 'shuffle') sfx(k === 'uno' ? 'uno' : k);   // suara Acak diputar di shuffleAnim agar pas dengan geraknya
     const el = document.createElement('div');
     el.className = 'fx-img-banner';
     el.innerHTML = `<img src="img/effects/${b.img}.png" alt="">`;
@@ -144,7 +146,9 @@ async function wildPicker(color) {
     el.className = 'fx-picker';
     el.innerHTML = '<img class="fx-picker-img fx-picker-spin" src="img/effects/wild-spin.png" alt=""><div class="fx-picker-name"></div>';
     document.body.appendChild(el);
+    sfx('spin');
     await sleep(900);
+    sfx('c_' + color);
     const img = el.querySelector('img');
     img.classList.remove('fx-picker-spin');
     img.src = `img/effects/wild-${color}.png`;
@@ -163,6 +167,7 @@ async function challengeFx(ev) {
     const el = document.createElement('div');
     el.className = 'fx-banner ' + (ev.ok ? 'fx-ok' : 'fx-fail');
     el.innerHTML = `<span>${ev.ok ? 'BENAR!' : 'SALAH!'}</span>`;
+    sfx(ev.ok ? 'challengeRight' : 'challengeWrong');
     const p = S.roomData?.players.find(x => x.uid === ev.by);
     const t = S.roomData?.players.find(x => x.uid === ev.target);
     if (p && t) { const s = document.createElement('small'); s.textContent = `${p.name} menantang ${t.name}`; el.appendChild(s); }
@@ -184,6 +189,7 @@ async function hammer(uid) {
     b.className = 'fx-boom'; b.innerHTML = '<img src="img/effects/boom.png" alt="">';
     b.style.left = (cx - 42) + 'px'; b.style.top = (r.top - 8) + 'px';
     document.body.append(h, b);
+    sfx('catch', reduce ? 0 : 0.85);   // bunyi "buk" tepat saat palu menghantam
     setTimeout(() => target && target.classList.add('fx-shake'), reduce ? 0 : 930);
     setTimeout(() => { h.remove(); b.remove(); target && target.classList.remove('fx-shake'); }, reduce ? 0 : 1600);
     await sleep(1600);
@@ -197,7 +203,9 @@ async function play(ev) {
     const top = document.querySelector('.pile-top');
     if (top) top.style.visibility = 'hidden';
     const n = S.roomData?.gameState.discardPile.length || 1;
+    sfx('card');
     await fly(faceHTML(ev.card), from, discardRect(), { dur: 700, rot: pileRot(n - 1) });
+    sfx('slap');
     if (top) top.style.visibility = '';
     if (ev.card.color === 'Black') flash(ev.color);
 }
@@ -209,7 +217,9 @@ async function draw({ uid, n, sides }) {
     const mine = uid === S.currentUser?.uid;
     const kids = mine ? [...$('human-hand-ui').children] : [];
     const jobs = [];
+    if (n >= 6) sfx('draw6');   // +6: tantangan salah
     for (let i = 0; i < count; i++) {
+        sfx('draw', i * 0.22);
         const to = mine ? (clampRect(rectOf(kids[kids.length - n + i])) || posOfPlayer(uid)) : posOfPlayer(uid);
         const deck = (sides && sides[i] === 'R') ? deckR : deckL;   // terbang dari deck asal kartu
         jobs.push(fly(BACK, deck, to, { delay: i * 220 }).then(() => land(uid)));
@@ -228,11 +238,14 @@ async function deal(state) {
     const hand = [...$('human-hand-ui').children];
     hand.forEach(k => { k.style.visibility = 'hidden'; });
     const jobs = [];
+    const dealSfx = (i, extra = 0) => sfx('deal', (i * 170 + extra) / 1000 + 0.05);
+    hand.forEach((k, i) => dealSfx(i));
     hand.forEach((k, i) => jobs.push(
         fly(BACK, nextDeck(), clampRect(rectOf(k)), { dur: 650, delay: i * 170 }).then(() => { k.style.visibility = ''; })
     ));
     Object.keys(state.hands).filter(u => u !== me).forEach((u, pi) => {
         const to = posOfPlayer(u);
+        for (let i = 0; i < Math.min(state.hands[u].length, 7); i++) dealSfx(i, pi * 70);
         for (let i = 0; i < Math.min(state.hands[u].length, 7); i++) jobs.push(fly(BACK, nextDeck(), to, { dur: 650, delay: i * 170 + pi * 70 }));
     });
     await Promise.all(jobs);
@@ -266,6 +279,7 @@ async function shuffleAnim(state) {
     };
 
     // 1. kumpulkan kartu lama ke tengah
+    sfx('shuffle');
     const out = collect();
     await Promise.all(out.map((it, i) => fly(BACK, it.rect, jitter(), { dur: 800, delay: (i % 12) * 80, rot: rnd(24) })));
 
