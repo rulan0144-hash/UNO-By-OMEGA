@@ -82,7 +82,7 @@
     <div id="game-screen" class="hidden h-full w-full flex flex-col relative casino">
 
         <!-- Tombol menu (jeda / keluar) -->
-        <button id="btn-menu" onclick="openMenu()" class="menu-btn" aria-label="Menu">❚❚</button>
+        <button id="btn-menu" onclick="openMenu()" class="menu-btn" aria-label="Menu"><img src="img/ui/pause.png" alt="" draggable="false"></button>
 
         <!-- Menu Jeda -->
         <div id="pause-modal" class="pause-modal hidden">
@@ -143,7 +143,7 @@
         <div class="row-mid flex flex-row items-center justify-center relative w-full px-4">
             <div class="table-line"></div>
             <div id="dir-ring" class="dir-ring"><img src="img/ui/direction.png" alt="" draggable="false"></div>
-            <div class="absolute left-4 top-4 bottom-4 w-48 md:w-64 bg-black/40 rounded-lg p-3 overflow-y-auto hidden sm:flex flex-col gap-1 hide-scrollbar">
+            <div class="absolute left-4 top-4 bottom-4 w-48 md:w-64 bg-black/40 rounded-lg p-3 overflow-y-auto hidden flex-col gap-1 hide-scrollbar">
                 <h3 class="text-gray-400 text-sm mb-1 uppercase tracking-wider sticky top-0 bg-gray-900/90 py-1 font-bold flex justify-between"><span>Log</span> <span id="room-code-display" class="text-yellow-400"></span></h3>
                 <div id="logs-container" class="text-xs text-gray-200 flex flex-col gap-1 space-y-1"></div>
             </div>
