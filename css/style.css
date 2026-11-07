@@ -64,8 +64,12 @@ body {
 
 /* Belakang Kartu */
 .card-back { background-color: #000; border-color: white; }
-.card-back .oval { background-color: #ef4444; width: 80%; height: 80%; }
-.card-back .val-center { color: #facc15; font-size: 22px; transform: rotate(-25deg); letter-spacing: 2px; text-shadow: 2px 2px 0 #b41010; }
+
+/* Satu desain kartu belakang untuk semua tempat (deck, lawan, kartu terbang) */
+.card-back .oval { display: flex; align-items: center; justify-content: center; background-color: #ef4444; width: 82%; height: 82%; }
+.card-back .val-center { transform: none; color: #facc15; font-size: 24px; letter-spacing: 1px; text-shadow: 2px 2px 0 #b41010; }
+.opponent-card.card-back .val-center { font-size: 13px; letter-spacing: 0; text-shadow: 1px 1px 0 #b41010; }
+@media (min-width: 768px) { .opponent-card.card-back .val-center { font-size: 15px; } }
 
 .toast-enter { transform: translateY(100%); opacity: 0; }
 .toast-show { transform: translateY(0); opacity: 1; }
