@@ -139,7 +139,7 @@ body {
 .player-panel { background: linear-gradient(rgba(0,0,0,.30), rgba(0,0,0,.50)); border-top: 2px solid rgba(212,167,44,.6); padding-top: calc(8px * var(--s, 1)); padding-bottom: calc(20px * var(--s, 1)); }
 
 /* panah arah putaran (searah jarum jam / berlawanan) */
-.dir-ring { position: absolute; left: 50%; top: 50%; width: min(74vw, 320px, 36vh); aspect-ratio: 1; opacity: .8; pointer-events: none; animation: dir-spin 18s linear infinite; }
+.dir-ring { position: absolute; left: 50%; top: 50%; width: var(--ring); aspect-ratio: 1; opacity: .8; pointer-events: none; animation: dir-spin 18s linear infinite; }
 .dir-ring img { width: 100%; display: block; }
 .dir-ring.ccw { animation-direction: reverse; }
 .dir-ring.ccw img { transform: scaleX(-1); }
@@ -245,3 +245,19 @@ body {
 .pause-btn:active { transform: scale(.97); }
 .pause-btn.hidden { display: none; }
 .pause-resume { background: #16a34a; } .pause-restart { background: #2563eb; } .pause-exit { background: #6b7280; }
+
+
+/* ===== MEJA: deck kiri | buangan di tengah | deck kanan ===== */
+/* --ring = ukuran cincin arah; dibuat cukup kecil supaya dua deck muat DI LUAR cincin */
+:root { --ring: min(calc(100vw - 2 * (80px * var(--s, 1) + 20px)), 320px, 36vh); }
+.table-grid { position: relative; z-index: 10; flex: 1 1 auto; align-self: stretch; width: 100%; display: grid; grid-template-columns: 1fr var(--ring) 1fr; align-items: center; }
+.deck-slot { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.deck-slot-l { justify-self: end; }
+.deck-slot-r { justify-self: start; }
+.deck-slot-l, .deck-slot-r { margin: 0 calc(4px * var(--s, 1)); }
+.center-slot { position: relative; display: flex; align-items: center; justify-content: center; }
+.color-badge { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: calc(14px * var(--s, 1)); white-space: nowrap; padding: 3px 14px; border-radius: 999px; font-size: calc(13px * max(var(--s, 1), .8)); font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,.5); }
+.deck-count { background: rgba(0,0,0,.6); border: 1px solid #4b5563; border-radius: 999px; padding: 1px 10px; font-size: calc(12px * max(var(--s, 1), .8)); font-weight: 800; color: #fff; }
+.deck-empty { opacity: .3; cursor: not-allowed; }
+.deck-ready { animation: deck-ready 1.4s ease-in-out infinite; }
+@keyframes deck-ready { 0%, 100% { filter: drop-shadow(0 4px 5px rgba(0,0,0,.5)); } 50% { filter: drop-shadow(0 0 12px rgba(250,204,21,.85)); } }
