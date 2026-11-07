@@ -38,8 +38,19 @@ window.humanPlayCard = (idx) => {
     processPlayCard(idx, card.color);
 };
 
+// Pemilih warna: sentuh/arahkan ke satu warna -> gambar berganti ke wild-<Warna>.png (sama dengan efek Wild)
+document.querySelectorAll('#color-modal .cp-zone').forEach(z => {
+    const img = document.getElementById('cp-img');
+    const on = () => { img.src = `img/effects/wild-${z.dataset.c}.png`; };
+    const off = () => { img.src = 'img/effects/wild-spin.png'; };
+    z.addEventListener('pointerenter', on);
+    z.addEventListener('pointerdown', on);
+    z.addEventListener('pointerleave', off);
+});
+
 window.pickColor = (color) => {
     document.getElementById('color-modal').classList.add('hidden');
+    document.getElementById('cp-img').src = 'img/effects/wild-spin.png';
     processPlayCard(S.pendingWildCardIdx, color);
     S.pendingWildCardIdx = -1;
 };
