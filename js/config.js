@@ -21,7 +21,7 @@ export function preloadCards() {
     ['Wild', 'WildDrawFour', 'WildShuffleHands'].forEach(n => srcs.push(`img/cards/Black-${n}.png`));
     ['draw2', 'draw4', 'skip', 'reverse', 'shuffle', 'uno', 'wild-spin', 'wild-Red', 'wild-Green', 'wild-Blue', 'wild-Yellow', 'hammer', 'boom']
         .forEach(n => srcs.push(`img/effects/${n}.png`));
-    ['frame-gold', 'frame-silver', 'direction'].forEach(n => srcs.push(`img/ui/${n}.png`));
+    ['frame-gold', 'frame-silver', 'direction', 'pause'].forEach(n => srcs.push(`img/ui/${n}.png`));
     srcs.forEach(s => { new Image().src = s; });
 }
 
