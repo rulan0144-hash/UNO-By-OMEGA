@@ -18,7 +18,6 @@ body {
 .card-img { width: 100%; height: 100%; display: block; pointer-events: none; user-select: none; -webkit-user-drag: none; }
 
 /* kartu di tangan */
-.playable:hover { transform: translateY(-12px); filter: drop-shadow(0 10px 12px rgba(0,0,0,.6)); }
 .unplayable { filter: brightness(.6) drop-shadow(0 4px 5px rgba(0,0,0,.5)); cursor: not-allowed; }
 
 /* tumpukan deck */
@@ -218,6 +217,15 @@ body {
 .fly-card .uno-card, .fx-riffle-card .uno-card { width: 80px; height: 116px; }
 #human-hand-ui { min-height: 0; flex: 1 1 0; height: auto; }
 #human-hand-ui .uno-card { flex-shrink: 0; }
+/* Tangan seperti memegang kartu: saling menumpuk (jarak diatur layoutHand di ui.js), ketuk = terangkat */
+#human-hand-ui { overflow: visible !important; padding-left: 8px !important; padding-right: 8px !important; gap: 0 !important; align-items: flex-end !important; padding-bottom: calc(22px * var(--s, 1)); padding-top: calc(30px * var(--s, 1)); }
+#human-hand-ui .uno-card { border-radius: 8px; }
+#human-hand-ui .fan-card { transform-origin: 50% calc(100% + var(--pivot, 170px)); transform: rotate(var(--rot, 0deg)); }
+#human-hand-ui .fan-card.selected { transform: rotate(var(--rot, 0deg)) translateY(calc(-32px * var(--s, 1))); z-index: 60; filter: drop-shadow(0 10px 14px rgba(0,0,0,.75)); }
+#human-hand-ui .fan-card { touch-action: none; }
+#human-hand-ui .fan-card.dragging { transition: none; z-index: 80; filter: drop-shadow(0 14px 18px rgba(0,0,0,.8)); cursor: grabbing; }
+#discard-pile-ui.drop-ready { filter: drop-shadow(0 0 16px #facc15) drop-shadow(0 0 6px #facc15); }
+#human-hand-ui .fan-card.unplayable.selected { filter: brightness(.8) drop-shadow(0 10px 14px rgba(0,0,0,.75)); }
 #btn-uno { font-size: calc(18px * max(var(--s, 1), .75)) !important; padding: calc(8px * var(--s, 1)) calc(16px * var(--s, 1)) !important; }
 #btn-pass { font-size: calc(14px * max(var(--s, 1), .75)) !important; padding: calc(8px * var(--s, 1)) calc(14px * var(--s, 1)) !important; }
 #turn-indicator { font-size: calc(20px * max(var(--s, 1), .7)) !important; }
