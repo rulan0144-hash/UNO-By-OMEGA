@@ -81,14 +81,15 @@
     <div id="game-screen" class="hidden h-full w-full flex flex-col relative casino">
 
         <!-- Modal Pilih Warna -->
-        <div id="color-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden">
-            <div class="bg-gray-800 p-8 rounded-xl border-4 border-gray-600 text-center shadow-2xl">
-                <h2 class="text-3xl mb-6 font-bold">Pilih Warna</h2>
-                <div class="grid grid-cols-2 gap-4">
-                    <button onclick="pickColor('Red')" class="w-24 h-24 bg-red-500 rounded-lg border-4 border-red-700 hover:scale-105 active:scale-95 transition"></button>
-                    <button onclick="pickColor('Blue')" class="w-24 h-24 bg-blue-500 rounded-lg border-4 border-blue-700 hover:scale-105 active:scale-95 transition"></button>
-                    <button onclick="pickColor('Green')" class="w-24 h-24 bg-green-500 rounded-lg border-4 border-green-700 hover:scale-105 active:scale-95 transition"></button>
-                    <button onclick="pickColor('Yellow')" class="w-24 h-24 bg-yellow-500 rounded-lg border-4 border-yellow-700 hover:scale-105 active:scale-95 transition"></button>
+        <div id="color-modal" class="cp-modal hidden">
+            <div class="cp-box">
+                <h2 class="cp-title">Pilih Warna</h2>
+                <div class="cp-stage">
+                    <img id="cp-img" src="img/effects/wild-spin.png" alt="">
+                    <button class="cp-zone cp-Green"  data-c="Green"  onclick="pickColor('Green')"  aria-label="Hijau"></button>
+                    <button class="cp-zone cp-Blue"   data-c="Blue"   onclick="pickColor('Blue')"   aria-label="Biru"></button>
+                    <button class="cp-zone cp-Yellow" data-c="Yellow" onclick="pickColor('Yellow')" aria-label="Kuning"></button>
+                    <button class="cp-zone cp-Red"    data-c="Red"    onclick="pickColor('Red')"    aria-label="Merah"></button>
                 </div>
             </div>
         </div>
