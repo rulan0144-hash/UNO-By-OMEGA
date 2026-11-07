@@ -1,5 +1,5 @@
 import { S, fx, nameOf } from './state.js';
-import { extractCards, shuffle } from './deck.js';
+import { drawFrom, shuffle } from './deck.js';
 
 export function isMyTurn() {
     if (!S.roomData || S.roomData.status !== 'playing') return false;
@@ -141,9 +141,9 @@ export function canCallUno(state) {
 
 // Beri kartu ke pemain + catat animasi tarik kartu
 export function giveCards(state, uid, n) {
-    const got = extractCards(state, n);
+    const { cards: got, sides } = drawFrom(state, n);
     state.hands[uid] = state.hands[uid].concat(got);
-    if (got.length) fx(state, { t: 'draw', uid, n: got.length });
+    if (got.length) fx(state, { t: 'draw', uid, n: got.length, sides });
     return got.length;
 }
 

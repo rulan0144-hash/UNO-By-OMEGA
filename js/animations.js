@@ -203,14 +203,15 @@ async function play(ev) {
 }
 
 // Kartu ditarik: terbang dari tumpukan ke tangan / profil pemain, kartu baru muncul saat tiba
-async function draw({ uid, n }) {
-    const deck = rectOf($('draw-pile-ui'));
+async function draw({ uid, n, sides }) {
+    const deckL = rectOf($('draw-pile-ui')), deckR = rectOf($('draw-pile-r'));
     const count = Math.min(n, 6);
     const mine = uid === S.currentUser?.uid;
     const kids = mine ? [...$('human-hand-ui').children] : [];
     const jobs = [];
     for (let i = 0; i < count; i++) {
         const to = mine ? (clampRect(rectOf(kids[kids.length - n + i])) || posOfPlayer(uid)) : posOfPlayer(uid);
+        const deck = (sides && sides[i] === 'R') ? deckR : deckL;   // terbang dari deck asal kartu
         jobs.push(fly(BACK, deck, to, { delay: i * 220 }).then(() => land(uid)));
     }
     await Promise.all(jobs);
@@ -218,7 +219,9 @@ async function draw({ uid, n }) {
 
 // Awal permainan: kartu dibagikan satu per satu
 async function deal(state) {
-    const deck = rectOf($('draw-pile-ui'));
+    const decks = [rectOf($('draw-pile-ui')), rectOf($('draw-pile-r'))];
+    let dk = 0;
+    const nextDeck = () => decks[dk++ % 2];   // kartu dibagikan bergantian dari deck kiri & kanan
     const me = S.currentUser?.uid;
     const pile = $('discard-pile-ui');
     if (pile) pile.style.visibility = 'hidden';
@@ -226,11 +229,11 @@ async function deal(state) {
     hand.forEach(k => { k.style.visibility = 'hidden'; });
     const jobs = [];
     hand.forEach((k, i) => jobs.push(
-        fly(BACK, deck, clampRect(rectOf(k)), { dur: 650, delay: i * 170 }).then(() => { k.style.visibility = ''; })
+        fly(BACK, nextDeck(), clampRect(rectOf(k)), { dur: 650, delay: i * 170 }).then(() => { k.style.visibility = ''; })
     ));
     Object.keys(state.hands).filter(u => u !== me).forEach((u, pi) => {
         const to = posOfPlayer(u);
-        for (let i = 0; i < Math.min(state.hands[u].length, 7); i++) jobs.push(fly(BACK, deck, to, { dur: 650, delay: i * 170 + pi * 70 }));
+        for (let i = 0; i < Math.min(state.hands[u].length, 7); i++) jobs.push(fly(BACK, nextDeck(), to, { dur: 650, delay: i * 170 + pi * 70 }));
     });
     await Promise.all(jobs);
     if (pile) { pile.style.visibility = ''; pile.classList.add('fx-pop-in'); setTimeout(() => pile.classList.remove('fx-pop-in'), 500); }
@@ -239,10 +242,10 @@ async function deal(state) {
 // Kartu Acak: tangan lama dikumpulkan ke tengah, dikocok, lalu kartu baru dibagikan satu per satu
 async function shuffleAnim(state) {
     const me = S.currentUser?.uid;
-    const dk = rectOf($('draw-pile-ui'));
-    if (!dk) return;
-    const d = center(dk), p = center(discardRect() || dk);
-    const mid = { left: (d.x + p.x) / 2 - 40, top: (d.y + p.y) / 2 - 58, width: 80, height: 116 };
+    const dr = discardRect() || rectOf($('draw-pile-ui'));
+    if (!dr) return;
+    const p = center(dr);   // titik kumpul = tengah meja
+    const mid = { left: p.x - 40, top: p.y - 58, width: 80, height: 116 };
     const jitter = () => ({ ...mid, left: mid.left + rnd(16), top: mid.top + rnd(12) });
 
     // daftar kartu yang sedang terlihat di layar, lalu disembunyikan (digantikan kartu terbang)

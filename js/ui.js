@@ -103,7 +103,15 @@ export function renderGame() {
     }
 
     // Tumpukan
-    document.getElementById('deck-count').innerText = state.deck.length;
+    const nL = state.deck.length, nR = (state.deckR || []).length;
+    document.getElementById('deck-count').innerText = nL;
+    document.getElementById('deck-count-r').innerText = nR;
+    document.getElementById('draw-pile-ui').classList.toggle('deck-empty', nL === 0);
+    document.getElementById('draw-pile-r').classList.toggle('deck-empty', nR === 0);
+    // kedua deck berdenyut lembut saat giliran kamu & boleh menarik kartu
+    const canDraw = isMyTurn() && !state.pending && !S.hasDrawnThisTurn;
+    document.getElementById('draw-pile-ui').classList.toggle('deck-ready', canDraw && nL > 0);
+    document.getElementById('draw-pile-r').classList.toggle('deck-ready', canDraw && nR > 0);
     const topCard = state.discardPile[state.discardPile.length - 1];
     if (topCard) {
         const pile = state.discardPile, n = pile.length;
@@ -119,7 +127,7 @@ export function renderGame() {
     }
     const badge = document.getElementById('current-color-badge');
     const bgC = { 'Red': 'bg-red-500', 'Blue': 'bg-blue-500', 'Green': 'bg-green-500', 'Yellow': 'bg-yellow-500' }[state.currentColor] || 'bg-gray-700';
-    badge.className = `mt-2 px-4 py-1 rounded-full text-xs md:text-sm font-bold shadow-md text-white border-2 border-white ${bgC}`;
+    badge.className = `color-badge text-white border-2 border-white ${bgC}`;
     badge.innerText = `Warna: ${COLOR_NAMES[state.currentColor] || state.currentColor}`;
 
     // Tangan

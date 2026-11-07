@@ -1,6 +1,6 @@
 import { COLORS, LOCAL_UID } from './config.js';
 import { S, cloneState, esc, fx } from './state.js';
-import { dealGame, extractCards } from './deck.js';
+import { dealGame, drawFrom } from './deck.js';
 import { advance, penalize, playCardOn, resolvePending } from './rules.js';
 import { updateRemoteState } from './actions.js';
 import { renderGame } from './ui.js';
@@ -55,10 +55,11 @@ export function botTurn(bot) {
     let idx = hand.findIndex(c => c.color !== 'Black' && ok(c));
     if (idx < 0) idx = hand.findIndex(c => c.color === 'Black');
     if (idx < 0) {
-        const d = extractCards(s, 1)[0];
+        const got = drawFrom(s, 1, Math.random() < 0.5 ? 'L' : 'R');   // bot memilih deck kiri/kanan secara acak
+        const d = got.cards[0];
         if (d) {
             hand.push(d);
-                    fx(s, { t: 'draw', uid, n: 1 });
+                    fx(s, { t: 'draw', uid, n: 1, sides: got.sides });
             s.logs.push(`<b>${esc(bot.name)}</b> mengambil kartu.`);
             if (ok(d)) idx = hand.length - 1;
         }

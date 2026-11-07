@@ -1,7 +1,7 @@
 import { isBusy } from './animations.js';
 import { S, cloneState, fx, nameOf } from './state.js';
 import { roomDoc, updateDoc } from './firebase.js';
-import { calculatePoint, extractCards } from './deck.js';
+import { calculatePoint, drawFrom } from './deck.js';
 import { advance, canCallUno, isMyTurn, isPlayable, normalizeUno, penalize, playCardOn, resolvePending } from './rules.js';
 import { hideChallenge } from './challenge.js';
 import { scheduleBot } from './local.js';
@@ -63,18 +63,20 @@ export async function processPlayCard(idx, color) {
     await updateRemoteState(s, won ? { status: 'finished' } : {});
 }
 
-window.humanDrawCard = () => {
+// side: 'L' = deck kiri, 'R' = deck kanan (pemain bebas memilih)
+window.humanDrawCard = (side) => {
     if (S.roomData && S.roomData.gameState.pending) return showToast("Jawab dulu: ambil kartu atau tantang.");
     if (isBusy()) return showToast("Tunggu animasi selesai...");
     if (!isMyTurn() || S.hasDrawnThisTurn) return;
     const s = cloneState();
     const me = S.currentUser.uid;
     s.catchable = null;
-    const drawn = extractCards(s, 1)[0];
+    const got = drawFrom(s, 1, side);
+    const drawn = got.cards[0];
     if (!drawn) { advance(s); s.logs.push(`<b>${nameOf(me)}</b> tidak bisa mengambil kartu.`); updateRemoteState(s); return; }
 
     s.hands[me].push(drawn);
-            fx(s, { t: 'draw', uid: me, n: 1 });
+            fx(s, { t: 'draw', uid: me, n: 1, sides: got.sides });
     s.logs.push(`<b>${nameOf(me)}</b> mengambil kartu.`);
     if (!isPlayable(drawn)) {
         advance(s);
@@ -172,8 +174,8 @@ export function timeoutTurn(uid) {
 
     s.catchable = null;
     if (!drew) {
-        const got = extractCards(s, 1);
-        if (got.length) { s.hands[uid].push(got[0]); fx(s, { t: 'draw', uid, n: 1 }); }
+        const got = drawFrom(s, 1);
+        if (got.cards.length) { s.hands[uid].push(got.cards[0]); fx(s, { t: 'draw', uid, n: 1, sides: got.sides }); }
     }
     s.logs.push(`Waktu habis! <b>${nameOf(uid)}</b> tidak punya kartu cocok, ambil dari deck.`);
     if (mine) showToast("Waktu habis! Tidak ada kartu cocok, ambil dari deck.");
