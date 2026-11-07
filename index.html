@@ -140,7 +140,7 @@
         </div>
 
         <!-- Tengah: Meja -->
-        <div class="row-mid flex flex-row items-center justify-center relative w-full px-4">
+        <div class="row-mid flex flex-row items-center justify-center relative w-full px-2">
             <div class="table-line"></div>
             <div id="dir-ring" class="dir-ring"><img src="img/ui/direction.png" alt="" draggable="false"></div>
             <div class="absolute left-4 top-4 bottom-4 w-48 md:w-64 bg-black/40 rounded-lg p-3 overflow-y-auto hidden flex-col gap-1 hide-scrollbar">
@@ -148,14 +148,19 @@
                 <div id="logs-container" class="text-xs text-gray-200 flex flex-col gap-1 space-y-1"></div>
             </div>
 
-            <div class="flex gap-8 items-center justify-center w-full relative z-10">
-                <div class="flex flex-col items-center">
-                    <div onclick="humanDrawCard()" id="draw-pile-ui" class="uno-card draw-pile"><img class="card-img" src="img/cards/back.png" alt="" draggable="false"></div>
-                    <span class="mt-2 text-xs md:text-sm text-gray-400 bg-black/50 px-3 py-1 rounded-full border border-gray-700"><span id="deck-count" class="font-bold text-white">0</span> Sisa</span>
+            <!-- Meja: deck kiri | tumpukan buangan (tepat di tengah) | deck kanan -->
+            <div class="table-grid">
+                <div class="deck-slot deck-slot-l">
+                    <div onclick="humanDrawCard('L')" id="draw-pile-ui" class="uno-card draw-pile"><img class="card-img" src="img/cards/back.png" alt="" draggable="false"></div>
+                    <span class="deck-count"><span id="deck-count">0</span></span>
                 </div>
-                <div class="flex flex-col items-center">
+                <div class="center-slot">
                     <div id="discard-pile-ui" class="relative"></div>
-                    <div id="current-color-badge" class="mt-2 px-4 py-1 rounded-full text-xs md:text-sm font-bold shadow-md bg-gray-700 text-white border-2 border-transparent">Warna: -</div>
+                    <div id="current-color-badge" class="color-badge">Warna: -</div>
+                </div>
+                <div class="deck-slot deck-slot-r">
+                    <div onclick="humanDrawCard('R')" id="draw-pile-r" class="uno-card draw-pile"><img class="card-img" src="img/cards/back.png" alt="" draggable="false"></div>
+                    <span class="deck-count"><span id="deck-count-r">0</span></span>
                 </div>
             </div>
         </div>
