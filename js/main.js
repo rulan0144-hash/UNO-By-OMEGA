@@ -16,7 +16,7 @@ async function initAuth() {
             const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000));
             const login = initialAuthToken ? signInWithCustomToken(auth, initialAuthToken) : signInAnonymously(auth);
             await Promise.race([login, timeout]);
-            S.fbUser = auth.S.currentUser;
+            S.fbUser = auth.currentUser;
         } catch (err) { console.error("Firebase gagal:", err); }
     }
     document.getElementById('loading-screen').classList.add('hidden');
