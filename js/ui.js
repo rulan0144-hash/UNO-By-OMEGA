@@ -84,18 +84,19 @@ export function renderGame() {
         stackHTML += `<div class="uno-card opponent-card st-${c}">${imgTag(BACK_SRC)}</div>`;
         }
         const calledBadge = (count === 1 && state.unoCalled[p.uid]) ? `<div class="absolute top-0 -left-4 z-20 bg-green-600 text-[10px] px-1 rounded border border-white">UNO ✓</div>` : '';
-        const catchBtn = (S.selectedOpp === p.uid && count === 1)
-            ? `<button onclick="event.stopPropagation(); catchPlayer('${p.uid}')" class="absolute top-0 -right-7 z-20 bg-red-600 border-2 border-white rounded-full text-xs font-black px-2 py-1 animate-bounce shadow-lg">UNO!</button>` : '';
+        // Lupa UNO: ikon palu muncul di profil; ketuk profil = langsung tertangkap
+        const catchable = state.catchable === p.uid && !state.unoCalled[p.uid] && state.hands[p.uid].length === 1;
+        const catchBtn = catchable ? `<img class="catch-hammer" src="img/effects/hammer.png" alt="">` : '';
 
         oppArea.innerHTML += `
-            <div id="prof-${p.uid}" onclick="toggleOpp('${p.uid}')" class="opp-profile ${isTurn ? 'is-turn' : ''}">
+            <div id="prof-${p.uid}" onclick="catchPlayer('${p.uid}')" class="opp-profile ${isTurn ? 'is-turn' : ''}">
                 <div id="stack-${p.uid}" class="opp-stack">
                     ${stackHTML}
                     <div class="count-badge">${count}</div>
                     ${calledBadge}${catchBtn}
                 </div>
                 <div class="opp-avatar">${avatarHTML(p, isTurn, 'opp')}</div>
-                <span class="name-tag ${isTurn ? 'name-turn' : ''} ${S.selectedOpp === p.uid ? 'ring-2 ring-red-400' : ''}">${esc(p.name)}</span>
+                <span class="name-tag ${isTurn ? 'name-turn' : ''} ">${esc(p.name)}</span>
             </div>`;
     }
 
@@ -136,7 +137,10 @@ export function renderGame() {
     // Profil saya (avatar + bingkai)
     const meP = S.roomData.players.find(p => p.uid === me);
     const meAv = document.getElementById('me-avatar');
-    if (meAv && meP) meAv.innerHTML = avatarHTML(meP, isMyTurn(), 'me');
+    if (meAv && meP) {
+        const mineCatch = state.catchable === me && !state.unoCalled[me] && (state.hands[me] || []).length === 1;
+        meAv.innerHTML = avatarHTML(meP, isMyTurn(), 'me') + (mineCatch ? `<img class="catch-hammer" src="img/effects/hammer.png" alt="" onclick="showToast('Kamu lupa UNO! Tekan tombol UNO sekarang.')">` : '');
+    }
 
     // Tombol UNO: berdenyut saat sudah boleh ditekan
     const btnUno = document.getElementById('btn-uno');
