@@ -20,9 +20,14 @@ export function advance(state) {
     state.turnNo = (state.turnNo || 0) + 1;
 }
 
-// Kartu > 2 membatalkan status "sudah UNO"
-export function normalizeUno(state) {
-    Object.keys(state.hands).forEach(u => { if (state.hands[u].length > 2) state.unoCalled[u] = false; });
+// Status "sudah UNO" batal jika kartu > 2, atau jumlah kartu pemain bertambah
+// (ambil kartu, kena +2/+4, penalti, Acak). Harus tekan UNO lagi.
+export function normalizeUno(state, prevHands) {
+    Object.keys(state.hands).forEach(u => {
+        const n = state.hands[u].length;
+        const before = prevHands && prevHands[u] ? prevHands[u].length : n;
+        if (n > 2 || n > before) state.unoCalled[u] = false;
+    });
 }
 
 export function penalize(state, uid, byUid) {
