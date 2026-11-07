@@ -98,7 +98,7 @@ export function renderGame() {
 
         let stackHTML = '';
         for (let c = 0; c < Math.min(count, 5); c++) {
-            stackHTML += `<div class="uno-card opponent-card card-back absolute left-0" style="margin-left: ${c * 5}px; z-index: ${c};"><div class="oval"></div></div>`;
+            stackHTML += `<div class="uno-card opponent-card card-back absolute left-0" style="margin-left: ${c * 5}px; z-index: ${c};"><div class="oval"><span class="val-center">UNO</span></div></div>`;
         }
         const calledBadge = (count === 1 && state.unoCalled[p.uid]) ? `<div class="absolute top-0 -left-4 z-20 bg-green-600 text-[10px] px-1 rounded border border-white">UNO ✓</div>` : '';
         const catchBtn = (S.selectedOpp === p.uid && count === 1)
