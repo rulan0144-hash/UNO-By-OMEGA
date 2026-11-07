@@ -24,3 +24,12 @@ export function preloadCards() {
     ['frame-gold', 'frame-silver', 'direction'].forEach(n => srcs.push(`img/ui/${n}.png`));
     srcs.forEach(s => { new Image().src = s; });
 }
+
+// ---- Skala tampilan: semua ukuran kartu/profil mengikuti ukuran jendela (variabel CSS --s) ----
+export function getScale() { return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--s')) || 1; }
+export function applyScale() {
+    const h = window.innerHeight, w = window.innerWidth;
+    const s = Math.max(0.42, Math.min(1.2, (h - 20) / 830, w / 360));
+    document.documentElement.style.setProperty('--s', s.toFixed(3));
+    document.documentElement.classList.toggle('compact', s < 0.65);   // jendela sangat kecil: sembunyikan info tambahan
+}
