@@ -261,3 +261,12 @@ body {
 .deck-empty { opacity: .3; cursor: not-allowed; }
 .deck-ready { animation: deck-ready 1.4s ease-in-out infinite; }
 @keyframes deck-ready { 0%, 100% { filter: drop-shadow(0 4px 5px rgba(0,0,0,.5)); } 50% { filter: drop-shadow(0 0 12px rgba(250,204,21,.85)); } }
+
+/* ---- Suara: tombol cepat di sebelah tombol menu + penggeser volume di menu jeda ---- */
+.snd-btn { right: calc(14px * var(--s, 1) + 46px * max(var(--s, 1), .78) + 8px); }
+.snd-panel { display: flex; align-items: center; gap: 12px; margin: 6px 0 4px; padding: 10px; background: rgba(0, 0, 0, .3); border-radius: 12px; }
+.snd-mute { width: 46px; height: 46px; padding: 0; border: 0; background: none; cursor: pointer; line-height: 0; flex: none; }
+.snd-mute img { width: 100%; height: 100%; display: block; pointer-events: none; }
+.snd-sliders { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.snd-sliders label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: #e5e7eb; }
+.snd-sliders input { flex: 1; min-width: 0; accent-color: #facc15; }
