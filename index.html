@@ -84,11 +84,21 @@
         <!-- Tombol menu (jeda / keluar) -->
         <button id="btn-menu" onclick="openMenu()" class="menu-btn" aria-label="Menu"><img src="img/ui/pause.png" alt="" draggable="false"></button>
 
+        <!-- Tombol suara cepat (bisu / hidupkan) -->
+        <button id="btn-sound" onclick="toggleSound()" data-nosfx="1" class="menu-btn snd-btn" aria-label="Suara"><img class="snd-img" src="img/ui/sound-on.png" alt="" draggable="false"></button>
+
         <!-- Menu Jeda -->
         <div id="pause-modal" class="pause-modal hidden">
             <div class="pause-box">
                 <h2 id="pause-title" class="pause-title">Jeda</h2>
                 <p id="pause-note" class="pause-note"></p>
+                <div class="snd-panel">
+                    <button onclick="toggleSound()" data-nosfx="1" class="snd-mute" aria-label="Bisu"><img class="snd-img" src="img/ui/sound-on.png" alt="" draggable="false"></button>
+                    <div class="snd-sliders">
+                        <label>Musik <input id="vol-music" type="range" min="0" max="100" value="60" oninput="setVolume('music', this.value)"></label>
+                        <label>Efek <input id="vol-sfx" type="range" min="0" max="100" value="90" oninput="setVolume('sfx', this.value)"></label>
+                    </div>
+                </div>
                 <button onclick="resumeGame()" class="pause-btn pause-resume">▶ Lanjutkan</button>
                 <button id="btn-restart" onclick="restartLocal()" class="pause-btn pause-restart">↻ Mulai Ulang</button>
                 <button onclick="exitGame()" class="pause-btn pause-exit">◀ Keluar ke Beranda</button>
