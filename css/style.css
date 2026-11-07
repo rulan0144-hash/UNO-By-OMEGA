@@ -10,7 +10,7 @@ body {
 
 /* ===== KARTU: gambar PNG di folder img/cards/ ===== */
 .uno-card {
-    width: 80px; height: 116px;
+    width: calc(80px * var(--s, 1)); height: calc(116px * var(--s, 1));
     display: inline-block; position: relative; flex-shrink: 0; cursor: pointer;
     transition: transform .2s ease, filter .2s ease;
     filter: drop-shadow(0 4px 5px rgba(0,0,0,.5));
@@ -25,8 +25,7 @@ body {
 .draw-pile:hover { transform: scale(1.05); filter: drop-shadow(0 0 12px rgba(255,255,255,.45)); }
 
 /* kartu lawan (kecil, bertumpuk) */
-.opponent-card { position: absolute; left: 0; top: 0; width: 50px; height: 72px; cursor: default; }
-@media (min-width: 768px) { .opponent-card { width: 60px; height: 86px; } }
+.opponent-card { position: absolute; left: 0; top: 0; width: calc(50px * var(--s, 1)); height: calc(72px * var(--s, 1)); cursor: default; }
 .st-0 { margin-left: 0;    z-index: 0; }
 .st-1 { margin-left: 5px;  z-index: 1; }
 .st-2 { margin-left: 10px; z-index: 2; }
@@ -34,7 +33,7 @@ body {
 .st-4 { margin-left: 20px; z-index: 4; }
 
 /* tumpukan buangan: kartu di bawahnya tetap terlihat */
-.pile-wrap { position: relative; width: 80px; height: 116px; }
+.pile-wrap { position: relative; width: calc(80px * var(--s, 1)); height: calc(116px * var(--s, 1)); }
 .pile-card { position: absolute; left: 0; top: 0; cursor: default; transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); }
 .glow-Red    { filter: drop-shadow(0 0 14px #ef4444) drop-shadow(0 0 5px #ef4444); }
 .glow-Green  { filter: drop-shadow(0 0 14px #22c55e) drop-shadow(0 0 5px #22c55e); }
@@ -137,10 +136,10 @@ body {
 .table-line { position: absolute; left: 50%; top: 50%; width: 88%; height: 92%; transform: translate(-50%, -50%); border: 2px solid rgba(212,167,44,.55); border-radius: 50%; pointer-events: none; }
 .table-line::before { content: ''; position: absolute; inset: 14px; border: 1px dashed rgba(212,167,44,.3); border-radius: 50%; }
 .table-line::after { content: 'UNO'; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-12deg); font-size: min(26vw, 150px); color: rgba(255,255,255,.05); letter-spacing: 6px; }
-.player-panel { background: linear-gradient(rgba(0,0,0,.30), rgba(0,0,0,.50)); border-top: 2px solid rgba(212,167,44,.6); padding-top: 8px; padding-bottom: 16px; }
+.player-panel { background: linear-gradient(rgba(0,0,0,.30), rgba(0,0,0,.50)); border-top: 2px solid rgba(212,167,44,.6); padding-top: calc(8px * var(--s, 1)); padding-bottom: calc(20px * var(--s, 1)); }
 
 /* panah arah putaran (searah jarum jam / berlawanan) */
-.dir-ring { position: absolute; left: 50%; top: 50%; width: min(74vw, 320px); aspect-ratio: 1; opacity: .8; pointer-events: none; animation: dir-spin 18s linear infinite; }
+.dir-ring { position: absolute; left: 50%; top: 50%; width: min(74vw, 320px, 36vh); aspect-ratio: 1; opacity: .8; pointer-events: none; animation: dir-spin 18s linear infinite; }
 .dir-ring img { width: 100%; display: block; }
 .dir-ring.ccw { animation-direction: reverse; }
 .dir-ring.ccw img { transform: scaleX(-1); }
@@ -149,14 +148,13 @@ body {
 /* ===== PROFIL PEMAIN: avatar + bingkai ===== */
 .opp-profile { display: flex; flex-direction: column; align-items: center; padding: 0 4px; cursor: pointer; opacity: .8; transition: transform .2s ease, opacity .2s ease; }
 .opp-profile.is-turn { transform: scale(1.08); opacity: 1; }
-.opp-stack { position: relative; width: 56px; height: 76px; display: flex; justify-content: center; }
-@media (min-width: 768px) { .opp-stack { width: 64px; height: 86px; } }
+.opp-stack { position: relative; width: calc(56px * var(--s, 1)); height: calc(76px * var(--s, 1)); display: flex; justify-content: center; }
 .count-badge { position: absolute; bottom: -10px; z-index: 10; background: #000; color: #fff; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; border: 1px solid #6b7280; }
-.opp-avatar { margin-top: 8px; }
-.name-tag { margin-top: 2px; font-size: 12px; white-space: nowrap; padding: 2px 8px; border-radius: 6px; background: rgba(0,0,0,.55); color: #d1d5db; }
+.opp-avatar { margin-top: calc(8px * var(--s, 1)); }
+.name-tag { margin-top: 2px; font-size: calc(12px * max(var(--s, 1), .8)); white-space: nowrap; padding: 2px 8px; border-radius: 6px; background: rgba(0,0,0,.55); color: #d1d5db; }
 .name-tag.name-turn { color: #facc15; border: 1px solid #facc15; }
-.avatar { position: relative; width: 56px; height: 56px; }
-.avatar-me { width: 64px; height: 64px; }
+.avatar { position: relative; width: calc(56px * var(--s, 1)); height: calc(56px * var(--s, 1)); }
+.avatar-me { width: calc(64px * var(--s, 1)); height: calc(64px * var(--s, 1)); }
 .avatar-face { position: absolute; inset: 0; margin: auto; width: 68%; height: 68%; border-radius: 50%; background: hsl(var(--h) 65% 42%); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; text-shadow: 0 2px 0 rgba(0,0,0,.4); }
 .avatar-frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .avatar-active { animation: avatar-glow 1.2s ease-in-out infinite; }
@@ -176,7 +174,7 @@ body {
 .ch-note { margin-top: 10px; font-size: 12px; color: #bfdbfe; }
 
 /* ===== EFEK TENGAH (gambar PNG) ===== */
-.fx-img-banner { position: fixed; left: 50%; top: 42%; width: min(62vw, 300px); z-index: 400; pointer-events: none; animation: fx-pop 1.6s cubic-bezier(.2, .9, .3, 1.2) forwards; }
+.fx-img-banner { position: fixed; left: 50%; top: 42%; width: min(62vw, 300px, 40vh); z-index: 400; pointer-events: none; animation: fx-pop 1.6s cubic-bezier(.2, .9, .3, 1.2) forwards; }
 .fx-img-banner img { width: 100%; display: block; }
 .fx-img-banner small { position: absolute; left: 0; right: 0; bottom: -26px; text-align: center; font-size: 18px; color: #fff; text-shadow: 0 2px 0 #000; }
 .fx-ok { color: #4ade80; -webkit-text-stroke: 3px #000; paint-order: stroke fill; }
@@ -184,7 +182,7 @@ body {
 .fx-hammer img, .fx-boom img { width: 100%; height: 100%; display: block; }
 
 /* pemilih warna Wild */
-.fx-picker { position: fixed; left: 50%; top: 44%; width: min(66vw, 320px); z-index: 400; pointer-events: none; text-align: center; transform: translate(-50%, -50%); animation: fx-picker-in .35s ease-out; }
+.fx-picker { position: fixed; left: 50%; top: 44%; width: min(66vw, 320px, 44vh); z-index: 400; pointer-events: none; text-align: center; transform: translate(-50%, -50%); animation: fx-picker-in .35s ease-out; }
 .fx-picker-img { width: 100%; display: block; }
 .fx-picker-spin { animation: fx-spin .9s cubic-bezier(.5, 0, .3, 1); }
 .fx-picker-pop { animation: fx-picker-pop .5s cubic-bezier(.2, 1.4, .4, 1); }
@@ -201,7 +199,7 @@ body {
 /* ---- Pemilih warna Wild (memakai gambar yang sama dengan efek Wild) ---- */
 .cp-modal { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, .78); }
 .cp-modal.hidden { display: none; }
-.cp-box { width: min(78vw, 340px); text-align: center; animation: fx-picker-pop .4s cubic-bezier(.2, 1.4, .4, 1); }
+.cp-box { width: min(78vw, 340px, 64vh); text-align: center; animation: fx-picker-pop .4s cubic-bezier(.2, 1.4, .4, 1); }
 .cp-title { font-size: min(9vw, 40px); font-weight: 800; color: #fff; margin-bottom: 4px; text-shadow: -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000, 0 4px 0 #000; }
 .cp-stage { position: relative; width: 100%; aspect-ratio: 1 / 1; }
 .cp-stage img { width: 100%; height: 100%; display: block; pointer-events: none; user-select: none; -webkit-user-drag: none; }
@@ -210,3 +208,25 @@ body {
 .cp-Blue   { left: 32%; top: 45%; }
 .cp-Yellow { left: 67%; top: 45%; }
 .cp-Red    { left: 50%; top: 64%; }
+
+/* ---- Ikon palu: pemain lupa UNO, ketuk profil untuk menangkap ---- */
+#me-avatar { position: relative; }
+.catch-hammer { position: absolute; top: -10px; right: -14px; width: 34px; height: 34px; z-index: 20; animation: catch-bob .6s ease-in-out infinite alternate; filter: drop-shadow(0 2px 3px rgba(0,0,0,.7)); }
+@keyframes catch-bob { from { transform: rotate(-18deg) scale(1); } to { transform: rotate(14deg) scale(1.15); } }
+
+/* ---- Tampilan responsif: panel bawah & pengganti ukuran Tailwind ---- */
+.fly-card .uno-card, .fx-riffle-card .uno-card { width: 80px; height: 116px; }
+#human-hand-ui { min-height: 0; flex: 1 1 0; height: auto; }
+#human-hand-ui .uno-card { flex-shrink: 0; }
+#btn-uno { font-size: calc(18px * max(var(--s, 1), .75)) !important; padding: calc(8px * var(--s, 1)) calc(16px * var(--s, 1)) !important; }
+#btn-pass { font-size: calc(14px * max(var(--s, 1), .75)) !important; padding: calc(8px * var(--s, 1)) calc(14px * var(--s, 1)) !important; }
+#turn-indicator { font-size: calc(20px * max(var(--s, 1), .7)) !important; }
+.count-badge { font-size: calc(12px * max(var(--s, 1), .8)); }
+
+/* Tinggi tiga baris mengikuti skala, jadi kartu di tangan selalu terlihat penuh */
+.row-top { flex: 0 0 auto; height: calc(190px * var(--s, 1)); }
+.row-mid { flex: 1 1 0; min-height: 0; }
+.row-bot { flex: 0 0 auto; height: calc(250px * var(--s, 1)); }
+.player-panel > div:first-child { margin-bottom: calc(8px * var(--s, 1)) !important; }
+.compact #direction-indicator { display: none; }
+.compact .player-panel .mt-1 { margin-top: 0 !important; }
