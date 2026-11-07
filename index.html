@@ -120,9 +120,7 @@
 
             <div class="flex gap-8 items-center justify-center w-full">
                 <div class="flex flex-col items-center">
-                    <div onclick="humanDrawCard()" id="draw-pile-ui" class="uno-card card-back hover:scale-105 hover:shadow-[0_0_15px_rgba(255,255,255,0.3)] transition relative">
-                        <div class="oval flex items-center justify-center"><span class="val-center">UNO</span></div>
-                    </div>
+                    <div onclick="humanDrawCard()" id="draw-pile-ui" class="uno-card draw-pile"><img class="card-img" src="img/cards/back.png" alt="" draggable="false"></div>
                     <span class="mt-2 text-xs md:text-sm text-gray-400 bg-black/50 px-3 py-1 rounded-full border border-gray-700"><span id="deck-count" class="font-bold text-white">0</span> Sisa</span>
                 </div>
                 <div class="flex flex-col items-center">
