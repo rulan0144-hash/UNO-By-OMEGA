@@ -8,68 +8,38 @@ body {
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Gaya Kartu UNO */
+/* ===== KARTU: gambar PNG di folder img/cards/ ===== */
 .uno-card {
     width: 80px; height: 116px;
-    border-radius: 8px;
-    border: 4px solid white;
-    display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
-    position: relative; overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.5);
-    flex-shrink: 0; cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: inline-block; position: relative; flex-shrink: 0; cursor: pointer;
+    transition: transform .2s ease, filter .2s ease;
+    filter: drop-shadow(0 4px 5px rgba(0,0,0,.5));
 }
+.card-img { width: 100%; height: 100%; display: block; pointer-events: none; user-select: none; -webkit-user-drag: none; }
 
-.opponent-card { width: 50px; height: 72px; border-width: 2px; cursor: default; margin-bottom: -30px; }
-@media (min-width: 768px) {
-    .opponent-card { width: 60px; height: 86px; margin-right: -30px; margin-bottom: 0; }
-}
+/* kartu di tangan */
+.playable:hover { transform: translateY(-12px); filter: drop-shadow(0 10px 12px rgba(0,0,0,.6)); }
+.unplayable { filter: brightness(.6) drop-shadow(0 4px 5px rgba(0,0,0,.5)); cursor: not-allowed; }
 
-.playable:hover {
-    transform: translateY(-12px);
-    box-shadow: 0 10px 15px rgba(0,0,0,0.6);
-}
-.unplayable { filter: brightness(0.6); cursor: not-allowed; }
+/* tumpukan deck */
+.draw-pile:hover { transform: scale(1.05); filter: drop-shadow(0 0 12px rgba(255,255,255,.45)); }
 
-.bg-Red { background-color: #ef4444; }
-.bg-Green { background-color: #22c55e; }
-.bg-Blue { background-color: #3b82f6; }
-.bg-Yellow { background-color: #eab308; }
-.bg-Black { background-color: #111827; }
+/* kartu lawan (kecil, bertumpuk) */
+.opponent-card { position: absolute; left: 0; top: 0; width: 50px; height: 72px; cursor: default; }
+@media (min-width: 768px) { .opponent-card { width: 60px; height: 86px; } }
+.st-0 { margin-left: 0;    z-index: 0; }
+.st-1 { margin-left: 5px;  z-index: 1; }
+.st-2 { margin-left: 10px; z-index: 2; }
+.st-3 { margin-left: 15px; z-index: 3; }
+.st-4 { margin-left: 20px; z-index: 4; }
 
-/* Oval Dalam Kartu */
-.uno-card .oval {
-    position: absolute;
-    width: 90%; height: 95%;
-    background-color: white;
-    border-radius: 50% 50% / 60% 60%;
-    transform: rotate(-25deg);
-    z-index: 1;
-    box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
-}
-.uno-card .inner-oval {
-    position: absolute;
-    width: 75%; height: 80%;
-    border-radius: 50% 50% / 60% 60%;
-    transform: rotate(-25deg);
-    z-index: 2;
-}
-
-/* Tipografi pada kartu */
-.text-shadow-sm { text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
-.val-center { z-index: 3; font-size: 34px; color: white; line-height: 1; text-align: center; }
-.val-sm-tl { position: absolute; top: 2px; left: 6px; z-index: 3; font-size: 14px; color: white; }
-.val-sm-br { position: absolute; bottom: 2px; right: 6px; z-index: 3; font-size: 14px; color: white; transform: rotate(180deg); }
-.val-W { font-size: 16px; letter-spacing: 1px; }
-
-/* Belakang Kartu */
-.card-back { background-color: #000; border-color: white; }
-
-/* Satu desain kartu belakang untuk semua tempat (deck, lawan, kartu terbang) */
-.card-back .oval { display: flex; align-items: center; justify-content: center; background-color: #ef4444; width: 82%; height: 82%; }
-.card-back .val-center { transform: none; color: #facc15; font-size: 24px; letter-spacing: 1px; text-shadow: 2px 2px 0 #b41010; }
-.opponent-card.card-back .val-center { font-size: 13px; letter-spacing: 0; text-shadow: 1px 1px 0 #b41010; }
-@media (min-width: 768px) { .opponent-card.card-back .val-center { font-size: 15px; } }
+/* tumpukan buangan: kartu di bawahnya tetap terlihat */
+.pile-wrap { position: relative; width: 80px; height: 116px; }
+.pile-card { position: absolute; left: 0; top: 0; cursor: default; transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); }
+.glow-Red    { filter: drop-shadow(0 0 14px #ef4444) drop-shadow(0 0 5px #ef4444); }
+.glow-Green  { filter: drop-shadow(0 0 14px #22c55e) drop-shadow(0 0 5px #22c55e); }
+.glow-Blue   { filter: drop-shadow(0 0 14px #3b82f6) drop-shadow(0 0 5px #3b82f6); }
+.glow-Yellow { filter: drop-shadow(0 0 14px #eab308) drop-shadow(0 0 5px #eab308); }
 
 .toast-enter { transform: translateY(100%); opacity: 0; }
 .toast-show { transform: translateY(0); opacity: 1; }
