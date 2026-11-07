@@ -78,7 +78,7 @@
     </div>
 
     <!-- AREA PERMAINAN -->
-    <div id="game-screen" class="hidden h-full w-full flex flex-col relative">
+    <div id="game-screen" class="hidden h-full w-full flex flex-col relative casino">
 
         <!-- Modal Pilih Warna -->
         <div id="color-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden">
@@ -90,6 +90,18 @@
                     <button onclick="pickColor('Green')" class="w-24 h-24 bg-green-500 rounded-lg border-4 border-green-700 hover:scale-105 active:scale-95 transition"></button>
                     <button onclick="pickColor('Yellow')" class="w-24 h-24 bg-yellow-500 rounded-lg border-4 border-yellow-700 hover:scale-105 active:scale-95 transition"></button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Kotak Tantangan +4 -->
+        <div id="challenge-modal" class="ch-modal hidden">
+            <div class="ch-panel">
+                <p class="ch-title">Apakah <b id="ch-name"></b> masih punya kartu <span id="ch-color" class="ch-color"></span>?</p>
+                <div class="ch-buttons">
+                    <button id="ch-draw" onclick="challengeAction('draw')" class="ch-btn ch-btn-draw">Ambil Kartu</button>
+                    <button onclick="challengeAction('challenge')" class="ch-btn ch-btn-challenge">Tantang</button>
+                </div>
+                <p id="ch-note" class="ch-note"></p>
             </div>
         </div>
 
@@ -107,18 +119,20 @@
         </div>
 
         <!-- Atas: Lawan -->
-        <div class="h-[25%] border-b border-gray-700/50 w-full overflow-x-auto hide-scrollbar pt-2 pb-2 px-4 flex items-end">
+        <div class="h-[25%] w-full overflow-x-auto hide-scrollbar pt-2 pb-2 px-4 flex items-end">
             <div id="opponents-area" class="flex gap-4 md:gap-8 flex-nowrap min-w-max items-end mx-auto justify-center"></div>
         </div>
 
         <!-- Tengah: Meja -->
         <div class="h-[45%] flex flex-row items-center justify-center relative w-full px-4">
+            <div class="table-line"></div>
+            <div id="dir-ring" class="dir-ring"><img src="img/ui/direction.png" alt="" draggable="false"></div>
             <div class="absolute left-4 top-4 bottom-4 w-48 md:w-64 bg-black/40 rounded-lg p-3 overflow-y-auto hidden sm:flex flex-col gap-1 hide-scrollbar">
                 <h3 class="text-gray-400 text-sm mb-1 uppercase tracking-wider sticky top-0 bg-gray-900/90 py-1 font-bold flex justify-between"><span>Log</span> <span id="room-code-display" class="text-yellow-400"></span></h3>
                 <div id="logs-container" class="text-xs text-gray-200 flex flex-col gap-1 space-y-1"></div>
             </div>
 
-            <div class="flex gap-8 items-center justify-center w-full">
+            <div class="flex gap-8 items-center justify-center w-full relative z-10">
                 <div class="flex flex-col items-center">
                     <div onclick="humanDrawCard()" id="draw-pile-ui" class="uno-card draw-pile"><img class="card-img" src="img/cards/back.png" alt="" draggable="false"></div>
                     <span class="mt-2 text-xs md:text-sm text-gray-400 bg-black/50 px-3 py-1 rounded-full border border-gray-700"><span id="deck-count" class="font-bold text-white">0</span> Sisa</span>
@@ -131,9 +145,10 @@
         </div>
 
         <!-- Bawah: Pemain -->
-        <div class="h-[30%] flex flex-col items-center justify-start w-full relative bg-gray-800/40 border-t border-gray-700/50 pt-2 pb-4">
+        <div class="h-[30%] flex flex-col items-center justify-start w-full relative player-panel pt-2 pb-4">
             <div class="w-full max-w-6xl flex justify-between items-center px-4 md:px-6 mb-2">
                 <div class="flex gap-2 md:gap-3 items-center">
+                    <div id="me-avatar"></div>
                     <button onclick="pressUno()" id="btn-uno" class="bg-red-600 hover:bg-red-500 text-white font-black text-lg md:text-xl py-2 px-4 md:px-6 rounded-full shadow-[0_0_15px_rgba(239,68,68,0.6)] transition active:scale-95 border-2 border-red-400">UNO!</button>
                     <button onclick="humanPass()" id="btn-pass" class="hidden bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 md:px-6 rounded-full transition active:scale-95 border-2 border-gray-400 text-sm md:text-base">Lewati</button>
                 </div>
