@@ -216,6 +216,7 @@ export function layoutHand() {
         var dth = Math.min(step / (R + ch / 2), MAX_TOTAL / (n - 1));
     }
     h.style.setProperty('--pivot', R + 'px');
+    kids.forEach(k => { k.style.transition = 'none'; });   // jangan animasikan kipas membuka/menutup tiap render
     h.style.justifyContent = 'center';
     kids.forEach((k, i) => {
         const deg = n > 1 ? ((i - (n - 1) / 2) * dth) * 180 / Math.PI : 0;
@@ -223,6 +224,8 @@ export function layoutHand() {
         k.style.setProperty('--rot', deg.toFixed(2) + 'deg');
         k.style.marginLeft = i ? (-w) + 'px' : '0';       // semua kartu bertumpuk di satu titik, lalu diputar
     });
+    void h.offsetWidth;                                   // terapkan posisi tanpa transisi
+    kids.forEach(k => { k.style.transition = ''; });      // transisi hanya untuk angkat/turun kartu
 }
 
 function markSelected() {

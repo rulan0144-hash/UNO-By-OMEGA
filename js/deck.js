@@ -16,7 +16,9 @@ export function buildDeck() {
         d.push({ type: 'wild', color: 'Black', value: 'Wild' });
         d.push({ type: 'wild', color: 'Black', value: 'Wild Draw Four' });
     }
-    for (let i = 0; i < 4; i++) d.push({ type: 'wild', color: 'Black', value: 'Wild Shuffle Hands' });
+    // Acak hanya 1 kartu; 3 kartu lainnya menjadi Wild biasa (total deck tetap 112)
+    for (let i = 0; i < 3; i++) d.push({ type: 'wild', color: 'Black', value: 'Wild' });
+    d.push({ type: 'wild', color: 'Black', value: 'Wild Shuffle Hands' });
         return d;
 }
 

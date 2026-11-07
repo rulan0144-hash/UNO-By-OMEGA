@@ -1,7 +1,7 @@
 import { BACK_SRC, COLOR_NAMES, imgTag, getScale } from './config.js';
 import { S } from './state.js';
 import { generateCardHTML, pileRot, renderGame } from './ui.js';
-import { sfx } from './sound.js';
+import { sfx, sayAsync } from './sound.js';
 
 // Semua animasi permainan. Dipicu oleh daftar peristiwa (state.fx) yang dicatat di rules.js,
 // jadi semua pemain online melihat animasi yang sama.
@@ -282,6 +282,9 @@ async function shuffleAnim(state) {
         });
         return items;
     };
+
+    // 0. ucapkan "Shuffle!" dulu (maks. 1,5 dtk agar tidak macet bila suara tidak tersedia)
+    await Promise.race([sayAsync('Shuffle!'), new Promise(r => setTimeout(r, 1500))]);
 
     // 1. kumpulkan kartu lama ke tengah
     sfx('shuffle');
