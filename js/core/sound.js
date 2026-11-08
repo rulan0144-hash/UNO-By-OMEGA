@@ -201,9 +201,38 @@ const SFX = {
     // ---- UNO Flip ----
     c_Pink() { duck(0.9); }, c_Teal() { duck(0.9); }, c_Orange() { duck(0.9); }, c_Purple() { duck(0.9); },
     draw1() { duck(0.8); tone({ f: note(76), f2: note(81), type: 'sine', dur: 0.14, vol: 0.3 }); noise({ t: 0.12, dur: 0.08, vol: 0.1, f: 4000 }); },
-    draw5() { SFX.draw4(); },
-    skipall() { SFX.skip(); },
-    wdc() { SFX.draw4(); },
+    // +5 (sisi gelap): lima dentuman rendah menaik, bergema seram
+    draw5() {
+        duck(1.5);
+        [43, 44, 46, 47, 49].forEach((m, i) => { tone({ f: note(m), f2: note(m - 7), type: 'sine', t: i * 0.11, dur: 0.22, vol: 0.5 }); noise({ t: i * 0.11, dur: 0.07, vol: 0.2, type: 'lowpass', f: 1400 }); });
+        tone({ f: note(55), type: 'sawtooth', t: 0.1, dur: 0.6, vol: 0.12, filter: { f: 700, q: 3 }, vib: 6 });
+        tone({ f: note(31), f2: note(24), type: 'sine', t: 0.6, dur: 0.8, vol: 0.7 });
+        noise({ t: 0.6, dur: 0.7, vol: 0.3, type: 'lowpass', f: 2500, f2: 150 });
+    },
+    // Skip Everyone: rantai "wuuss" turun beruntun (semua dilewati) lalu gong
+    skipall() {
+        duck(1.5);
+        for (let i = 0; i < 4; i++) {
+            tone({ f: 1100 - i * 120, f2: 140, type: 'square', t: i * 0.17, dur: 0.2, vol: 0.14, filter: { f: 2200 } });
+            noise({ t: i * 0.17, dur: 0.18, vol: 0.12, f: 3500, f2: 500, q: 1.1 });
+        }
+        tone({ f: 110, type: 'sine', t: 0.72, dur: 0.9, vol: 0.55 });
+        tone({ f: 165, type: 'triangle', t: 0.72, dur: 0.8, vol: 0.2, vib: 5 });
+        noise({ t: 0.72, dur: 0.35, vol: 0.2, type: 'lowpass', f: 1800 });
+    },
+    // hitung mundur awal permainan
+    cdTick() { tone({ f: 660, type: 'square', dur: 0.12, vol: 0.14, filter: { f: 2500 } }); },
+    cdLast() { tone({ f: 880, type: 'square', dur: 0.16, vol: 0.18, filter: { f: 3000 } }); },
+    cdGo() { duck(1); [72, 76, 79, 84].forEach((m, i) => tone({ f: note(m), type: 'square', t: i * 0.06, dur: 0.22, vol: 0.14, filter: { f: 3500 } })); noise({ dur: 0.2, vol: 0.12, type: 'highpass', f: 6000 }); },
+    // Wild Draw Color: pusaran 4 warna (arpeggio bergemerlap menaik, minor) lalu hentakan berat
+    wdc() {
+        duck(1.8);
+        [57, 60, 63, 67, 69, 72, 75, 79].forEach((m, i) => { tone({ f: note(m), type: 'triangle', t: i * 0.07, dur: 0.18, vol: 0.2 }); tone({ f: note(m + 12), type: 'sine', t: i * 0.07, dur: 0.12, vol: 0.07 }); });
+        noise({ dur: 0.6, vol: 0.14, f: 500, f2: 5000, q: 1.3 });
+        tone({ f: note(45), type: 'sawtooth', t: 0.6, dur: 0.5, vol: 0.2, filter: { f: 900 } });
+        tone({ f: note(33), f2: note(26), type: 'sine', t: 0.6, dur: 0.7, vol: 0.65 });
+        noise({ t: 0.6, dur: 0.5, vol: 0.3, type: 'lowpass', f: 2800, f2: 200 });
+    },
     flip() { duck(1.1); noise({ dur: 0.45, vol: 0.2, f: 600, f2: 5000, q: 0.7 }); tone({ f: 300, f2: 900, type: 'triangle', dur: 0.3, vol: 0.18 }); tone({ f: 900, f2: 300, type: 'triangle', t: 0.32, dur: 0.3, vol: 0.14 }); },
 
     // tantangan +4
