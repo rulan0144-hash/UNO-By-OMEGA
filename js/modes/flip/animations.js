@@ -3,6 +3,7 @@ import { S } from '../../core/state.js';
 import { NAMES, cardSrc, face, imgTag, oppSide } from './deck.js';
 import { generateCardHTML, pileRot, renderGame, fanClose, fanOpen } from './ui.js';
 import { sfx, sayAsync } from '../../core/sound.js';
+import { runCountdown } from '../../core/countdown.js';
 
 // Semua animasi permainan Flip. Dipicu oleh daftar peristiwa (state.fx) yang dicatat di rules.js.
 // Peristiwa: deal, play, draw, banner, picker, uno, catch, challenge, flip.
@@ -194,17 +195,18 @@ async function play(ev) {
 }
 
 // Kartu ditarik: terbang dari dek (menampilkan sisi seberang) ke tangan / profil pemain
-async function draw({ uid, n, sides, cards }) {
+async function draw({ uid, n, sides, cards, pen }) {
     const deckL = rectOf($('f-draw-l')), deckR = rectOf($('f-draw-r'));
     const count = Math.min(n, 8);
     const mine = uid === S.currentUser?.uid;
     const kids = mine ? [...$('f-hand').children] : [];
     const jobs = [];
     const other = oppSide(S.roomData.gameState.side);
-    if (n >= 6) sfx('draw6');
+    if (pen) sfx('draw2');   // hukuman tantangan salah: kartu Wild Draw tadi sudah berbunyi, lalu +2 berbunyi "Draw two!"
+    const base = kids.length - Math.max(n, cur ? cur.me : n);   // kartu baru milik peristiwa ini
     for (let i = 0; i < count; i++) {
         sfx('draw', i * 0.22);
-        const to = mine ? (clampRect(rectOf(kids[kids.length - n + i])) || posOfPlayer(uid)) : posOfPlayer(uid);
+        const to = mine ? (clampRect(rectOf(kids[base + i])) || posOfPlayer(uid)) : posOfPlayer(uid);
         const deck = (sides && sides[i] === 'R') ? deckR : deckL;
         const html = cards && cards[i] ? cardEl(cards[i], other) : '';
         jobs.push(fly(html, deck, to, { delay: i * 220 }).then(() => land(uid)));
@@ -225,17 +227,20 @@ async function deal(state) {
     if (pile) pile.style.visibility = 'hidden';
     const hand = [...$('f-hand').children];
     hand.forEach(k => { k.style.visibility = 'hidden'; });
+    const order = [me, ...Object.keys(state.hands).filter(u => u !== me)];   // dibagi bergiliran: saya, lawan 1, lawan 2, ...
+    const P = order.length, DUR = 900, TOTAL = reduce ? 0 : 5000;               // seluruh pembagian berlangsung ~5 detik
+    const GAP = Math.max(60, (TOTAL - DUR) / (7 * P - 1));
     const jobs = [];
-    const dealSfx = (i, extra = 0) => sfx('deal', (i * 170 + extra) / 1000 + 0.05);
-    hand.forEach((k, i) => dealSfx(i));
-    hand.forEach((k, i) => jobs.push(
-        fly(cardEl(state.hands[me][i], other), nextDeck(), clampRect(rectOf(k)), { dur: 650, delay: i * 170 }).then(() => { k.style.visibility = ''; })
-    ));
-    Object.keys(state.hands).filter(u => u !== me).forEach((u, pi) => {
-        const to = posOfPlayer(u);
-        const n = Math.min(state.hands[u].length, 7);
-        for (let i = 0; i < n; i++) dealSfx(i, pi * 70);
-        for (let i = 0; i < n; i++) jobs.push(fly(cardEl(state.hands[u][i], other), nextDeck(), to, { dur: 650, delay: i * 170 + pi * 70 }));
+    for (let i = 0; i < 7; i++) order.forEach((u, pi) => {
+        const delay = (i * P + pi) * GAP;
+        sfx('deal', delay / 1000 + 0.05);
+        if (u === me) {
+            const k = hand[i];
+            if (!k) return;
+            jobs.push(fly(cardEl(state.hands[me][i], other), nextDeck(), clampRect(rectOf(k)), { dur: DUR, delay }).then(() => { k.style.visibility = ''; }));
+        } else if (i < state.hands[u].length) {
+            jobs.push(fly(cardEl(state.hands[u][i], other), nextDeck(), posOfPlayer(u), { dur: DUR, delay }));
+        }
     });
     await Promise.all(jobs);
     if (pile) { pile.style.visibility = ''; pile.classList.add('fx-pop-in'); setTimeout(() => pile.classList.remove('fx-pop-in'), 500); }
@@ -320,7 +325,12 @@ async function run(list, state, c) {
             }
         }
         if (ev.t === 'play' && ghost) { ghost.remove(); ghost = null; }
-        if (ev.t === 'deal') await deal(state);
+        if (ev.t === 'deal') {
+            const gen = lastFxId;
+            sfx('cdGo', 5.2);   // aba-aba mulai tepat setelah hitungan selesai
+            await Promise.all([runCountdown(() => gen !== lastFxId || !S.roomData), deal(state)]);   // hitung mundur sambil kartu dibagikan
+            if (gen !== lastFxId || !S.roomData) return;
+        }
         else if (ev.t === 'play') await play(ev);
         else if (ev.t === 'banner') await banner(ev.k, undefined, ev);
         else if (ev.t === 'picker') await wildPicker(ev.color, ev.side);

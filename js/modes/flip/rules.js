@@ -33,10 +33,10 @@ export function normalizeUno(state, prevHands) {
 }
 
 // Beri kartu (jumlah tetap) ke pemain + catat animasi
-export function giveCards(state, uid, n) {
+export function giveCards(state, uid, n, pen = false) {   // pen = +2 hukuman tantangan salah (bunyi "Draw two!")
     const got = drawFrom(state, n);
     state.hands[uid] = state.hands[uid].concat(got.cards);
-    if (got.cards.length) fx(state, { t: 'draw', uid, n: got.cards.length, sides: got.sides, cards: got.cards });
+    if (got.cards.length) fx(state, { t: 'draw', uid, n: got.cards.length, sides: got.sides, cards: got.cards, pen });
     return got.cards.length;
 }
 // Beri kartu sampai dapat warna tertentu
@@ -183,7 +183,7 @@ export function resolvePending(state, uid, choice) {
     if (!p) return false;
     state.pending = null;
     state.catchable = null;
-    const penalty = (who, extra) => (p.type === 'wdc' ? giveUntil(state, who, p.color) : giveCards(state, who, p.total)) + (extra ? giveCards(state, who, extra) : 0);
+    const penalty = (who, extra) => (p.type === 'wdc' ? giveUntil(state, who, p.color) : giveCards(state, who, p.total)) + (extra ? giveCards(state, who, extra, true) : 0);
     const label = p.type === 'wdc' ? `sampai dapat warna ${NAMES[p.color]}` : `${p.total} kartu`;
     if (choice === 'challenge') {
         const guilty = p.prevColor !== 'Black' && state.hands[p.by].some(c => face(c, state.side).color === p.prevColor);

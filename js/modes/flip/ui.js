@@ -93,9 +93,9 @@ export function renderGame() {
     badge.className = 'color-badge text-white border-2 border-white';
     badge.style.background = HEX[state.currentColor] || '#374151';
     badge.innerText = `Warna: ${NAMES[state.currentColor] || state.currentColor}`;
-    const sb = document.getElementById('f-side');
-    sb.className = 'side-badge side-' + side;
-    sb.innerHTML = `Sisi<br>${side === 'dark' ? 'Gelap' : 'Terang'}`;
+    const scr = document.getElementById('flip-screen');   // tema meja: siang (terang) / malam seram (gelap)
+    scr.classList.toggle('f-dark', side === 'dark');
+    scr.classList.toggle('f-light', side !== 'dark');
 
     // Tangan
     const handUI = document.getElementById('f-hand');
