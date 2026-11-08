@@ -329,3 +329,36 @@ body.h-screen { height: var(--app-h, 100dvh) !important; }
 .opp-area .name-tag { max-width: calc(100% - 4px); overflow: hidden; text-overflow: ellipsis; font-size: calc(12px * max(var(--os), .62)); padding: 2px calc(8px * var(--of)); }
 .opp-area .count-badge { font-size: calc(12px * max(var(--os), .62)); padding: 0 calc(8px * var(--of)); bottom: calc(-10px * var(--of)); }
 .opp-area .catch-hammer { width: calc(34px * max(var(--os), .6)); height: calc(34px * max(var(--os), .6)); right: calc(-14px * var(--of)); }
+
+
+/* ===== Layar memuat isi game (core/loader.js) ===== */
+.load-overlay { position: fixed; inset: 0; z-index: 3000; display: flex; align-items: center; justify-content: center; padding: 24px; background: radial-gradient(circle at 50% 35%, #14532d, #052e16 70%); color: #fff; }
+.load-overlay.hidden { display: none; }
+.load-box { width: 100%; max-width: 340px; text-align: center; }
+.load-text { font-family: 'Fredoka One', system-ui, sans-serif; font-size: 22px; letter-spacing: .5px; margin-bottom: 18px; text-shadow: 0 2px 0 rgba(0,0,0,.5); }
+.load-track { height: 16px; border-radius: 999px; background: rgba(0,0,0,.45); border: 2px solid #facc15; overflow: hidden; }
+.load-bar { height: 100%; width: 0; background: linear-gradient(90deg, #facc15, #f97316); transition: width .15s linear; }
+.load-pct { margin-top: 10px; font-size: 20px; font-weight: 800; color: #facc15; }
+.load-hint { margin-top: 14px; font-size: 13px; opacity: .75; }
+.load-skip { margin-top: 18px; padding: 12px 20px; min-height: 48px; border-radius: 999px; border: 2px solid #fff; background: rgba(255,255,255,.12); color: #fff; font-weight: 700; touch-action: manipulation; }
+.load-skip.hidden { display: none; }
+
+/* ===== Tombol UNO: di TENGAH-bawah meja, gaya sendiri (tanpa Tailwind), area sentuh besar, di atas kartu terangkat ===== */
+.table-bottom { z-index: 120; }
+.uno-btn { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); pointer-events: auto; z-index: 5;
+    min-width: calc(112px * max(var(--s, 1), .8)); height: calc(58px * max(var(--s, 1), .8)); padding: 0 calc(26px * max(var(--s, 1), .8));
+    border-radius: 999px; border: 3px solid #fca5a5; background: linear-gradient(#ef4444, #b91c1c); color: #fff; cursor: pointer;
+    font-family: 'Fredoka One', system-ui, sans-serif; font-weight: 900; font-size: calc(26px * max(var(--s, 1), .8)); letter-spacing: 1px; text-shadow: 0 2px 0 rgba(0,0,0,.45);
+    box-shadow: 0 0 15px rgba(239,68,68,.6), 0 4px 0 #7f1d1d; touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+.uno-btn::before { content: ''; position: absolute; inset: -14px; }   /* area sentuh lebih luas dari tampilannya */
+.uno-btn:active { transform: translateX(-50%) scale(.94); }
+.uno-btn.uno-ready { animation: uno-pulse .7s ease-in-out infinite alternate; }
+.uno-btn.uno-done { opacity: .5; }
+@keyframes uno-pulse { from { transform: translateX(-50%) scale(1); } to { transform: translateX(-50%) scale(1.1); box-shadow: 0 0 26px rgba(250,204,21,.9), 0 4px 0 #7f1d1d; } }
+
+/* ===== Layar akhir permainan: di atas SEMUA (kartu terangkat z 60/80, efek 400, hitung mundur 450, menu jeda 500) ===== */
+.over-modal { position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(0,0,0,.95); touch-action: manipulation; }
+.over-modal.hidden { display: none; }
+.over-btn { display: block; width: 100%; min-height: 60px; padding: 14px 24px; border: 3px solid #93c5fd; border-radius: 999px; background: linear-gradient(#3b82f6, #1d4ed8); color: #fff; font-size: 20px; font-weight: 800; cursor: pointer;
+    box-shadow: 0 4px 0 #1e3a8a; touch-action: manipulation; -webkit-tap-highlight-color: transparent; position: relative; z-index: 1; }
+.over-btn:active { transform: scale(.97); }
