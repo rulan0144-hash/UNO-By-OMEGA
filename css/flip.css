@@ -30,8 +30,49 @@
 .ch-color.ch-Pink { color: #f9a8d4; } .ch-color.ch-Teal { color: #5eead4; } .ch-color.ch-Orange { color: #fdba74; } .ch-color.ch-Purple { color: #d8b4fe; }
 .fx-pn-Pink { color: #f9a8d4; } .fx-pn-Teal { color: #5eead4; } .fx-pn-Orange { color: #fdba74; } .fx-pn-Purple { color: #d8b4fe; }
 
-/* animasi FLIP: dek, buangan, dan tangan berputar ke sisi seberang */
-.flip-out { animation: flip-out .38s ease-in forwards; }
-.flip-in { animation: flip-in .42s ease-out; }
-@keyframes flip-out { from { transform: perspective(800px) rotateY(0deg); } to { transform: perspective(800px) rotateY(90deg); opacity: .3; } }
-@keyframes flip-in { from { transform: perspective(800px) rotateY(-90deg); opacity: .3; } to { transform: perspective(800px) rotateY(0deg); opacity: 1; } }
+/* animasi FLIP: dek, buangan, dan kartu lawan membalik (menyempit lalu melebar); kipas tangan diatur lewat JS */
+.flip-x-out { animation: flip-x-out .4s ease-in forwards; }
+.flip-x-in { animation: flip-x-in .45s ease-out; }
+@keyframes flip-x-out { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+@keyframes flip-x-in { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* ===== MEJA UNO FLIP: siang berawan (sisi Terang) / malam seram (sisi Gelap) ===== */
+#flip-screen.casino { isolation: isolate; background-color: #0b1020; background-image: none; box-shadow: inset 0 0 60px rgba(0,0,0,.5); overflow: hidden; }
+.f-bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+.f-bg-light, .f-bg-dark { position: absolute; inset: 0; transition: opacity 1s ease; }
+.f-bg-light { background: #6bb8f2 url('../img/flip/table/sky-day.png') center / cover no-repeat; }
+.f-bg-dark { background: #0b0615 url('../img/flip/table/night.png') center / cover no-repeat; opacity: 0; }
+#flip-screen.f-dark .f-bg-dark { opacity: 1; }
+#flip-screen.f-dark .f-bg-light { opacity: 0; }
+
+/* awan siang: dua lapis melayang pelan (translateX, ringan untuk HP) */
+.f-clouds { position: absolute; left: 0; width: 200%; background: url('../img/flip/table/clouds.png') repeat-x; will-change: transform; }
+.f-clouds-a { top: 2%; height: 36%; background-size: 50% 100%; opacity: .95; animation: f-drift 95s linear infinite; }
+.f-clouds-b { top: 40%; height: 30%; background-size: 50% 100%; opacity: .7; animation: f-drift 150s linear infinite reverse; }
+@keyframes f-drift { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* kabut malam, mata menyala, aura berdenyut */
+.f-fog { position: absolute; left: 0; width: 200%; background: url('../img/flip/table/fog.png') repeat-x; background-size: 50% 100%; will-change: transform; }
+.f-fog-a { bottom: 6%; height: 38%; opacity: .85; animation: f-drift 55s linear infinite; }
+.f-fog-b { top: 22%; height: 34%; opacity: .5; animation: f-drift 85s linear infinite reverse; }
+.f-eyes { position: absolute; width: calc(74px * var(--s, 1)); opacity: 0; animation: f-eyes 9s ease-in-out infinite; }
+.f-eyes-1 { left: 3%; top: 48%; animation-delay: 1s; }
+.f-eyes-2 { right: 4%; top: 30%; width: calc(58px * var(--s, 1)); animation-delay: 4.5s; animation-duration: 11s; }
+.f-eyes-3 { left: 40%; top: 14%; width: calc(46px * var(--s, 1)); animation-delay: 7s; animation-duration: 13s; }
+@keyframes f-eyes { 0%, 18% { opacity: 0; transform: scaleY(1); } 24% { opacity: .95; } 36% { transform: scaleY(1); } 38% { transform: scaleY(.08); } 40% { transform: scaleY(1); } 52% { opacity: .95; } 58% { opacity: .95; transform: scaleY(1); } 60% { transform: scaleY(.08); } 62% { transform: scaleY(1); } 70%, 100% { opacity: 0; } }
+.f-aura { position: absolute; inset: 0; background: url('../img/flip/table/aura.png') center / 100% 100% no-repeat; animation: f-aura 4.2s ease-in-out infinite; }
+@keyframes f-aura { 0%, 100% { opacity: .55; transform: scale(1.02); } 45% { opacity: 1; transform: scale(1); } 52% { opacity: .75; } 58% { opacity: 1; } }
+
+/* meja di tengah: piringan awan (terang) / kolam kabut ungu (gelap), bingkai emas diganti */
+#flip-screen .table-line { border: 2px solid rgba(255,255,255,.55); background: radial-gradient(ellipse at 50% 50%, rgba(255,255,255,.34) 0%, rgba(255,255,255,.14) 62%, rgba(255,255,255,0) 100%); box-shadow: 0 0 30px rgba(255,255,255,.35); transition: all 1s ease; }
+#flip-screen .table-line::before { border-color: rgba(255,255,255,.35); }
+#flip-screen .table-line::after { color: rgba(255,255,255,.14); }
+#flip-screen.f-dark .table-line { border-color: rgba(192,132,252,.5); background: radial-gradient(ellipse at 50% 50%, rgba(88,28,135,.42) 0%, rgba(40,8,60,.3) 62%, rgba(0,0,0,0) 100%); box-shadow: 0 0 34px rgba(168,85,247,.45), inset 0 0 40px rgba(0,0,0,.5); }
+#flip-screen.f-dark .table-line::before { border-color: rgba(192,132,252,.3); }
+#flip-screen.f-dark .table-line::after { color: rgba(216,180,254,.1); }
+#flip-screen .player-panel { background: linear-gradient(rgba(255,255,255,.12), rgba(20,50,90,.38)); border-top: 2px solid rgba(255,255,255,.65); }
+#flip-screen.f-dark .player-panel { background: linear-gradient(rgba(10,0,20,.45), rgba(10,0,20,.7)); border-top: 2px solid rgba(168,85,247,.6); }
+#f-opps .name-tag { background: rgba(10,30,60,.55); }
+#flip-screen.f-dark #f-opps .name-tag { background: rgba(10,0,20,.7); }
+
+@media (prefers-reduced-motion: reduce) { .f-clouds, .f-fog, .f-aura, .f-eyes { animation: none; } .f-eyes { opacity: 0; } }
