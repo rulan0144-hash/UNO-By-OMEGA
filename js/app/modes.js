@@ -16,10 +16,10 @@ export const MODES = [
         bots: { min: 1, max: 5, def: 3 }
     },
     {
-        id: 'flip', group: 'other', ready: false,
+        id: 'flip', group: 'other', ready: true, online: false,
         name: 'UNO Flip',
-        desc: 'Kartu dua sisi: terang dan gelap. Balik dek, ubah permainan!',
-        art: ['img/cards/back.png', 'img/cards/back.png'],
+        desc: 'Kartu dua sisi: terang dan gelap. Balik dek, ubah permainan! Pemenang = 500 poin.',
+        art: ['img/flip/light/Blue-4.png', 'img/flip/dark/Black-Wild.png', 'img/flip/light/Red-Flip.png'],
         bots: { min: 1, max: 5, def: 3 }
     }
 ];

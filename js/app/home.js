@@ -23,6 +23,8 @@ function cardHTML(m) {
             <span class="mc-stepval"><b>${n}</b> lawan</span>
             <button class="mc-stepbtn" onclick="stepBots('${m.id}', 1)" aria-label="Tambah lawan">+</button></div>
             <button class="mc-play" onclick="playMode('${m.id}')">Main ▶</button></div>`;
+    } else if (m.online === false) {
+        action = `<div class="mc-soon">Online segera hadir</div>`;
     } else {
         action = `<div class="mc-row"><button class="mc-play mc-play-wide" onclick="playMode('${m.id}')">Buat / Gabung ▶</button></div>`;
     }
