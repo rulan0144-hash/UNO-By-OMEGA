@@ -14,6 +14,12 @@ DARK = ['Pink', 'Teal', 'Orange', 'Purple']
 g.PAL.update({'Pink': ('#f9a8d4', '#ec4899', '#be185d'), 'Teal': ('#5eead4', '#14b8a6', '#0f766e'),
               'Orange': ('#fdba74', '#f97316', '#c2410c'), 'Purple': ('#d8b4fe', '#a855f7', '#7e22ce')})
 FONT, svg, burst, big_text, badge = g.FONT, g.svg, g.burst, g.big_text, g.badge
+# ikon yang SAMA dengan yang dipakai di kartu (diambil dari gen_flip_cards.py: icon_skip_everyone, icon_flip, icon_stack)
+_src = open(os.path.join(HERE, 'gen_flip_cards.py'), encoding='utf-8').read()
+_seg = _src[_src.index('# ---------- melukis ikon'):_src.index('def corner_icon')]
+_ns = {}
+exec(_seg, _ns)
+icon_skip_everyone, icon_flip, icon_stack = _ns['icon_skip_everyone'], _ns['icon_flip'], _ns['icon_stack']
 
 def grad(color):
     lt, mid, dk = g.PAL[color]
@@ -22,19 +28,14 @@ def grad(color):
 def draw_n(txt, color):
     return svg(grad(color) + burst(256, 256, 236, 186, 14, 'url(#g)', -8) + big_text(txt, 210, 326))
 
-def wdc(color):   # ambil kartu sampai dapat warna pilihan
-    return svg(grad(color) + burst(256, 256, 236, 186, 14, 'url(#g)', -8) + big_text('+?', 210, 326))
+def wdc(color):   # Wild Draw Color: ikon tumpukan kartu seperti di kartu
+    return svg(grad(color) + burst(256, 256, 236, 186, 14, 'url(#g)', -8) + f'<g transform="translate(256 250) scale(1.95)">{icon_stack("darkwhite", 1)}</g>')
 
-def skipall(color):
-    mid = g.PAL[color][1]
-    return svg(badge(mid) +
-        '<g transform="translate(256 226) scale(.72) translate(-256 -256)" fill="none" stroke-linecap="round"><circle cx="256" cy="256" r="104" stroke="#000" stroke-width="72"/><line x1="182" y1="330" x2="330" y2="182" stroke="#000" stroke-width="72"/>'
-        '<circle cx="256" cy="256" r="104" stroke="#fff" stroke-width="48"/><line x1="182" y1="330" x2="330" y2="182" stroke="#fff" stroke-width="48"/></g>' +
-        big_text('ALL', 120, 440))
+def skipall(color):   # Skip Everyone: ikon sama dengan kartu
+    return svg(badge(g.PAL[color][1]) + f'<g transform="translate(256 256) scale(2.3)">{icon_skip_everyone("darkwhite", 1)}</g>')
 
-def flip(dark):
-    return svg(badge('#5b21b6' if dark else '#f59e0b') + big_text('FLIP', 138, 300) +
-        '<text x="256" y="400" font-size="64" fill="#fff" text-anchor="middle" %s stroke="#000" stroke-width="8" paint-order="stroke" stroke-linejoin="round">%s</text>' % (FONT, 'GELAP' if dark else 'TERANG'))
+def flip(dark):   # Flip: ikon kartu berbalik sama dengan kartu
+    return svg(badge('#5b21b6' if dark else '#f59e0b') + f'<g transform="translate(256 256) scale(2.7)">{icon_flip("darkwhite", 1)}</g>')
 
 DCOLS = {'Pink': ('#ec4899', '#be185d'), 'Teal': ('#14b8a6', '#0f766e'), 'Orange': ('#f97316', '#c2410c'), 'Purple': ('#a855f7', '#7e22ce')}
 DCELL = {'Teal': (-1, -1), 'Orange': (1, -1), 'Pink': (1, 1), 'Purple': (-1, 1)}   # posisi sama dengan Green/Yellow/Red/Blue
