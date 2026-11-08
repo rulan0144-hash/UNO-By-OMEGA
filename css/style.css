@@ -291,3 +291,9 @@ body.h-screen { height: var(--app-h, 100dvh) !important; }
 .table-bottom > div { pointer-events: auto; }
 .tb-left { display: flex; align-items: center; gap: calc(8px * var(--s, 1)); }
 .tb-right { display: flex; flex-direction: column; align-items: flex-end; gap: calc(6px * var(--s, 1)); text-align: right; max-width: 50%; }
+
+/* ---- Hitung mundur 5 detik di awal permainan (tampil bersama animasi pembagian kartu; dipakai Klasik & Flip) ---- */
+.f-countdown { position: fixed; inset: 0; z-index: 450; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+.f-countdown .cd-label { font-size: calc(20px * max(var(--s, 1), .8)); font-weight: 800; color: #fff; text-shadow: 0 2px 0 #000, 0 0 14px rgba(0,0,0,.7); letter-spacing: 1px; margin-bottom: 6px; }
+.f-countdown .cd-num { font-size: min(40vw, 200px); line-height: 1; font-weight: 900; font-style: italic; color: #ffd400; opacity: .92; -webkit-text-stroke: 8px #000; paint-order: stroke fill; text-shadow: 0 8px 0 rgba(0,0,0,.45); animation: cd-pop 1s cubic-bezier(.2, .9, .3, 1.2) both; }
+@keyframes cd-pop { 0% { transform: scale(2.2); opacity: 0; } 22% { transform: scale(1); opacity: .92; } 80% { transform: scale(.94); opacity: .92; } 100% { transform: scale(.7); opacity: 0; } }
