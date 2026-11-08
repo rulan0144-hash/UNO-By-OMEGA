@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/home.css">
+    <link rel="stylesheet" href="css/flip.css">
 </head>
 <body class="text-white h-screen flex flex-col relative w-full overflow-hidden">
 
@@ -218,6 +219,124 @@
             <div id="human-hand-ui" class="flex gap-2 overflow-x-auto w-full max-w-6xl items-center h-full px-4 md:px-6 hide-scrollbar"></div>
         </div>
     </div>
+
+    <!-- AREA PERMAINAN UNO FLIP (id berawalan f-, dikendalikan js/modes/flip/) -->
+    <div id="flip-screen" class="hidden h-full w-full flex flex-col relative casino">
+
+        <!-- Tombol menu (jeda / keluar) -->
+        <button id="f-btn-menu" onclick="flipOpenMenu()" class="menu-btn" aria-label="Menu"><img src="img/ui/pause.png" alt="" draggable="false"></button>
+
+        <!-- Tombol suara cepat (bisu / hidupkan) -->
+        <button id="f-btn-sound" onclick="toggleSound()" data-nosfx="1" class="menu-btn snd-btn" aria-label="Suara"><img class="snd-img" src="img/ui/sound-on.png" alt="" draggable="false"></button>
+
+        <!-- Menu Jeda -->
+        <div id="f-pause-modal" class="pause-modal hidden">
+            <div class="pause-box">
+                <h2 id="f-pause-title" class="pause-title">Jeda</h2>
+                <p id="f-pause-note" class="pause-note"></p>
+                <div class="snd-panel">
+                    <button onclick="toggleSound()" data-nosfx="1" class="snd-mute" aria-label="Bisu"><img class="snd-img" src="img/ui/sound-on.png" alt="" draggable="false"></button>
+                    <div class="snd-sliders">
+                        <label>Musik <input class="vol-music" type="range" min="0" max="100" value="60" oninput="setVolume('music', this.value)"></label>
+                        <label>Efek <input class="vol-sfx" type="range" min="0" max="100" value="90" oninput="setVolume('sfx', this.value)"></label>
+                    </div>
+                </div>
+                <button onclick="flipResume()" class="pause-btn pause-resume">▶ Lanjutkan</button>
+                <button id="f-btn-restart" onclick="flipRestart()" class="pause-btn pause-restart">↻ Mulai Ulang</button>
+                <button onclick="flipExit()" class="pause-btn pause-exit">◀ Keluar ke Beranda</button>
+            </div>
+        </div>
+
+        <!-- Modal Pilih Warna -->
+        <div id="f-color-modal" class="cp-modal hidden">
+            <div class="cp-box">
+                <h2 class="cp-title">Pilih Warna</h2>
+                <div class="cp-stage">
+                    <img id="f-cp-img" src="img/effects/wild-spin.png" alt="">
+                    <button class="cp-zone cp-Green"  data-c="Green"  onclick="flipPick(this.dataset.c)"  aria-label="Hijau"></button>
+                    <button class="cp-zone cp-Blue"   data-c="Blue"   onclick="flipPick(this.dataset.c)"   aria-label="Biru"></button>
+                    <button class="cp-zone cp-Yellow" data-c="Yellow" onclick="flipPick(this.dataset.c)" aria-label="Kuning"></button>
+                    <button class="cp-zone cp-Red"    data-c="Red"    onclick="flipPick(this.dataset.c)"    aria-label="Merah"></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kotak Tantangan +4 -->
+        <div id="f-challenge-modal" class="ch-modal hidden">
+            <div class="ch-panel">
+                <p class="ch-title">Apakah <b id="f-ch-name"></b> masih punya kartu <span id="f-ch-color" class="ch-color"></span>?</p>
+                <div class="ch-buttons">
+                    <button id="f-ch-draw" onclick="flipChallenge('draw')" class="ch-btn ch-btn-draw">Ambil Kartu</button>
+                    <button onclick="flipChallenge('challenge')" class="ch-btn ch-btn-challenge">Tantang</button>
+                </div>
+                <p id="f-ch-note" class="ch-note"></p>
+            </div>
+        </div>
+
+        <!-- Modal Game Over -->
+        <div id="f-over-modal" class="fixed inset-0 bg-black/95 flex items-center justify-center z-50 hidden p-4">
+            <div class="bg-gray-800 p-6 md:p-10 rounded-xl border-4 border-yellow-500 text-center w-full max-w-lg shadow-[0_0_50px_rgba(234,179,8,0.3)]">
+                <h1 id="f-winner-text" class="text-4xl md:text-5xl mb-2 text-yellow-400 font-bold">Player Menang!</h1>
+                <p id="f-score-text" class="text-2xl mb-4 font-black text-green-400">Total Skor: 0 Poin</p>
+                <div class="bg-gray-900 border border-gray-700 rounded-lg p-4 mb-6 text-left max-h-48 overflow-y-auto hide-scrollbar">
+                    <h3 class="text-gray-400 text-sm uppercase tracking-widest font-bold mb-2 border-b border-gray-700 pb-2">Poin Pertandingan</h3>
+                    <div id="f-score-breakdown" class="text-sm text-gray-200 space-y-2"></div>
+                </div>
+                <p id="f-over-hint" class="text-sm text-gray-400 mb-3"></p>
+                <button id="f-next-btn" onclick="flipNextRound()" class="w-full mb-3 bg-green-600 hover:bg-green-500 text-white font-bold py-4 px-8 rounded-full text-xl shadow-lg transition active:scale-95">Ronde Berikutnya ▶</button>
+                <button onclick="flipLeave()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-full text-xl shadow-lg transition active:scale-95">Kembali ke Beranda</button>
+            </div>
+        </div>
+
+        <!-- Atas: Lawan -->
+        <div class="row-top w-full overflow-x-auto hide-scrollbar pt-2 pb-2 px-4 flex items-end">
+            <div id="f-opps" class="flex gap-4 md:gap-8 flex-nowrap min-w-max items-end mx-auto justify-center"></div>
+        </div>
+
+        <!-- Tengah: Meja -->
+        <div class="row-mid flex flex-row items-center justify-center relative w-full px-2">
+            <div class="table-line"></div>
+            <div id="f-dir-ring" class="dir-ring"><img src="img/ui/direction.png" alt="" draggable="false"></div>
+
+            <!-- Hitung mundur giliran (gaya stopwatch) -->
+            <div id="f-side" class="side-badge side-light"></div>
+            <div id="f-timer" class="turn-timer tt-ok"><span id="f-time">15.00</span></div>
+
+            <!-- Kiri-bawah meja: profil + tombol UNO | kanan-bawah: giliran -->
+            <div class="table-bottom">
+                <div class="tb-left">
+                    <div id="f-me-avatar"></div>
+                    <button onclick="flipUno()" id="f-btn-uno" class="bg-red-600 hover:bg-red-500 text-white font-black text-lg md:text-xl py-2 px-4 md:px-6 rounded-full shadow-[0_0_15px_rgba(239,68,68,0.6)] transition active:scale-95 border-2 border-red-400">UNO!</button>
+                </div>
+                <div class="tb-right">
+                    <span id="f-turn-ind" class="text-lg md:text-2xl font-black text-gray-400 transition-colors">Menunggu...</span>
+                    <button onclick="flipPass()" id="f-btn-pass" class="hidden bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 md:px-6 rounded-full transition active:scale-95 border-2 border-gray-400 text-sm md:text-base">Lewati</button>
+                </div>
+            </div>
+
+            <!-- Meja: deck kiri | tumpukan buangan (tepat di tengah) | deck kanan -->
+            <div class="table-grid">
+                <div class="deck-slot deck-slot-l">
+                    <div onclick="flipDraw('L')" id="f-draw-l" class="uno-card draw-pile"></div>
+                    <span class="deck-count"><span id="f-count-l">0</span></span>
+                </div>
+                <div class="center-slot">
+                    <div id="f-discard" class="relative"></div>
+                    <div id="f-badge" class="color-badge">Warna: -</div>
+                </div>
+                <div class="deck-slot deck-slot-r">
+                    <div onclick="flipDraw('R')" id="f-draw-r" class="uno-card draw-pile"></div>
+                    <span class="deck-count"><span id="f-count-r">0</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bawah: tangan kartu -->
+        <div class="row-bot flex flex-col items-center justify-start w-full relative player-panel">
+            <div id="f-hand" class="flex gap-2 overflow-x-auto w-full max-w-6xl items-center h-full px-4 md:px-6 hide-scrollbar"></div>
+        </div>
+    </div>
+
 
         <script>
         // Penjaga: tampilkan penyebab jelas di layar jika file JS gagal dimuat
