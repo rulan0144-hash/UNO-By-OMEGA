@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/home.css">
 </head>
 <body class="text-white h-screen flex flex-col relative w-full overflow-hidden">
 
@@ -23,7 +24,7 @@
 
     <!-- LAYAR LOGIN (NAMA) -->
     <div id="login-screen" class="hidden absolute inset-0 bg-gray-900 z-[90] flex flex-col items-center justify-center p-6 text-center">
-        <h1 class="text-6xl text-red-500 font-bold mb-6 shadow-black drop-shadow-xl tracking-wider">UNO</h1>
+        <img class="home-logo home-logo-sm" src="img/ui/logo-uno.png" alt="UNO" draggable="false">
         <div class="bg-gray-800 p-8 rounded-xl border-4 border-gray-600 shadow-2xl max-w-sm w-full">
             <h2 class="text-2xl mb-4 font-bold">Masukkan Nama Kamu</h2>
             <input type="text" id="player-name" class="w-full bg-gray-700 border-2 border-gray-500 rounded-lg py-3 px-4 text-white text-center text-xl font-bold mb-4 focus:outline-none focus:border-green-500" placeholder="Nama Pemain" maxlength="12">
@@ -32,34 +33,56 @@
         </div>
     </div>
 
-    <!-- LAYAR BERANDA (BUAT / GABUNG RUANGAN) -->
-    <div id="home-screen" class="hidden absolute inset-0 bg-gray-900 z-[80] flex flex-col items-center justify-center p-6 text-center">
-        <h1 class="text-6xl text-red-500 font-bold mb-2 shadow-black drop-shadow-xl tracking-wider">UNO</h1>
-        <h2 class="text-xl text-yellow-400 mb-8 font-semibold">Multiplayer Real-Time</h2>
-        <div class="flex items-center gap-3 mb-6 -mt-4">
-            <span class="text-gray-300">Halo, <b id="home-name" class="text-white"></b></span>
-            <button onclick="changeName()" class="bg-gray-700 hover:bg-gray-600 text-white text-sm font-bold py-1 px-3 rounded-full border border-gray-500 transition active:scale-95">✏️ Ganti Nama</button>
-        </div>
-        
-        <div class="bg-gray-800 p-8 rounded-xl border-4 border-gray-600 shadow-2xl max-w-sm w-full flex flex-col gap-4">
-            <div class="flex gap-2">
-                <select id="bot-count" class="bg-gray-700 border-2 border-gray-500 rounded-xl px-3 text-white font-bold text-lg">
-                    <option value="1">1 Lawan</option><option value="2">2 Lawan</option><option value="3" selected>3 Lawan</option><option value="4">4 Lawan</option><option value="5">5 Lawan</option>
-                </select>
-                <button onclick="startLocal()" class="flex-grow bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-bold py-4 rounded-xl shadow-lg transition active:scale-95 text-xl">vs Komputer 🤖</button>
+    <!-- LAYAR BERANDA: logo, tab Offline/Online, Klasik, Mode Lain (diisi js/app/home.js dari daftar mode) -->
+    <div id="home-screen" class="hidden casino home-screen">
+        <button class="home-gear" onclick="openSettings()" aria-label="Pengaturan"><img src="img/ui/settings.png" alt="" draggable="false"></button>
+        <div class="home-wrap">
+            <img class="home-logo" src="img/ui/logo-uno.png" alt="UNO" draggable="false">
+            <p class="home-hello">Halo, <b class="my-name"></b></p>
+            <div class="home-tabs" role="tablist">
+                <button id="tab-offline" class="home-tab on" onclick="setHomeTab('offline')" role="tab">Offline</button>
+                <button id="tab-online" class="home-tab" onclick="setHomeTab('online')" role="tab">Online</button>
             </div>
-            <p id="online-status" class="text-xs text-gray-400"></p>
-            <div class="flex items-center my-1"><div class="flex-grow border-t border-gray-600"></div><span class="px-3 text-gray-400 font-bold">ONLINE</span><div class="flex-grow border-t border-gray-600"></div></div>
-            <button onclick="createRoom()" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-xl shadow-lg transition active:scale-95 text-xl">Buat Ruangan Baru</button>
-            <div class="flex items-center my-2">
-                <div class="flex-grow border-t border-gray-600"></div>
-                <span class="px-3 text-gray-400 font-bold">ATAU</span>
-                <div class="flex-grow border-t border-gray-600"></div>
-            </div>
-            <input type="text" id="room-code-input" class="w-full bg-gray-700 border-2 border-gray-500 rounded-lg py-3 px-4 text-white text-center text-2xl font-black focus:outline-none focus:border-blue-500 uppercase tracking-widest" placeholder="KODE RUANGAN" maxlength="5">
-            <button onclick="joinRoom()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl shadow-lg transition active:scale-95 text-xl">Gabung Ruangan</button>
+            <p id="home-sub" class="home-sub"></p>
+            <div id="home-sections"></div>
         </div>
     </div>
+
+    <!-- LAYAR ONLINE: buat ruangan / gabung dengan kode -->
+    <div id="online-screen" class="hidden casino home-screen">
+        <div class="home-wrap">
+            <button class="back-btn" onclick="closeOnlineHub()">◀ Kembali</button>
+            <img class="home-logo home-logo-sm" src="img/ui/logo-uno.png" alt="UNO" draggable="false">
+            <h2 class="hub-title">Online · <span id="hub-mode"></span></h2>
+            <p id="online-status" class="hub-status"></p>
+            <div class="hub-card">
+                <button onclick="createRoom()" class="hub-btn hub-create">Buat Ruangan Baru</button>
+                <div class="hub-or"><span>ATAU</span></div>
+                <input type="text" id="room-code-input" class="hub-input" placeholder="KODE RUANGAN" maxlength="5" autocomplete="off" autocapitalize="characters">
+                <button onclick="joinRoom()" class="hub-btn hub-join">Gabung Ruangan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PENGATURAN -->
+    <div id="settings-modal" class="pause-modal hidden">
+        <div class="pause-box">
+            <h2 class="pause-title">Pengaturan</h2>
+            <div class="set-name">Nama: <b class="my-name"></b></div>
+            <button onclick="settingsChangeName()" class="pause-btn pause-restart">Ganti Nama</button>
+            <div class="snd-panel">
+                <button onclick="toggleSound()" data-nosfx="1" class="snd-mute" aria-label="Bisu"><img class="snd-img" src="img/ui/sound-on.png" alt="" draggable="false"></button>
+                <div class="snd-sliders">
+                    <label>Musik <input class="vol-music" type="range" min="0" max="100" value="60" oninput="setVolume('music', this.value)"></label>
+                    <label>Efek <input class="vol-sfx" type="range" min="0" max="100" value="90" oninput="setVolume('sfx', this.value)"></label>
+                </div>
+            </div>
+            <button onclick="closeSettings()" class="pause-btn pause-resume">Tutup</button>
+        </div>
+    </div>
+
+    <!-- jumlah lawan untuk mode vs Komputer (diatur dari beranda) -->
+    <input type="hidden" id="bot-count" value="3">
 
     <!-- LAYAR LOBBY -->
     <div id="lobby-screen" class="hidden absolute inset-0 bg-gray-900 z-[70] flex flex-col items-center p-6 pt-10">
@@ -95,8 +118,8 @@
                 <div class="snd-panel">
                     <button onclick="toggleSound()" data-nosfx="1" class="snd-mute" aria-label="Bisu"><img class="snd-img" src="img/ui/sound-on.png" alt="" draggable="false"></button>
                     <div class="snd-sliders">
-                        <label>Musik <input id="vol-music" type="range" min="0" max="100" value="60" oninput="setVolume('music', this.value)"></label>
-                        <label>Efek <input id="vol-sfx" type="range" min="0" max="100" value="90" oninput="setVolume('sfx', this.value)"></label>
+                        <label>Musik <input class="vol-music" type="range" min="0" max="100" value="60" oninput="setVolume('music', this.value)"></label>
+                        <label>Efek <input class="vol-sfx" type="range" min="0" max="100" value="90" oninput="setVolume('sfx', this.value)"></label>
                     </div>
                 </div>
                 <button onclick="resumeGame()" class="pause-btn pause-resume">▶ Lanjutkan</button>
