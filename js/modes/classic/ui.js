@@ -1,5 +1,6 @@
 import { syncChallenge } from './challenge.js';
 import { BACK_SRC, cardSrc, imgTag, getScale } from '../../core/config.js';
+import { fitOpponents } from '../../core/oppfit.js';
 import { syncTimer } from './timer.js';
 import { COLOR_NAMES } from '../../core/config.js';
 import { S, esc } from '../../core/state.js';
@@ -68,6 +69,8 @@ export function renderGame() {
                 <span class="name-tag ${isTurn ? 'name-turn' : ''} ">${esc(p.name)}</span>
             </div>`;
     }
+
+    fitOpponents(oppArea);   // semua lawan muat tanpa geser kanan
 
     // Tumpukan
     const nL = state.deck.length, nR = (state.deckR || []).length;
