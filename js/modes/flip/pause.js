@@ -7,16 +7,27 @@ window.stopFlipTimerHook = stopTimer;   // dipakai ui.js / local.js tanpa impor 
 // Menu jeda (vs Komputer): permainan benar-benar berhenti (bot & batas 15 detik).
 const $ = (id) => document.getElementById(id);
 
+const setPauseLabel = () => { $('f-pause-toggle').textContent = S.paused ? '▶ Lanjutkan Permainan' : '⏸ Jeda Permainan'; };
+
+// Menu Pengaturan: suara, Jeda, Mulai Ulang, Keluar. Membuka menu TIDAK menjeda; jeda hanya lewat tombol "Jeda Permainan" (khusus vs Komputer).
 window.flipOpenMenu = () => {
     if (!S.roomData) return;
-    S.paused = !!S.localMode;
-    $('f-pause-title').textContent = S.localMode ? 'Jeda' : 'Menu';
+    $('f-pause-title').textContent = 'Pengaturan';
     $('f-pause-note').textContent = S.localMode ? '' : 'Permainan online tidak bisa dijeda; pemain lain tetap bermain.';
     $('f-btn-restart').classList.toggle('hidden', !S.localMode);
+    $('f-pause-toggle').classList.toggle('hidden', !S.localMode);
+    setPauseLabel();
     $('f-pause-modal').classList.remove('hidden');
-    if (S.localMode) { clearTimeout(S.botTimer); pauseTimer(); }
 };
 
+window.flipTogglePause = () => {
+    if (!S.localMode || !S.roomData) return;
+    if (!S.paused) { S.paused = true; clearTimeout(S.botTimer); pauseTimer(); }
+    else { S.paused = false; resumeTimer(); scheduleBot(); }
+    setPauseLabel();
+};
+
+// Tutup menu (kalau sedang dijeda, permainan dilanjutkan)
 window.flipResume = () => {
     $('f-pause-modal').classList.add('hidden');
     if (S.localMode && S.paused) { S.paused = false; resumeTimer(); scheduleBot(); }

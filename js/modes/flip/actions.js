@@ -1,7 +1,7 @@
 import { isBusy } from './animations.js';
 import { S, cloneState, fx, nameOf } from '../../core/state.js';
 import { drawFrom, face, pointOf } from './deck.js';
-import { advance, canCallUno, isMyTurn, isPlayable, isPlayableIn, normalizeUno, penalize, playCardOn, resolvePending, tallyRound } from './rules.js';
+import { advance, canCallUno, isMyTurn, isPlayable, isPlayableIn, normalizeUno, isCatchable, penalize, playCardOn, resolvePending, tallyRound } from './rules.js';
 import { hideChallenge } from './challenge.js';
 import { bestColor, scheduleBot } from './local.js';
 import { handleGameOver, renderGame } from './ui.js';
@@ -84,7 +84,6 @@ window.flipDraw = (side) => {
     if (!isMyTurn() || S.hasDrawnThisTurn) return;
     const s = cloneState();
     const me = S.currentUser.uid;
-    s.catchable = null;
     const got = drawFrom(s, 1, side);
     const drawn = got.cards[0];
     if (!drawn) { advance(s); s.logs.push(`<b>${nameOf(me)}</b> tidak bisa mengambil kartu.`); updateRemoteState(s); return; }
@@ -107,7 +106,6 @@ window.flipPass = () => {
     if (isBusy()) return showToast("Tunggu animasi selesai...");
     if (!isMyTurn() || !S.hasDrawnThisTurn) return;
     const s = cloneState();
-    s.catchable = null;
     s.logs.push(`<b>${nameOf(S.currentUser.uid)}</b> melewati giliran.`);
     advance(s);
     S.hasDrawnThisTurn = false;
@@ -124,7 +122,7 @@ window.flipUno = () => {
     }
     s.unoCalled[me] = true;
     fx(s, { t: 'uno', uid: me });
-    if (s.catchable === me) s.catchable = null;
+    if (s.forgot) delete s.forgot[me];
     s.logs.push(`<b>${nameOf(me)}</b> berteriak UNO!`);
     updateRemoteState(s);
     showToast("Kamu berteriak UNO!");
@@ -133,8 +131,8 @@ window.flipUno = () => {
 // Ketuk profil lawan yang bertanda palu -> langsung tertangkap
 window.flipCatch = (uid) => {
     const s = cloneState();
-    if (s.catchable !== uid || s.unoCalled[uid]) {
-        return showToast("Tidak bisa ditangkap (sudah UNO atau terlambat).");
+    if (!isCatchable(s, uid)) {
+        return showToast("Tidak bisa ditangkap (sudah bilang UNO atau kartunya bukan 1 lagi).");
     }
     penalize(s, uid, S.currentUser.uid);
     updateRemoteState(s);
@@ -181,7 +179,6 @@ export function timeoutTurn(uid) {
         return;
     }
 
-    s.catchable = null;
     if (!drew) {
         const got = drawFrom(s, 1);
         if (got.cards.length) { s.hands[uid].push(got.cards[0]); fx(s, { t: 'draw', uid, n: 1, sides: got.sides, cards: got.cards }); }

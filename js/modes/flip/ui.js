@@ -4,7 +4,7 @@ import { fitOpponents } from '../../core/oppfit.js';
 import { syncTimer } from './timer.js';
 import { S, esc } from '../../core/state.js';
 import { NAMES, HEX, cardSrc, face, imgTag, oppSide } from './deck.js';
-import { canCallUno, isMyTurn, isPlayableIn } from './rules.js';
+import { canCallUno, isCatchable, isMyTurn, isPlayableIn } from './rules.js';
 import { applyHold, handleFx, resetFx, shownCount, viewSide, whenIdle } from './animations.js';
 import { sfx, sayAsync, startMusic, stopMusic } from '../../core/sound.js';
 import { go } from '../../app/router.js';
@@ -55,7 +55,7 @@ export function renderGame() {
             stackHTML += `<div class="uno-card opponent-card st-${c}">${faceHTML(state.hands[p.uid][c], other)}</div>`;
         }
         const calledBadge = (count === 1 && state.unoCalled[p.uid]) ? `<div class="absolute top-0 -left-4 z-20 bg-green-600 text-[10px] px-1 rounded border border-white">UNO ✓</div>` : '';
-        const catchable = state.catchable === p.uid && !state.unoCalled[p.uid] && state.hands[p.uid].length === 1;
+        const catchable = isCatchable(state, p.uid);
         const catchBtn = catchable ? `<img class="catch-hammer" src="img/effects/hammer.png" alt="">` : '';
 
         oppArea.innerHTML += `
@@ -125,7 +125,7 @@ export function renderGame() {
     const meP = S.roomData.players.find(p => p.uid === me);
     const meAv = document.getElementById('f-me-avatar');
     if (meAv && meP) {
-        const mineCatch = state.catchable === me && !state.unoCalled[me] && (state.hands[me] || []).length === 1;
+        const mineCatch = isCatchable(state, me);
         meAv.innerHTML = avatarHTML(meP, isMyTurn(), 'me') + (mineCatch ? `<img class="catch-hammer" src="img/effects/hammer.png" alt="" onclick="showToast('Kamu lupa UNO! Tekan tombol UNO sekarang.')">` : '');
     }
 

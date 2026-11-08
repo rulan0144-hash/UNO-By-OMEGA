@@ -30,7 +30,10 @@ export function normalizeUno(state, prevHands) {
         const before = prevHands && prevHands[u] ? prevHands[u].length : n;
         if (n > 2 || n > before) state.unoCalled[u] = false;
     });
+    // Pemain yang lupa UNO tetap bisa ditangkap SELAMA kartunya masih tepat 1 dan belum bilang UNO (tidak ada batas waktu / tidak hilang saat pemain lain bertindak)
+    if (state.forgot) Object.keys(state.forgot).forEach(u => { if (!state.hands[u] || state.hands[u].length !== 1 || state.unoCalled[u]) delete state.forgot[u]; });
 }
+export const isCatchable = (state, uid) => !!(state.forgot && state.forgot[uid]) && !state.unoCalled[uid] && !!state.hands[uid] && state.hands[uid].length === 1;
 
 // Beri kartu (jumlah tetap) ke pemain + catat animasi
 export function giveCards(state, uid, n, pen = false) {   // pen = +2 hukuman tantangan salah (bunyi "Draw two!")
@@ -51,7 +54,7 @@ export function penalize(state, uid, byUid) {
     fx(state, { t: 'catch', by: byUid, uid });
     giveCards(state, uid, 2);
     state.unoCalled[uid] = false;
-    state.catchable = null;
+    if (state.forgot) delete state.forgot[uid];
     state.logs.push(`<b>${nameOf(byUid)}</b> menangkap <b>${nameOf(uid)}</b> yang lupa UNO! +2 kartu.`);
 }
 
@@ -62,7 +65,6 @@ export function playCardOn(state, uid, cardIdx, chosenColor, callUno) {
     const card = hand.splice(cardIdx, 1)[0];
     const f = face(card, state.side);
     const prevColor = state.currentColor;          // warna sebelum kartu ini (untuk tantangan Wild Draw)
-    state.catchable = null;
     state.discardPile.push(card);
     fx(state, { t: 'play', uid, card, side: state.side, color: chosenColor });
     if (f.color === 'Black') fx(state, { t: 'picker', color: chosenColor, side: state.side });
@@ -80,7 +82,7 @@ export function playCardOn(state, uid, cardIdx, chosenColor, callUno) {
             state.logs.push(`<b>${nameOf(uid)}</b> berteriak UNO!`);
         }
         if (!state.unoCalled[uid]) {
-            state.catchable = uid;
+            (state.forgot = state.forgot || {})[uid] = true;   // bisa ditangkap selama kartunya masih 1
             state.logs.push(`<b>${nameOf(uid)}</b> sisa 1 kartu tapi belum bilang UNO!`);
         }
     } else {
@@ -182,7 +184,6 @@ export function resolvePending(state, uid, choice) {
     const p = state.pending;
     if (!p) return false;
     state.pending = null;
-    state.catchable = null;
     const penalty = (who, extra) => (p.type === 'wdc' ? giveUntil(state, who, p.color) : giveCards(state, who, p.total)) + (extra ? giveCards(state, who, extra, true) : 0);
     const label = p.type === 'wdc' ? `sampai dapat warna ${NAMES[p.color]}` : `${p.total} kartu`;
     if (choice === 'challenge') {

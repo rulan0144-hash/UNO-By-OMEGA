@@ -17,7 +17,7 @@ function flipSrcs() {
     srcs.push('img/flip/fx/flip-light.png', 'img/flip/fx/flip-dark.png', 'img/flip/fx/wild-spin-dark.png');
     ['aura', 'cloud-day', 'cloud-night', 'clouds', 'eyes', 'fog', 'night', 'sky-day'].forEach(n => srcs.push(`img/flip/table/${n}.png`));
     ['wild-spin', 'wild-Red', 'wild-Green', 'wild-Blue', 'wild-Yellow', 'hammer', 'uno', 'boom'].forEach(n => srcs.push(`img/effects/${n}.png`));
-    ['frame-gold', 'frame-silver', 'direction', 'pause', 'logo-flip', 'sound-on', 'sound-off'].forEach(n => srcs.push(`img/ui/${n}.png`));
+    ['frame-gold', 'frame-silver', 'direction', 'pause', 'logo-flip', 'settings', 'sound-on', 'sound-off'].forEach(n => srcs.push(`img/ui/${n}.png`));
     return srcs;
 }
 
