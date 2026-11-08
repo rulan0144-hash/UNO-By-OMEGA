@@ -3,6 +3,8 @@ import { S } from '../../core/state.js';
 import { generateCardHTML, pileRot, renderGame } from './ui.js';
 import { sfx, sayAsync } from '../../core/sound.js';
 import { runCountdown } from '../../core/countdown.js';
+// animasi yang masih berjalan setelah pemain keluar / pindah mode tidak boleh menggambar ulang dengan data mode lain
+const inClassic = () => !!S.roomData && (S.roomData.mode || 'classic') === 'classic';
 
 // Semua animasi permainan. Dipicu oleh daftar peristiwa (state.fx) yang dicatat di rules.js,
 // jadi semua pemain online melihat animasi yang sama.
@@ -60,7 +62,7 @@ function land(uid) {
     } else {
         hold.transit[uid] = Math.max(0, (hold.transit[uid] || 0) - 1);
         cur.opp[uid] = (cur.opp[uid] || 0) - 1;
-        if (S.roomData) renderGame();
+        if (inClassic()) renderGame();
     }
 }
 
@@ -317,7 +319,7 @@ async function shuffleAnim(state) {
     // 3. tampilkan tangan baru (tersembunyi), lalu bagikan: kartu muncul saat tiba
     hold.frozenHand = null;
     hold.shuffleCounts = null;
-    if (S.roomData) renderGame();
+    if (inClassic()) renderGame();
     const back = collect();
     await Promise.all(back.map((it, i) => fly(BACK, jitter(), it.rect, { dur: 800, delay: (i % 12) * 80, rot: rnd(24) })
         .then(() => { if (it.mine) it.el.style.visibility = ''; })));
@@ -328,7 +330,7 @@ function restore() {
     if (pile) pile.style.visibility = '';
     const top = document.querySelector('.pile-top');
     if (top) top.style.visibility = '';
-    if (S.roomData && S.roomData.gameState) renderGame();   // tampilan akhir sesuai state sebenarnya
+    if (inClassic() && S.roomData.gameState) renderGame();   // tampilan akhir sesuai state sebenarnya
 }
 
 // Kartu "bayangan" yang diam di posisi asal selama efeknya tampil (kartu belum diletakkan)

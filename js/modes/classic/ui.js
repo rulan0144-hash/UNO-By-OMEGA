@@ -132,6 +132,8 @@ export function renderGame() {
     const btnUno = document.getElementById('btn-uno');
     btnUno.classList.toggle('animate-pulse', canCallUno(state));
     btnUno.classList.toggle('opacity-50', !!state.unoCalled[me]);
+    btnUno.classList.toggle('uno-ready', canCallUno(state) && !state.unoCalled[me]);   // kelas sendiri (tanpa Tailwind)
+    btnUno.classList.toggle('uno-done', !!state.unoCalled[me]);
 
     // Giliran
     const btnPass = document.getElementById('btn-pass');
