@@ -1,0 +1,37 @@
+/* Gaya khusus mode UNO Flip. Bagian pertama = salinan aturan gaya klasik yang memakai id (#human-hand-ui dst) untuk id Flip (#f-hand dst).
+   Gaya lain (kartu, avatar, tumpukan, menu jeda, efek) dipakai bersama dari style.css lewat kelas. */
+#f-turn-ind {text-shadow: 0 2px 0 rgba(0,0,0,.75);}
+#f-me-avatar {position: relative;}
+#f-hand {min-height: 0; flex: 1 1 0; height: auto;}
+#f-hand .uno-card {flex-shrink: 0;}
+#f-hand {overflow: visible !important; padding-left: 8px !important; padding-right: 8px !important; gap: 0 !important; align-items: flex-end !important; padding-bottom: calc(22px * var(--s, 1)); padding-top: calc(30px * var(--s, 1));}
+#f-hand .uno-card {border-radius: 8px;}
+#f-hand .fan-card {transform-origin: 50% calc(100% + var(--pivot, 170px)); transform: rotate(var(--rot, 0deg));}
+#f-hand .fan-card.selected {transform: rotate(var(--rot, 0deg)) translateY(calc(-32px * var(--s, 1))); z-index: 60; filter: drop-shadow(0 10px 14px rgba(0,0,0,.75));}
+#f-hand .fan-card {touch-action: none;}
+#f-hand .fan-card.dragging {transition: none; z-index: 80; filter: drop-shadow(0 14px 18px rgba(0,0,0,.8)); cursor: grabbing;}
+#f-discard.drop-ready {filter: drop-shadow(0 0 16px #facc15) drop-shadow(0 0 6px #facc15);}
+#f-hand .fan-card.unplayable.selected {filter: brightness(.8) drop-shadow(0 10px 14px rgba(0,0,0,.75));}
+#f-btn-uno {font-size: calc(18px * max(var(--s, 1), .75)) !important; padding: calc(8px * var(--s, 1)) calc(16px * var(--s, 1)) !important;}
+#f-btn-pass {font-size: calc(14px * max(var(--s, 1), .75)) !important; padding: calc(8px * var(--s, 1)) calc(14px * var(--s, 1)) !important;}
+#f-turn-ind {font-size: calc(20px * max(var(--s, 1), .7)) !important; line-height: 1.15;}
+
+/* ---- khusus Flip ---- */
+#flip-screen .table-line::after { content: 'FLIP'; }
+.deck-void { width: calc(80px * var(--s, 1)); height: calc(116px * var(--s, 1)); border: 2px dashed rgba(255,255,255,.35); border-radius: 8px; }
+.glow-c { filter: drop-shadow(0 0 14px var(--glow)) drop-shadow(0 0 5px var(--glow)) !important; }
+
+/* label ronde & sisi (kiri-atas meja) */
+.side-badge { position: absolute; top: calc(10px * var(--s, 1)); left: calc(12px * var(--s, 1)); z-index: 20; padding: 3px 12px; border-radius: 14px; text-align: center; font-size: calc(12px * max(var(--s, 1), .8)); font-weight: 800; border: 2px solid #fff; box-shadow: 0 3px 8px rgba(0,0,0,.55); pointer-events: none; max-width: 28%; line-height: 1.2; }
+.side-light { background: #f59e0b; color: #1f1300; }
+.side-dark { background: #3b0764; color: #f5d0fe; border-color: #c084fc; }
+
+/* warna sisi gelap pada kotak tantangan & nama warna pemilih */
+.ch-color.ch-Pink { color: #f9a8d4; } .ch-color.ch-Teal { color: #5eead4; } .ch-color.ch-Orange { color: #fdba74; } .ch-color.ch-Purple { color: #d8b4fe; }
+.fx-pn-Pink { color: #f9a8d4; } .fx-pn-Teal { color: #5eead4; } .fx-pn-Orange { color: #fdba74; } .fx-pn-Purple { color: #d8b4fe; }
+
+/* animasi FLIP: dek, buangan, dan tangan berputar ke sisi seberang */
+.flip-out { animation: flip-out .38s ease-in forwards; }
+.flip-in { animation: flip-in .42s ease-out; }
+@keyframes flip-out { from { transform: perspective(800px) rotateY(0deg); } to { transform: perspective(800px) rotateY(90deg); opacity: .3; } }
+@keyframes flip-in { from { transform: perspective(800px) rotateY(-90deg); opacity: .3; } to { transform: perspective(800px) rotateY(0deg); opacity: 1; } }
