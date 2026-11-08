@@ -3,7 +3,8 @@ import './core/sound.js';
 import './app/profile.js';
 import './app/settings.js';
 import './app/online-hub.js';
-import './modes/classic/index.js';       // tiap mode baru: tambahkan import './modes/<id>/index.js' di sini
+import './modes/classic/index.js';
+import './modes/flip/index.js';       // tiap mode baru: tambahkan import './modes/<id>/index.js' di sini
 import { sfx } from './core/sound.js';
 import { preloadCards, applyScale } from './core/config.js';
 import { S } from './core/state.js';
