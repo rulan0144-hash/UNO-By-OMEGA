@@ -47,8 +47,8 @@
 
 /* awan siang: dua lapis melayang pelan (translateX, ringan untuk HP) */
 .f-clouds { position: absolute; left: 0; width: 200%; background: url('../img/flip/table/clouds.png') repeat-x; will-change: transform; }
-.f-clouds-a { top: 2%; height: 36%; background-size: 50% 100%; opacity: .95; animation: f-drift 95s linear infinite; }
-.f-clouds-b { top: 40%; height: 30%; background-size: 50% 100%; opacity: .7; animation: f-drift 150s linear infinite reverse; }
+.f-clouds-a { top: 2%; height: 36%; background-size: 50% 100%; opacity: .6; animation: f-drift 95s linear infinite; }
+.f-clouds-b { top: 40%; height: 30%; background-size: 50% 100%; opacity: .4; animation: f-drift 150s linear infinite reverse; }
 @keyframes f-drift { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
 /* kabut malam, mata menyala, aura berdenyut */
@@ -63,13 +63,16 @@
 .f-aura { position: absolute; inset: 0; background: url('../img/flip/table/aura.png') center / 100% 100% no-repeat; animation: f-aura 4.2s ease-in-out infinite; }
 @keyframes f-aura { 0%, 100% { opacity: .55; transform: scale(1.02); } 45% { opacity: 1; transform: scale(1); } 52% { opacity: .75; } 58% { opacity: 1; } }
 
-/* meja di tengah: piringan awan (terang) / kolam kabut ungu (gelap), bingkai emas diganti */
-#flip-screen .table-line { border: 2px solid rgba(255,255,255,.55); background: radial-gradient(ellipse at 50% 50%, rgba(255,255,255,.34) 0%, rgba(255,255,255,.14) 62%, rgba(255,255,255,0) 100%); box-shadow: 0 0 30px rgba(255,255,255,.35); transition: all 1s ease; }
-#flip-screen .table-line::before { border-color: rgba(255,255,255,.35); }
-#flip-screen .table-line::after { color: rgba(255,255,255,.14); }
-#flip-screen.f-dark .table-line { border-color: rgba(192,132,252,.5); background: radial-gradient(ellipse at 50% 50%, rgba(88,28,135,.42) 0%, rgba(40,8,60,.3) 62%, rgba(0,0,0,0) 100%); box-shadow: 0 0 34px rgba(168,85,247,.45), inset 0 0 40px rgba(0,0,0,.5); }
-#flip-screen.f-dark .table-line::before { border-color: rgba(192,132,252,.3); }
-#flip-screen.f-dark .table-line::after { color: rgba(216,180,254,.1); }
+/* meja di tengah = AWAN BESAR (pengganti arena bulat): putih untuk sisi Terang, awan badai ungu berpendar untuk sisi Gelap.
+   Gambar: img/flip/table/cloud-day.png & cloud-night.png (alat/gen_flip_cloud.py). Berganti pudar silang 1 detik saat Flip. */
+#flip-screen .table-line { left: 50%; top: 50%; width: 112%; height: 99%; border: 0; border-radius: 0; background: none; box-shadow: none; animation: f-cloud-bob 8s ease-in-out infinite alternate; will-change: transform; }
+#flip-screen .table-line::before, #flip-screen .table-line::after { content: ''; position: absolute; inset: 0; border: 0; border-radius: 0; transform: none; letter-spacing: 0; font-size: 0; background-position: center; background-repeat: no-repeat; background-size: contain; transition: opacity 1s ease; }
+#flip-screen .table-line::before { background-image: url('../img/flip/table/cloud-day.png'); opacity: 1; filter: drop-shadow(0 12px 16px rgba(30, 80, 140, .45)); }
+#flip-screen .table-line::after { background-image: url('../img/flip/table/cloud-night.png'); opacity: 0; filter: drop-shadow(0 0 18px rgba(139, 92, 246, .55)); }
+#flip-screen.f-dark .table-line::before { opacity: 0; }
+#flip-screen.f-dark .table-line::after { opacity: 1; }
+@keyframes f-cloud-bob { from { transform: translate(-50%, -50%); } to { transform: translate(-50%, calc(-50% + 5px)); } }
+@media (prefers-reduced-motion: reduce) { #flip-screen .table-line { animation: none; } }
 #flip-screen .player-panel { background: linear-gradient(rgba(255,255,255,.12), rgba(20,50,90,.38)); border-top: 2px solid rgba(255,255,255,.65); }
 #flip-screen.f-dark .player-panel { background: linear-gradient(rgba(10,0,20,.45), rgba(10,0,20,.7)); border-top: 2px solid rgba(168,85,247,.6); }
 #f-opps .name-tag { background: rgba(10,30,60,.55); }

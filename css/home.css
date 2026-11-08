@@ -61,3 +61,15 @@
 
 .set-name { margin: 4px 0 2px; color: #d1d5db; font-size: 15px; }
 .set-name b { color: #fde68a; }
+
+
+/* ===== Poster gaya kotak UNO: sinar bintang, logo, tulisan penyemangat, kartu mengintip, lencana 2-10 | 7+ ===== */
+.mc-poster { display: flex; flex-direction: column; align-items: center; height: 262px; padding-top: 8px; }
+.mc-red { background: repeating-conic-gradient(from 0deg at 50% 36%, #ef4444 0deg 7.5deg, #c21f1f 7.5deg 15deg); }
+.mc-purple { height: 262px; background: repeating-conic-gradient(from 0deg at 50% 36%, #8b5cf6 0deg 7.5deg, #6d33d6 7.5deg 15deg); }
+.mc-poster::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 34%, rgba(255,255,255,.18), rgba(0,0,0,0) 45%, rgba(0,0,0,.38) 100%); }
+.mc-poster .mc-logo { position: relative; top: auto; left: auto; transform: none; width: 64%; max-width: 270px; z-index: 2; }
+.mc-tag { position: relative; z-index: 2; margin-top: 4px; padding: 0 8px; text-align: center; font-size: 17px; font-weight: 800; color: #fff; transform: rotate(-2deg);
+    text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, 0 3px 0 #000; }
+.mc-poster .mc-fan { z-index: 1; }
+.mc-badge { position: absolute; left: 8px; bottom: 8px; z-index: 30; width: 40%; max-width: 150px; height: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,.5)); pointer-events: none; }
