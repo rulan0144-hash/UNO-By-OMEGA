@@ -5,7 +5,7 @@ import { syncTimer } from './timer.js';
 import { COLOR_NAMES } from '../../core/config.js';
 import { S, esc } from '../../core/state.js';
 import { calculatePoint } from './deck.js';
-import { canCallUno, isMyTurn, isPlayable } from './rules.js';
+import { canCallUno, isCatchable, isMyTurn, isPlayable } from './rules.js';
 import { applyHold, frozenHand, handleFx, shownCount, whenIdle } from './animations.js';
 import { sfx, sayAsync, startMusic, stopMusic } from '../../core/sound.js';
 import { go } from '../../app/router.js';
@@ -55,7 +55,7 @@ export function renderGame() {
         }
         const calledBadge = (count === 1 && state.unoCalled[p.uid]) ? `<div class="absolute top-0 -left-4 z-20 bg-green-600 text-[10px] px-1 rounded border border-white">UNO ✓</div>` : '';
         // Lupa UNO: ikon palu muncul di profil; ketuk profil = langsung tertangkap
-        const catchable = state.catchable === p.uid && !state.unoCalled[p.uid] && state.hands[p.uid].length === 1;
+        const catchable = isCatchable(state, p.uid);
         const catchBtn = catchable ? `<img class="catch-hammer" src="img/effects/hammer.png" alt="">` : '';
 
         oppArea.innerHTML += `
@@ -124,7 +124,7 @@ export function renderGame() {
     const meP = S.roomData.players.find(p => p.uid === me);
     const meAv = document.getElementById('me-avatar');
     if (meAv && meP) {
-        const mineCatch = state.catchable === me && !state.unoCalled[me] && (state.hands[me] || []).length === 1;
+        const mineCatch = isCatchable(state, me);
         meAv.innerHTML = avatarHTML(meP, isMyTurn(), 'me') + (mineCatch ? `<img class="catch-hammer" src="img/effects/hammer.png" alt="" onclick="showToast('Kamu lupa UNO! Tekan tombol UNO sekarang.')">` : '');
     }
 

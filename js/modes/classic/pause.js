@@ -8,16 +8,27 @@ import { scheduleBot } from './local.js';
 // Online: permainan tidak bisa dijeda (pemain lain tetap main), menu hanya untuk keluar.
 const $ = (id) => document.getElementById(id);
 
+const setPauseLabel = () => { $('pause-toggle').textContent = S.paused ? '▶ Lanjutkan Permainan' : '⏸ Jeda Permainan'; };
+
+// Menu Pengaturan: suara, Jeda, Mulai Ulang, Keluar. Membuka menu TIDAK menjeda; jeda hanya lewat tombol "Jeda Permainan" (khusus vs Komputer).
 window.openMenu = () => {
     if (!S.roomData) return;
-    S.paused = !!S.localMode;
-    $('pause-title').textContent = S.localMode ? 'Jeda' : 'Menu';
+    $('pause-title').textContent = 'Pengaturan';
     $('pause-note').textContent = S.localMode ? '' : 'Permainan online tidak bisa dijeda; pemain lain tetap bermain.';
     $('btn-restart').classList.toggle('hidden', !S.localMode);
+    $('pause-toggle').classList.toggle('hidden', !S.localMode);
+    setPauseLabel();
     $('pause-modal').classList.remove('hidden');
-    if (S.localMode) { clearTimeout(S.botTimer); pauseTimer(); }
 };
 
+window.togglePause = () => {
+    if (!S.localMode || !S.roomData) return;
+    if (!S.paused) { S.paused = true; clearTimeout(S.botTimer); pauseTimer(); }
+    else { S.paused = false; resumeTimer(); scheduleBot(); }
+    setPauseLabel();
+};
+
+// Tutup menu (kalau sedang dijeda, permainan dilanjutkan)
 window.resumeGame = () => {
     $('pause-modal').classList.add('hidden');
     if (S.localMode && S.paused) { S.paused = false; resumeTimer(); scheduleBot(); }
