@@ -362,3 +362,6 @@ body.h-screen { height: var(--app-h, 100dvh) !important; }
 .over-btn { display: block; width: 100%; min-height: 60px; padding: 14px 24px; border: 3px solid #93c5fd; border-radius: 999px; background: linear-gradient(#3b82f6, #1d4ed8); color: #fff; font-size: 20px; font-weight: 800; cursor: pointer;
     box-shadow: 0 4px 0 #1e3a8a; touch-action: manipulation; -webkit-tap-highlight-color: transparent; position: relative; z-index: 1; }
 .over-btn:active { transform: scale(.97); }
+
+/* Menu Pengaturan: tombol Jeda di dalam menu */
+.pause-pause { background: #d97706; }
