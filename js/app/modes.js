@@ -17,7 +17,7 @@ export const MODES = [
         bots: { min: 1, max: 9, def: 3 }
     },
     {
-        id: 'flip', group: 'other', ready: true, online: false,
+        id: 'flip', group: 'other', ready: true,
         name: 'UNO Flip',
         desc: 'Kartu dua sisi: terang dan gelap. Balik dek, ubah permainan!',
         theme: 'purple', logo: 'img/ui/logo-flip.png', tag: 'Balik dek, ubah permainan!', badge: 'img/ui/badge-players-flip.png',
