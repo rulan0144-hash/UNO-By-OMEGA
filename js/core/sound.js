@@ -198,6 +198,13 @@ const SFX = {
     c_Yellow() { duck(0.9); },
     c_Blue() { duck(0.9); },
     c_Green() { duck(0.9); },
+    // ---- UNO Flip ----
+    c_Pink() { duck(0.9); }, c_Teal() { duck(0.9); }, c_Orange() { duck(0.9); }, c_Purple() { duck(0.9); },
+    draw1() { duck(0.8); tone({ f: note(76), f2: note(81), type: 'sine', dur: 0.14, vol: 0.3 }); noise({ t: 0.12, dur: 0.08, vol: 0.1, f: 4000 }); },
+    draw5() { SFX.draw4(); },
+    skipall() { SFX.skip(); },
+    wdc() { SFX.draw4(); },
+    flip() { duck(1.1); noise({ dur: 0.45, vol: 0.2, f: 600, f2: 5000, q: 0.7 }); tone({ f: 300, f2: 900, type: 'triangle', dur: 0.3, vol: 0.18 }); tone({ f: 900, f2: 300, type: 'triangle', t: 0.32, dur: 0.3, vol: 0.14 }); },
 
     // tantangan +4
     challengeRight() {   // penantang benar: "ta-da!"
@@ -247,7 +254,16 @@ const VOICE = {
     c_Red: ['Red', 1.1, 1.0, 0],
     c_Yellow: ['Yellow', 1.1, 1.0, 0],
     c_Blue: ['Blue', 1.1, 1.0, 0],
-    c_Green: ['Green', 1.1, 1.0, 0]
+    c_Green: ['Green', 1.1, 1.0, 0],
+    c_Pink: ['Pink', 1.1, 1.0, 0],
+    c_Teal: ['Teal', 1.1, 1.0, 0],
+    c_Orange: ['Orange', 1.1, 1.0, 0],
+    c_Purple: ['Purple', 1.1, 1.0, 0],
+    draw1: ['Draw one!', 1.2, 1.0, 0.05],
+    draw5: ['Draw five!', 1.1, 1.0, 0.05],
+    skipall: ['Skip everyone!', 1.1, 1.0, 0.05],
+    wdc: ['Draw color!', 1.1, 1.0, 0.05],
+    flip: ['Flip!', 1.2, 1.0, 0.1]
 };
 let voiceObj = null;
 function pickVoice() {
