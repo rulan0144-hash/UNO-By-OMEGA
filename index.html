@@ -221,7 +221,17 @@
     </div>
 
     <!-- AREA PERMAINAN UNO FLIP (id berawalan f-, dikendalikan js/modes/flip/) -->
-    <div id="flip-screen" class="hidden h-full w-full flex flex-col relative casino">
+    <div id="flip-screen" class="hidden h-full w-full flex flex-col relative casino f-light">
+
+        <!-- Latar meja: siang (awan) untuk sisi Terang, malam seram untuk sisi Gelap (gambar di img/flip/table/, gaya di css/flip.css) -->
+        <div class="f-bg" aria-hidden="true">
+            <div class="f-bg-light"><div class="f-clouds f-clouds-a"></div><div class="f-clouds f-clouds-b"></div></div>
+            <div class="f-bg-dark">
+                <div class="f-fog f-fog-a"></div><div class="f-fog f-fog-b"></div>
+                <img class="f-eyes f-eyes-1" src="img/flip/table/eyes.png" alt=""><img class="f-eyes f-eyes-2" src="img/flip/table/eyes.png" alt=""><img class="f-eyes f-eyes-3" src="img/flip/table/eyes.png" alt="">
+                <div class="f-aura"></div>
+            </div>
+        </div>
 
         <!-- Tombol menu (jeda / keluar) -->
         <button id="f-btn-menu" onclick="flipOpenMenu()" class="menu-btn" aria-label="Menu"><img src="img/ui/pause.png" alt="" draggable="false"></button>
@@ -279,11 +289,9 @@
                 <h1 id="f-winner-text" class="text-4xl md:text-5xl mb-2 text-yellow-400 font-bold">Player Menang!</h1>
                 <p id="f-score-text" class="text-2xl mb-4 font-black text-green-400">Total Skor: 0 Poin</p>
                 <div class="bg-gray-900 border border-gray-700 rounded-lg p-4 mb-6 text-left max-h-48 overflow-y-auto hide-scrollbar">
-                    <h3 class="text-gray-400 text-sm uppercase tracking-widest font-bold mb-2 border-b border-gray-700 pb-2">Poin Pertandingan</h3>
+                    <h3 class="text-gray-400 text-sm uppercase tracking-widest font-bold mb-2 border-b border-gray-700 pb-2">Rincian Poin</h3>
                     <div id="f-score-breakdown" class="text-sm text-gray-200 space-y-2"></div>
                 </div>
-                <p id="f-over-hint" class="text-sm text-gray-400 mb-3"></p>
-                <button id="f-next-btn" onclick="flipNextRound()" class="w-full mb-3 bg-green-600 hover:bg-green-500 text-white font-bold py-4 px-8 rounded-full text-xl shadow-lg transition active:scale-95">Ronde Berikutnya ▶</button>
                 <button onclick="flipLeave()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-full text-xl shadow-lg transition active:scale-95">Kembali ke Beranda</button>
             </div>
         </div>
@@ -299,7 +307,6 @@
             <div id="f-dir-ring" class="dir-ring"><img src="img/ui/direction.png" alt="" draggable="false"></div>
 
             <!-- Hitung mundur giliran (gaya stopwatch) -->
-            <div id="f-side" class="side-badge side-light"></div>
             <div id="f-timer" class="turn-timer tt-ok"><span id="f-time">15.00</span></div>
 
             <!-- Kiri-bawah meja: profil + tombol UNO | kanan-bawah: giliran -->
