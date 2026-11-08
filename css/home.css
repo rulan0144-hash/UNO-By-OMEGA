@@ -25,15 +25,11 @@
 .sec-title::after { transform: scaleX(-1); }
 
 /* kartu mode */
-.mode-card { display: flex; gap: 14px; align-items: center; margin-bottom: 12px; padding: 14px; text-align: left; border: 3px solid #d4a72c; border-radius: 20px; background: linear-gradient(rgba(0, 0, 0, .38), rgba(0, 0, 0, .55)); box-shadow: 0 6px 16px rgba(0, 0, 0, .45), inset 0 0 0 2px rgba(255, 255, 255, .06); }
-.mc-artbox { position: relative; flex: 0 0 104px; height: 112px; margin-right: 4px; }
-.mc-art { position: absolute; width: 62px; height: auto; bottom: 0; filter: drop-shadow(0 4px 5px rgba(0, 0, 0, .55)); -webkit-user-drag: none; }
-.mc-art-0 { left: 4px; transform: rotate(-14deg); transform-origin: 50% 100%; }
-.mc-art-1 { left: 22px; bottom: 6px; transform: rotate(0deg); z-index: 1; }
-.mc-art-2 { left: 40px; transform: rotate(14deg); transform-origin: 50% 100%; z-index: 2; }
-.mc-body { flex: 1; min-width: 0; }
-.mc-name { font-size: 24px; font-weight: 800; color: #fff; text-shadow: 0 3px 0 rgba(0, 0, 0, .6); line-height: 1.1; }
-.mc-desc { margin: 4px 0 10px; font-size: 13px; line-height: 1.25; color: #d1d5db; }
+.mode-card { display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px; padding: 14px; text-align: left; border: 3px solid #d4a72c; border-radius: 20px; background: linear-gradient(rgba(0, 0, 0, .38), rgba(0, 0, 0, .55)); box-shadow: 0 6px 16px rgba(0, 0, 0, .45), inset 0 0 0 2px rgba(255, 255, 255, .06); }
+.mc-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.mc-logo { width: 46%; max-width: 190px; height: auto; flex: 0 0 auto; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .5)); -webkit-user-drag: none; }
+.mc-fan { position: relative; flex: 0 0 auto; width: 128px; height: 100px; }
+.mc-art { position: absolute; bottom: 0; left: calc(var(--i) * 25px); width: 54px; height: auto; transform: rotate(calc((var(--i) - 1.5) * 9deg)); transform-origin: 50% 110%; z-index: var(--i); filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .55)); -webkit-user-drag: none; }
 .mc-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .mc-step { display: flex; align-items: center; gap: 4px; padding: 3px; border-radius: 999px; background: rgba(0, 0, 0, .45); border: 2px solid rgba(212, 167, 44, .6); }
 .mc-stepbtn { width: 30px; height: 30px; border: 0; border-radius: 50%; background: #374151; color: #fde68a; font-size: 20px; font-weight: 800; line-height: 1; cursor: pointer; }
