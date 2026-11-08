@@ -32,7 +32,7 @@ export const generateCardHTML = faceHTML;
 export function renderGame() {
     const state = S.roomData.gameState;
     const me = S.currentUser.uid;
-    if (S.roomData.status === 'playing') startMusic();   // musik latar (aman dipanggil berulang)
+    if (S.roomData.status === 'playing') startMusic(viewSide(state) === 'dark' ? 'flipDark' : 'flipLight');   // lagu beda untuk sisi terang & gelap (aman dipanggil berulang)
     handleFx(state);   // mencatat animasi baru & menahan tampilan
     const side = viewSide(state);
     const other = oppSide(side);
@@ -95,7 +95,7 @@ export function renderGame() {
     badge.innerText = `Warna: ${NAMES[state.currentColor] || state.currentColor}`;
     const sb = document.getElementById('f-side');
     sb.className = 'side-badge side-' + side;
-    sb.innerHTML = `Ronde ${state.round || 1}<br>Sisi ${side === 'dark' ? 'Gelap' : 'Terang'}`;
+    sb.innerHTML = `Sisi<br>${side === 'dark' ? 'Gelap' : 'Terang'}`;
 
     // Tangan
     const handUI = document.getElementById('f-hand');
@@ -252,32 +252,27 @@ document.addEventListener('click', (e) => {
     if (S.selIdx >= 0 && !(e.target.closest && e.target.closest('#f-hand'))) { S.selIdx = -1; markSelected(); }
 });
 
-// ---- Akhir ronde: poin ronde, total poin, dan rincian kartu sisa ----
+// ---- Akhir permainan (seperti klasik): pemenang + total poin dari kartu sisa lawan ----
 export function handleGameOver() {
     const state = S.roomData.gameState;
     const winnerUid = state.winner;
-    const players = S.roomData.players;
-    const winnerObj = players.find(p => p.uid === winnerUid);
-    const matchOver = !!state.matchWinner;
-    const sideTxt = state.scoreSide === 'dark' ? 'gelap' : 'terang';
+    const winnerObj = S.roomData.players.find(p => p.uid === winnerUid);
+    let breakdownHTML = '';
+    S.roomData.players.forEach(p => {
+        if (p.uid === winnerUid) return;
+        const d = (state.roundDetail || []).find(x => x.uid === p.uid) || { n: 0, pts: 0 };
+        breakdownHTML += `
+            <div class="flex justify-between bg-gray-800 p-2 rounded">
+                <span><b class="text-white">${esc(p.name)}</b> (${d.n} Kartu)</span>
+                <span class="text-red-400 font-bold">+${d.pts} pts</span>
+            </div>`;
+    });
+    document.getElementById('f-winner-text').innerText = (winnerUid === S.currentUser.uid) ? "Kamu Menang!" : `${winnerObj ? winnerObj.name : '?'} Menang!`;
+    document.getElementById('f-score-text').innerText = `Total Skor: ${state.roundPts || 0} Poin`;
+    document.getElementById('f-score-breakdown').innerHTML = breakdownHTML || '<div class="text-center text-gray-500">Tidak ada sisa poin.</div>';
 
-    const title = matchOver
-        ? (winnerUid === S.currentUser.uid ? 'Kamu Juara!' : `${winnerObj ? winnerObj.name : '?'} Juara!`)
-        : (winnerUid === S.currentUser.uid ? 'Kamu Menang Ronde!' : `${winnerObj ? winnerObj.name : '?'} Menang Ronde!`);
-    document.getElementById('f-winner-text').innerText = title;
-    document.getElementById('f-score-text').innerText = `+${state.roundPts || 0} poin (sisi ${sideTxt})`;
-
-    const rows = [...players].sort((a, b) => ((state.scores || {})[b.uid] || 0) - ((state.scores || {})[a.uid] || 0)).map(p => {
-        const tot = (state.scores || {})[p.uid] || 0;
-        const left = (state.roundDetail || []).find(d => d.uid === p.uid);
-        const note = p.uid === winnerUid ? `<span class="text-green-400">+${state.roundPts || 0}</span>` : `<span class="text-gray-400">sisa ${left ? left.n : 0} kartu (${left ? left.pts : 0})</span>`;
-        return `<div class="flex justify-between bg-gray-800 p-2 rounded"><span><b class="text-white">${esc(p.name)}</b> ${note}</span><span class="text-yellow-300 font-bold">${tot} / 500</span></div>`;
-    }).join('');
-    document.getElementById('f-score-breakdown').innerHTML = rows;
-    document.getElementById('f-next-btn').classList.toggle('hidden', matchOver);
-    document.getElementById('f-over-hint').innerText = matchOver ? 'Pertandingan selesai: poin 500 tercapai.' : 'Pemain pertama yang mencapai 500 poin menang.';
-
-    const key = S.currentRoomCode + ':' + (state.turnNo || 0) + ':' + winnerUid + ':' + (state.round || 1);
+    // Urutan: animasi kartu terakhir selesai -> terdengar "UNO game!" -> layar poin muncul + nada menang/kalah
+    const key = S.currentRoomCode + ':' + (state.turnNo || 0) + ':' + winnerUid;
     if (S.winShown === key) { document.getElementById('f-over-modal').classList.remove('hidden'); return; }
     if (S.winSoundKey === key) return;
     S.winSoundKey = key;
@@ -299,4 +294,21 @@ function avatarHTML(p, active, size) {
     for (const ch of String(p.uid)) h = (h * 31 + ch.charCodeAt(0)) % 360;
     return `<div class="avatar avatar-${size} ${active ? 'avatar-active' : ''}"><div class="avatar-face" style="--h:${h}">${esc(initial)}</div>` +
         `<img class="avatar-frame" src="img/ui/${active ? 'frame-gold' : 'frame-silver'}.png" alt="" draggable="false"></div>`;
+}
+
+// Animasi kipas tangan saat FLIP: menutup (semua kartu menumpuk) lalu membuka lagi
+export function fanClose() {
+    const h = document.getElementById('f-hand');
+    if (!h) return;
+    [...h.children].forEach(k => { k.dataset.rot = k.style.getPropertyValue('--rot'); k.style.transition = 'transform .4s ease-in'; k.style.setProperty('--rot', '0deg'); });
+}
+export function fanOpen() {
+    const h = document.getElementById('f-hand');
+    if (!h) return;
+    const kids = [...h.children];
+    const rots = kids.map(k => k.style.getPropertyValue('--rot'));
+    kids.forEach(k => { k.style.transition = 'none'; k.style.setProperty('--rot', '0deg'); });
+    void h.offsetWidth;
+    kids.forEach((k, i) => { k.style.transition = 'transform .45s ease-out'; k.style.setProperty('--rot', rots[i]); });
+    setTimeout(() => kids.forEach(k => { k.style.transition = ''; }), 500);
 }

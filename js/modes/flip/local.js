@@ -8,15 +8,14 @@ import { renderGame } from './ui.js';
 import { whenIdle } from './animations.js';
 
 // --- MODE VS KOMPUTER (lokal, tanpa Firebase) ---
-// Pertandingan = beberapa ronde; pemain pertama yang mencapai 500 poin menang.
-function beginRound(players, scores, round) {
-    if (window.stopFlipTimerHook) window.stopFlipTimerHook();   // ronde baru: hitungan 15 detik mulai dari awal
+function beginGame(players) {
+    if (window.stopFlipTimerHook) window.stopFlipTimerHook();   // permainan baru: hitungan 15 detik mulai dari awal
     clearTimeout(S.botTimer);
     S.winSoundKey = null; S.winShown = null;
     S.localMode = true;
     S.currentUser = { uid: LOCAL_UID };
     S.currentRoomCode = 'LOCAL-FLIP';
-    S.roomData = { mode: 'flip', hostId: LOCAL_UID, status: 'playing', players, gameState: dealGame(players, scores, round) };
+    S.roomData = { mode: 'flip', hostId: LOCAL_UID, status: 'playing', players, gameState: dealGame(players) };
     S.hasDrawnThisTurn = false;
     S.selIdx = -1; S.selCard = null;
     document.getElementById('f-over-modal').classList.add('hidden');
@@ -29,14 +28,7 @@ window.startFlipLocal = () => {
     const n = parseInt(document.getElementById('bot-count').value) || 1;
     const players = [{ uid: LOCAL_UID, name: S.myName || 'Kamu' }];
     for (let i = 1; i <= n; i++) players.push({ uid: 'bot' + i, name: 'Komputer ' + i, isBot: true });
-    beginRound(players, {}, 1);
-};
-
-// Ronde berikutnya: poin dibawa dari ronde sebelumnya
-window.flipNextRound = () => {
-    if (!S.roomData || S.roomData.status !== 'finished') return;
-    const st = S.roomData.gameState;
-    beginRound(S.roomData.players, st.scores, (st.round || 1) + 1);
+    beginGame(players);
 };
 
 export function scheduleBot() {

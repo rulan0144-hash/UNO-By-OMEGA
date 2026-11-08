@@ -1,5 +1,5 @@
 import { S, fx, nameOf } from '../../core/state.js';
-import { drawFrom, drawUntil, face, oppSide, shuffle, pointOf, NAMES, TARGET } from './deck.js';
+import { drawFrom, drawUntil, face, oppSide, shuffle, pointOf, NAMES } from './deck.js';
 
 export function isMyTurn() {
     if (!S.roomData || S.roomData.status !== 'playing') return false;
@@ -206,19 +206,15 @@ export function resolvePending(state, uid, choice) {
 }
 export { shuffle };
 
-// Hitung poin ronde: pemenang mendapat poin kartu lawan pada SISI YANG SEDANG MAIN saat ronde berakhir.
+// Poin kemenangan (seperti klasik): jumlah poin kartu sisa lawan pada SISI YANG SEDANG MAIN saat permainan berakhir.
 export function tallyRound(state) {
-    const w = state.winner;
     let pts = 0;
     const detail = [];
     S.roomData.players.forEach(p => {
-        if (p.uid === w) return;
+        if (p.uid === state.winner) return;
         const cards = state.hands[p.uid] || [];
         const sc = cards.reduce((a, c) => a + pointOf(face(c, state.side)), 0);
         pts += sc; detail.push({ uid: p.uid, n: cards.length, pts: sc });
     });
-    state.scores = { ...(state.scores || {}) };
-    state.scores[w] = (state.scores[w] || 0) + pts;
     state.roundPts = pts; state.roundDetail = detail; state.scoreSide = state.side;
-    state.matchWinner = state.scores[w] >= TARGET ? w : null;
 }

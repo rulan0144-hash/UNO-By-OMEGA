@@ -7,7 +7,6 @@ export const DARK = ['Pink', 'Teal', 'Orange', 'Purple'];
 export const COLORS_OF = (side) => side === 'dark' ? DARK : LIGHT;
 export const NAMES = { Red: 'Merah', Yellow: 'Kuning', Green: 'Hijau', Blue: 'Biru', Pink: 'Merah Muda', Teal: 'Hijau Tosca', Orange: 'Oranye', Purple: 'Ungu', Black: 'Bebas' };
 export const HEX = { Red: '#ef4444', Yellow: '#eab308', Green: '#22c55e', Blue: '#3b82f6', Pink: '#ec4899', Teal: '#14b8a6', Orange: '#f97316', Purple: '#a855f7' };
-export const TARGET = 500;
 
 export const oppSide = (s) => s === 'dark' ? 'light' : 'dark';
 export const face = (card, side) => side === 'dark' ? card.d : card.l;
@@ -34,7 +33,7 @@ export function shuffle(a) {
 }
 
 // Bagi 7 kartu per pemain. Kartu pertama (sisi terang) harus angka. Permainan mulai di sisi terang.
-export function dealGame(players, scores, round) {
+export function dealGame(players) {
     const deck = buildDeck();
     shuffle(deck);
     const hands = {};
@@ -44,7 +43,7 @@ export function dealGame(players, scores, round) {
     while (!isNum(first.l)) { deck.unshift(first); first = deck.pop(); }
     const state = {
         ...emptyState(), side: 'light', discardPile: [first], hands, currentColor: first.l.color,
-        logs: [`Ronde ${round || 1} dimulai di sisi terang!`], scores: { ...(scores || {}) }, round: round || 1,
+        logs: ['Permainan dimulai di sisi terang!'],
         fx: { id: 'deal' + Math.random().toString(36).slice(2), list: [{ t: 'deal' }] }
     };
     splitDeck(state, deck);

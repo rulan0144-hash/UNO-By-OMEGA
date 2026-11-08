@@ -1,7 +1,7 @@
 import { getScale } from '../../core/config.js';
 import { S } from '../../core/state.js';
 import { NAMES, cardSrc, face, imgTag, oppSide } from './deck.js';
-import { generateCardHTML, pileRot, renderGame } from './ui.js';
+import { generateCardHTML, pileRot, renderGame, fanClose, fanOpen } from './ui.js';
 import { sfx, sayAsync } from '../../core/sound.js';
 
 // Semua animasi permainan Flip. Dipicu oleh daftar peristiwa (state.fx) yang dicatat di rules.js.
@@ -241,8 +241,8 @@ async function deal(state) {
     if (pile) { pile.style.visibility = ''; pile.classList.add('fx-pop-in'); setTimeout(() => pile.classList.remove('fx-pop-in'), 500); }
 }
 
-// FLIP: tulisan besar, lalu dek, tumpukan buangan, dan tangan semua pemain berputar ke sisi seberang
-const FLIP_TARGETS = ['f-discard', 'f-draw-l', 'f-draw-r', 'f-hand', 'f-opps'];
+// FLIP: tulisan besar; kartu di tangan menutup lalu membuka dengan sisi baru; dek, buangan, dan kartu lawan membalik
+const flipPiles = () => ['f-discard', 'f-draw-l', 'f-draw-r'].map($).filter(Boolean).concat([...document.querySelectorAll('#f-opps .opp-stack')]);
 async function flipAnim(ev) {
     const el = document.createElement('div');
     el.className = 'fx-img-banner';
@@ -251,14 +251,15 @@ async function flipAnim(ev) {
     sfx('flip');
     setTimeout(() => el.remove(), reduce ? 0 : 1600);
     await sleep(1000);
-    const els = FLIP_TARGETS.map($).filter(Boolean);
-    els.forEach(e => { e.classList.remove('flip-in'); e.classList.add('flip-out'); });
-    await sleep(380);
-    hold.side = null;                       // ganti ke sisi baru di tengah putaran
-    if (S.roomData) renderGame();
-    els.forEach(e => { e.classList.remove('flip-out'); void e.offsetWidth; e.classList.add('flip-in'); });
+    fanClose();
+    flipPiles().forEach(e => { e.classList.remove('flip-x-in'); e.classList.add('flip-x-out'); });
     await sleep(420);
-    els.forEach(e => e.classList.remove('flip-in'));
+    hold.side = null;                       // ganti ke sisi baru saat semuanya tertutup
+    if (S.roomData) renderGame();
+    flipPiles().forEach(e => { e.classList.remove('flip-x-out'); void e.offsetWidth; e.classList.add('flip-x-in'); });
+    fanOpen();
+    await sleep(500);
+    flipPiles().forEach(e => e.classList.remove('flip-x-in'));
 }
 
 function restore() {
@@ -266,7 +267,7 @@ function restore() {
     if (pile) pile.style.visibility = '';
     const top = document.querySelector('#f-discard .pile-top');
     if (top) top.style.visibility = '';
-    FLIP_TARGETS.map($).filter(Boolean).forEach(e => e.classList.remove('flip-out', 'flip-in'));
+    flipPiles().forEach(e => e.classList.remove('flip-x-out', 'flip-x-in'));
     if (S.roomData && S.roomData.gameState) renderGame();
 }
 
