@@ -5,11 +5,12 @@ import { syncTimer } from './timer.js';
 import { S, esc } from '../../core/state.js';
 import { NAMES, HEX, cardSrc, face, imgTag, oppSide } from './deck.js';
 import { canCallUno, isMyTurn, isPlayableIn } from './rules.js';
-import { applyHold, handleFx, shownCount, viewSide, whenIdle } from './animations.js';
+import { applyHold, handleFx, resetFx, shownCount, viewSide, whenIdle } from './animations.js';
 import { sfx, sayAsync, startMusic, stopMusic } from '../../core/sound.js';
 import { go } from '../../app/router.js';
 
 window.flipLeave = () => {
+    if (S.roomUnsubscribe) { S.roomUnsubscribe(); S.roomUnsubscribe = null; }   // online: berhenti mendengar ruangan
     clearTimeout(S.botTimer);
     S.localMode = false;
     S.currentUser = S.fbUser;
@@ -20,6 +21,7 @@ window.flipLeave = () => {
     S.winSoundKey = null; S.winShown = null;
     S.selIdx = -1; S.selCard = null;
     stopMusic();
+    resetFx();   // ruangan/permainan berikutnya mulai dari nol (animasi lama tidak diputar ulang)
     if (window.stopFlipTimerHook) window.stopFlipTimerHook();
     ['f-pause-modal', 'f-over-modal', 'f-color-modal', 'f-challenge-modal'].forEach(id => document.getElementById(id).classList.add('hidden'));
     go('home-screen');
@@ -130,6 +132,8 @@ export function renderGame() {
     const btnUno = document.getElementById('f-btn-uno');
     btnUno.classList.toggle('animate-pulse', canCallUno(state));
     btnUno.classList.toggle('opacity-50', !!state.unoCalled[me]);
+    btnUno.classList.toggle('uno-ready', canCallUno(state) && !state.unoCalled[me]);   // kelas sendiri (tanpa Tailwind)
+    btnUno.classList.toggle('uno-done', !!state.unoCalled[me]);
 
     // Giliran
     const btnPass = document.getElementById('f-btn-pass');

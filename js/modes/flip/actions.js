@@ -6,13 +6,19 @@ import { hideChallenge } from './challenge.js';
 import { bestColor, scheduleBot } from './local.js';
 import { handleGameOver, renderGame } from './ui.js';
 import { sfx } from '../../core/sound.js';
+import { roomDoc, updateDoc } from '../../core/firebase.js';
 
-// Semua perubahan state lewat sini. (Mode Flip saat ini hanya vs Komputer; online menyusul.)
+// Semua perubahan state lewat sini. Offline: langsung ke S.roomData. Online: ditulis ke Firestore, semua pemain (termasuk kita) menerimanya lewat onSnapshot.
 export async function updateRemoteState(newState, extra = {}) {
     if (!S.currentRoomCode) return;
     if (newState.logs.length > 30) newState.logs = newState.logs.slice(-30);
     normalizeUno(newState, S.roomData && S.roomData.gameState && S.roomData.gameState.hands);
     if (extra.status === 'finished') tallyRound(newState);
+    if (!S.localMode) {
+        // JSON: buang field undefined (Firestore menolaknya)
+        await updateDoc(roomDoc(S.currentRoomCode), { gameState: JSON.parse(JSON.stringify(newState)), ...extra });
+        return;
+    }
     S.roomData = { ...S.roomData, ...extra, gameState: newState };
     renderGame();
     if (S.roomData.status === 'finished') handleGameOver(); else scheduleBot();

@@ -23,6 +23,8 @@ export const isBusy = () => pending > 0;   // true selama ada animasi berjalan/a
 // side    = sisi lama yang tetap tampil sampai animasi Flip membalik semuanya
 const hold = { transitMe: 0, transit: {}, side: null };
 let lastFxId = null, cur = null;
+// animasi yang masih berjalan setelah pemain keluar / pindah mode tidak boleh menggambar ulang dengan data mode lain
+const inFlip = () => !!S.roomData && S.roomData.mode === 'flip';
 export const viewSide = (state) => hold.side || state.side;
 
 export function shownCount(uid, actual) { return Math.max(0, actual - (hold.transit[uid] || 0)); }
@@ -44,7 +46,7 @@ function land(uid) {
     } else {
         hold.transit[uid] = Math.max(0, (hold.transit[uid] || 0) - 1);
         cur.opp[uid] = (cur.opp[uid] || 0) - 1;
-        if (S.roomData) renderGame();
+        if (inFlip()) renderGame();
     }
 }
 
@@ -260,7 +262,7 @@ async function flipAnim(ev) {
     flipPiles().forEach(e => { e.classList.remove('flip-x-in'); e.classList.add('flip-x-out'); });
     await sleep(420);
     hold.side = null;                       // ganti ke sisi baru saat semuanya tertutup
-    if (S.roomData) renderGame();
+    if (inFlip()) renderGame();
     flipPiles().forEach(e => { e.classList.remove('flip-x-out'); void e.offsetWidth; e.classList.add('flip-x-in'); });
     fanOpen();
     await sleep(500);
@@ -273,7 +275,7 @@ function restore() {
     const top = document.querySelector('#f-discard .pile-top');
     if (top) top.style.visibility = '';
     flipPiles().forEach(e => e.classList.remove('flip-x-out', 'flip-x-in'));
-    if (S.roomData && S.roomData.gameState) renderGame();
+    if (inFlip() && S.roomData.gameState) renderGame();
 }
 
 // Kartu "bayangan" yang diam di posisi asal selama efeknya tampil (kartu belum diletakkan)
