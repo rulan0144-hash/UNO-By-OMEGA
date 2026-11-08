@@ -388,14 +388,77 @@ function playMenuStep(n, at) {
     if (s % 2 === 1) noise({ t: off, dur: 0.03, vol: 0.05, type: 'highpass', f: 8000, bus: musicBus });             // hi-hat tipis
 }
 
-const stepOf = () => (curTrack === 'menu' ? MSTEP : STEP);
-const totalOf = () => (curTrack === 'menu' ? MTOTAL : TOTAL);
+
+// ---- Lagu UNO Flip: dua lagu berbeda dari klasik, satu untuk sisi terang dan satu untuk sisi gelap ----
+// Terang: 138 bpm, D mayor, riang & berkilau. Gelap: 100 bpm, A minor, berat & misterius.
+const LSTEP = 60 / 138 / 2;
+const LCH = { D: [38, [62, 66, 69]], Bm: [35, [59, 62, 66]], G: [43, [55, 59, 62]], A: [45, [57, 61, 64]], F: [42, [61, 64, 66]] };
+const LCHORDS = ['D', 'Bm', 'G', 'A', 'D', 'Bm', 'G', 'A', 'G', 'A', 'Bm', 'F', 'G', 'A', 'D', 'A'].map(k => LCH[k]);
+const LMELODY = [
+    [78, -1, 81, 78, 74, -1, 78, 81], [83, -1, 81, 78, 74, -1, 78, -1], [79, -1, 83, 79, 74, -1, 79, 83], [81, -1, 85, 81, 76, -1, 81, 85],
+    [86, -1, 85, 81, 78, -1, 81, 85], [83, -1, 86, 83, 78, -1, 83, 86], [83, -1, 79, 74, 79, -1, 83, -1], [85, -1, 81, 76, 81, 85, -1, -1],
+    [79, -1, 83, 86, 83, -1, 79, -1], [81, -1, 85, 88, 85, -1, 81, -1], [83, -1, 78, 83, 86, -1, 83, 78], [85, -1, 81, 78, 81, -1, 85, -1],
+    [86, -1, 83, 79, 83, 86, -1, -1], [85, -1, 81, 85, 88, -1, 85, 81], [86, -1, 81, 78, 74, 78, 81, 86], [85, -1, 81, 76, 73, 76, 81, -1]
+];
+const LTOTAL = LCHORDS.length * 8;
+function playFlipLightStep(n, at) {
+    const bar = Math.floor(n / 8), s = n % 8, off = at - ctx.currentTime;
+    const [root, ch] = LCHORDS[bar];
+    tone({ f: mtof(s % 2 ? root + 12 : root), type: 'triangle', t: off, dur: LSTEP * 0.9, vol: 0.42, bus: musicBus });          // bass memantul (oktaf)
+    tone({ f: mtof(ch[[0, 1, 2, 1, 2, 1, 0, 2][s]] + 24), type: 'sine', t: off, dur: LSTEP * 0.7, vol: 0.13, bus: musicBus });   // arpeggio lonceng tinggi
+    const m = LMELODY[bar][s];
+    if (m > 0) {
+        let len = 1;
+        while (s + len < 8 && LMELODY[bar][s + len] === -1) len++;
+        tone({ f: mtof(m), wave: 'pulse', t: off, dur: LSTEP * len * 0.9, vol: 0.13, bus: musicBus, filter: { f: 3400 }, vib: len > 1 ? 4 : 0 });
+    }
+    if (s === 0 || s === 4) tone({ f: 140, f2: 45, type: 'sine', t: off, dur: 0.15, vol: 0.65, bus: musicBus });
+    if (s === 2 || s === 6) noise({ t: off, dur: 0.07, vol: 0.2, f: 3000, q: 0.8, bus: musicBus });                              // tepukan
+    if (s % 2 === 1) noise({ t: off, dur: 0.03, vol: 0.1, type: 'highpass', f: 8500, bus: musicBus });
+}
+
+const DSTEP = 60 / 100 / 2;
+const DCH = { Am: [33, [57, 60, 64]], F: [29, [53, 57, 60]], C: [36, [55, 60, 64]], E: [40, [56, 59, 64]], Dm: [38, [53, 57, 62]], G: [31, [55, 59, 62]] };
+const DCHORDS = ['Am', 'F', 'C', 'E', 'Am', 'F', 'Dm', 'E', 'Am', 'F', 'C', 'G', 'F', 'Dm', 'E', 'Am'].map(k => DCH[k]);
+const DMELODY = [
+    [76, -1, -1, 72, 69, -1, -1, -1], [77, -1, -1, 72, 69, -1, 72, -1], [76, -1, 72, -1, 67, -1, 72, -1], [71, -1, -1, 76, 80, -1, -1, -1],
+    [81, -1, -1, 76, 72, -1, -1, -1], [77, -1, -1, 81, 77, -1, 72, -1], [74, -1, 77, -1, 81, -1, 77, 74], [76, -1, 80, -1, 83, -1, 80, -1],
+    [81, -1, 76, -1, 72, -1, 76, -1], [77, -1, -1, 72, 77, -1, 81, -1], [79, -1, 76, -1, 72, -1, 67, -1], [74, -1, 79, -1, 83, -1, 79, -1],
+    [77, -1, 81, -1, 84, -1, 81, 77], [74, -1, 77, -1, 81, -1, 77, -1], [76, -1, 80, -1, 83, -1, -1, -1], [81, -1, -1, -1, 69, -1, -1, -1]
+];
+const DTOTAL = DCHORDS.length * 8;
+function playFlipDarkStep(n, at) {
+    const bar = Math.floor(n / 8), s = n % 8, off = at - ctx.currentTime;
+    const [root, ch] = DCHORDS[bar];
+    if (s === 0) ch.forEach(c => tone({ f: mtof(c), type: 'sine', t: off, dur: DSTEP * 7.5, vol: 0.07, bus: musicBus }));         // pad panjang
+    if (s % 2 === 0) tone({ f: mtof(root), type: 'sawtooth', t: off, dur: DSTEP * 1.8, vol: s === 0 ? 0.3 : 0.17, bus: musicBus, filter: { f: 420 } });
+    const m = DMELODY[bar][s];
+    if (m > 0) {
+        let len = 1;
+        while (s + len < 8 && DMELODY[bar][s + len] === -1) len++;
+        tone({ f: mtof(m), type: 'sine', t: off, dur: DSTEP * len * 0.95, vol: 0.22, bus: musicBus, vib: len > 1 ? 5 : 0 });
+        tone({ f: mtof(m + 12), type: 'sine', t: off, dur: DSTEP * len * 0.6, vol: 0.05, bus: musicBus });
+    }
+    if (s === 0 && bar % 4 === 0) tone({ f: mtof(93), type: 'sine', t: off, dur: 1.2, vol: 0.05, bus: musicBus });                   // denting tinggi misterius
+    if (s === 0 || s === 4) tone({ f: 100, f2: 38, type: 'sine', t: off, dur: 0.24, vol: 0.75, bus: musicBus });                    // kick dalam
+    if (s === 6) tone({ f: 190, f2: 90, type: 'sine', t: off, dur: 0.16, vol: 0.35, bus: musicBus });                               // tom
+    if (s === 2) noise({ t: off, dur: 0.1, vol: 0.12, f: 900, q: 0.5, bus: musicBus });
+}
+
+const TRACKS = {
+    menu: { step: MSTEP, total: MTOTAL, play: playMenuStep },
+    flipLight: { step: LSTEP, total: LTOTAL, play: playFlipLightStep },
+    flipDark: { step: DSTEP, total: DTOTAL, play: playFlipDarkStep }
+};
+const trackOf = () => TRACKS[curTrack] || { step: STEP, total: TOTAL, play: playStep };
+const stepOf = () => trackOf().step;
+const totalOf = () => trackOf().total;
 
 function pump() {
     if (!ctx || !musicOn) return;
     if (ctx.state !== 'running') { nextT = ctx.currentTime + 0.1; return; }
     while (nextT < ctx.currentTime + 0.3) {
-        if (curTrack === 'menu') playMenuStep(stepNo, nextT); else playStep(stepNo, nextT);
+        trackOf().play(stepNo, nextT);
         nextT += stepOf();
         stepNo = (stepNo + 1) % totalOf();
     }
