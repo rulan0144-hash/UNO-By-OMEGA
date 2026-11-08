@@ -12,14 +12,16 @@ export const MODES = [
         id: 'classic', group: 'classic', ready: true,
         name: 'UNO Klasik',
         desc: 'Aturan klasik: cocokkan warna/angka, +2, +4, tantangan, dan UNO!',
-        art: ['img/cards/Blue-4.png', 'img/cards/Black-Wild.png', 'img/cards/Red-DrawTwo.png'],
+        logo: 'img/ui/logo-uno.png',
+        art: ['img/cards/Green-4.png', 'img/cards/Blue-3.png', 'img/cards/Red-2.png', 'img/cards/Yellow-1.png'],
         bots: { min: 1, max: 5, def: 3 }
     },
     {
         id: 'flip', group: 'other', ready: true, online: false,
         name: 'UNO Flip',
-        desc: 'Kartu dua sisi: terang dan gelap. Balik dek, ubah permainan! Pemenang = 500 poin.',
-        art: ['img/flip/light/Blue-4.png', 'img/flip/dark/Black-Wild.png', 'img/flip/light/Red-Flip.png'],
+        desc: 'Kartu dua sisi: terang dan gelap. Balik dek, ubah permainan!',
+        logo: 'img/ui/logo-flip.png',
+        art: ['img/flip/light/Blue-4.png', 'img/flip/light/Green-3.png', 'img/flip/dark/Teal-5.png', 'img/flip/light/Red-1.png'],
         bots: { min: 1, max: 5, def: 3 }
     }
 ];

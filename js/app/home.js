@@ -12,7 +12,7 @@ let tab = store.get('uno_tab', 'offline') === 'online' ? 'online' : 'offline';
 const botsOf = (m) => Math.max(m.bots.min, Math.min(m.bots.max, parseInt(store.get('uno_bots_' + m.id, m.bots.def)) || m.bots.def));
 
 function cardHTML(m) {
-    const art = m.art.map((src, i) => `<img class="mc-art mc-art-${i}" src="${src}" alt="" draggable="false">`).join('');
+    const art = m.art.map((src, i) => `<img class="mc-art" style="--i:${i}" src="${src}" alt="" draggable="false">`).join('');
     let action;
     if (!m.ready) {
         action = `<div class="mc-soon">Segera hadir</div>`;
@@ -28,9 +28,10 @@ function cardHTML(m) {
     } else {
         action = `<div class="mc-row"><button class="mc-play mc-play-wide" onclick="playMode('${m.id}')">Buat / Gabung ▶</button></div>`;
     }
-    return `<div class="mode-card ${m.ready ? '' : 'mc-off'}">
-        <div class="mc-artbox">${art}</div>
-        <div class="mc-body"><div class="mc-name">${esc(m.name)}</div><div class="mc-desc">${esc(m.desc)}</div>${action}</div>
+    // seperti sisi kotak UNO: logo di kiri, kartu menumpuk rapat di kanan, tanpa teks di tengah
+    return `<div class="mode-card ${m.ready ? '' : 'mc-off'}" aria-label="${esc(m.name)}">
+        <div class="mc-top"><img class="mc-logo" src="${m.logo}" alt="${esc(m.name)}" draggable="false"><div class="mc-fan">${art}</div></div>
+        ${action}
     </div>`;
 }
 
