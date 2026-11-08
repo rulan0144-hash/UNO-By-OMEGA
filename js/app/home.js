@@ -30,7 +30,7 @@ function cardHTML(m) {
     }
     // seperti sisi kotak UNO: logo di kiri, kartu menumpuk rapat di kanan, tanpa teks di tengah
     return `<div class="mode-card ${m.ready ? '' : 'mc-off'}" aria-label="${esc(m.name)}">
-        <div class="mc-poster mc-${m.theme}"><img class="mc-logo" src="${m.logo}" alt="${esc(m.name)}" draggable="false"><div class="mc-fan">${art}</div></div>
+        <div class="mc-poster mc-${m.theme}"><img class="mc-logo" src="${m.logo}" alt="${esc(m.name)}" draggable="false"><div class="mc-tag">${esc(m.tag || '')}</div><div class="mc-fan">${art}</div><img class="mc-badge" src="${m.badge}" alt="2-10 pemain, 7+ tahun" draggable="false"></div>
         ${action}
     </div>`;
 }
