@@ -12,8 +12,8 @@ export const cardSrc = (card) => `img/cards/${card.color}-${card.value.replace(/
 export const imgTag = (src) => `<img class="card-img" src="${src}" alt="" draggable="false">`;
 
 // Muat semua gambar lebih dulu supaya tidak berkedip saat pertama tampil
-export function preloadCards() {
-    const srcs = [BACK_SRC];
+export function classicSrcs() {
+    const srcs = [BACK_SRC, 'img/table/felt.png'];
     COLORS.forEach(c => {
         for (let n = 0; n <= 9; n++) srcs.push(`img/cards/${c}-${n}.png`);
         ACTIONS.forEach(a => srcs.push(`img/cards/${c}-${a.replace(/ /g, '')}.png`));
@@ -23,8 +23,10 @@ export function preloadCards() {
         .forEach(n => srcs.push(`img/effects/${n}.png`));
     ['draw2', 'draw4', 'skip', 'reverse'].forEach(k => COLORS.forEach(c => srcs.push(`img/effects/${k}-${c}.png`)));
     ['frame-gold', 'frame-silver', 'direction', 'pause', 'logo-uno', 'settings', 'sound-on', 'sound-off'].forEach(n => srcs.push(`img/ui/${n}.png`));
-    srcs.forEach(s => { new Image().src = s; });
+    return srcs;
 }
+// Pemanasan di latar saat beranda tampil (pemuatan wajib dengan layar "Memuat" ada di core/loader.js)
+export function preloadCards() { classicSrcs().forEach(s => { new Image().src = s; }); }
 
 // ---- Skala tampilan: semua ukuran kartu/profil mengikuti ukuran jendela (variabel CSS --s) ----
 export function getScale() { return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--s')) || 1; }
