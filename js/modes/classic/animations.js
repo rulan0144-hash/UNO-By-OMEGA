@@ -136,7 +136,8 @@ async function banner(k, uid, ev) {
     if (k !== 'shuffle') sfx(k === 'uno' ? 'uno' : k);   // suara Acak diputar di shuffleAnim agar pas dengan geraknya
     const el = document.createElement('div');
     el.className = 'fx-img-banner';
-    el.innerHTML = `<img src="img/effects/${b.img}.png" alt="">`;
+    const tint = ev && ev.c && ['skip', 'reverse', 'draw2', 'draw4'].includes(b.img) && COLOR_NAMES[ev.c] ? '-' + ev.c : '';   // efek berwarna sesuai kartu
+    el.innerHTML = `<img src="img/effects/${b.img}${tint}.png" alt="" onerror="this.onerror=null;this.src='img/effects/${b.img}.png'">`;
     const p = uid && S.roomData?.players.find(x => x.uid === uid);
     if (p) { const s = document.createElement('small'); s.textContent = p.name; el.appendChild(s); }
     document.body.appendChild(el);

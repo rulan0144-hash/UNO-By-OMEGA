@@ -95,28 +95,29 @@ export function applyCardEffect(state, card, playerIdx, prevColor) {
     const nextNextIdx = (nextIdx + state.direction + pCount) % pCount;
     const nextUid = S.roomData.players[nextIdx].uid;
     state.turnNo = (state.turnNo || 0) + 1;
+    const fxColor = card.color === 'Black' ? state.currentColor : card.color;   // warna efek = warna kartu (Wild: warna pilihan)
 
     switch (card.value) {
         case 'Skip':
             state.logs.push(`⏩ Giliran dilewati!`);
-                    fx(state, { t: 'banner', k: 'skip' });
+                    fx(state, { t: 'banner', k: 'skip', c: fxColor });
             state.turnIndex = nextNextIdx;
             break;
         case 'Reverse':
             if (pCount === 2) {
                 state.logs.push(`🔄 Putar Balik -> Lewati!`);
-                    fx(state, { t: 'banner', k: 'reverse' });
+                    fx(state, { t: 'banner', k: 'reverse', c: fxColor });
                 state.turnIndex = nextNextIdx;
             } else {
                 state.direction *= -1;
                 state.logs.push(`🔄 Arah berbalik!`);
-                    fx(state, { t: 'banner', k: 'reverse' });
+                    fx(state, { t: 'banner', k: 'reverse', c: fxColor });
                 state.turnIndex = (playerIdx + state.direction + pCount) % pCount;
             }
             break;
         case 'Draw Two':
             state.logs.push(`💥 +2 Kartu dan dilewati!`);
-                    fx(state, { t: 'banner', k: 'draw2' });
+                    fx(state, { t: 'banner', k: 'draw2', c: fxColor });
             giveCards(state, nextUid, 2);
             state.turnIndex = nextNextIdx;
             break;
@@ -124,7 +125,7 @@ export function applyCardEffect(state, card, playerIdx, prevColor) {
             // +4 tidak langsung dibagikan: pemain berikutnya memilih menantang atau ambil kartu
             state.pending = { total: 4, by: S.roomData.players[playerIdx].uid, prevColor };
             state.logs.push(`+4 dimainkan! ${nameOf(nextUid)} boleh menantang atau ambil kartu.`);
-            fx(state, { t: 'banner', k: 'draw4' });
+            fx(state, { t: 'banner', k: 'draw4', c: fxColor });
             state.turnIndex = nextIdx;
             break;
         }
