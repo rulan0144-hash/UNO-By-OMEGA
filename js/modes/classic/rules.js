@@ -1,18 +1,21 @@
 import { S, fx, nameOf } from '../../core/state.js';
-import { drawFrom, shuffle } from './deck.js';
+import { drawFrom, drawUntil, face, oppSide, shuffle, pointOf, NAMES } from './deck.js';
 
 export function isMyTurn() {
     if (!S.roomData || S.roomData.status !== 'playing') return false;
     return S.roomData.players[S.roomData.gameState.turnIndex].uid === S.currentUser.uid;
 }
 
-export function isPlayable(card) {
-    const st = S.roomData.gameState;
-    if (st.pending) return false;   // ada +4 menunggu jawaban: belum boleh main kartu
-    if (card.color === 'Black') return true;
-    const topCard = st.discardPile[st.discardPile.length - 1];
-    return card.color === st.currentColor || card.value === topCard.value;
+export const topCard = (st) => st.discardPile[st.discardPile.length - 1];
+
+// Kartu cocok jika warna / nilai sama (sesuai sisi yang sedang main); kartu hitam selalu boleh.
+export function isPlayableIn(st, card) {
+    if (st.pending) return false;                  // ada Wild Draw yang menunggu jawaban
+    const f = face(card, st.side);
+    if (f.color === 'Black' || st.currentColor === 'Black') return true;
+    return f.color === st.currentColor || f.value === face(topCard(st), st.side).value;
 }
+export const isPlayable = (card) => isPlayableIn(S.roomData.gameState, card);
 
 export function advance(state) {
     const n = S.roomData.players.length;
@@ -20,8 +23,7 @@ export function advance(state) {
     state.turnNo = (state.turnNo || 0) + 1;
 }
 
-// Status "sudah UNO" batal jika kartu > 2, atau jumlah kartu pemain bertambah
-// (ambil kartu, kena +2/+4, penalti, Acak). Harus tekan UNO lagi.
+// Status "sudah UNO" batal jika kartu > 2 atau jumlah kartu bertambah.
 export function normalizeUno(state, prevHands) {
     Object.keys(state.hands).forEach(u => {
         const n = state.hands[u].length;
@@ -30,32 +32,44 @@ export function normalizeUno(state, prevHands) {
     });
 }
 
+// Beri kartu (jumlah tetap) ke pemain + catat animasi
+export function giveCards(state, uid, n, pen = false) {   // pen = +2 hukuman tantangan salah (bunyi "Draw two!")
+    const got = drawFrom(state, n);
+    state.hands[uid] = state.hands[uid].concat(got.cards);
+    if (got.cards.length) fx(state, { t: 'draw', uid, n: got.cards.length, sides: got.sides, cards: got.cards, pen });
+    return got.cards.length;
+}
+// Beri kartu sampai dapat warna tertentu
+export function giveUntil(state, uid, color) {
+    const got = drawUntil(state, color);
+    state.hands[uid] = state.hands[uid].concat(got.cards);
+    if (got.cards.length) fx(state, { t: 'draw', uid, n: got.cards.length, sides: got.sides, cards: got.cards });
+    return got.cards.length;
+}
+
 export function penalize(state, uid, byUid) {
     fx(state, { t: 'catch', by: byUid, uid });
     giveCards(state, uid, 2);
     state.unoCalled[uid] = false;
     state.catchable = null;
-    state.logs.push(`🚨 <b>${nameOf(byUid)}</b> menangkap <b>${nameOf(uid)}</b> yang lupa UNO! +2 kartu.`);
+    state.logs.push(`<b>${nameOf(byUid)}</b> menangkap <b>${nameOf(uid)}</b> yang lupa UNO! +2 kartu.`);
 }
 
-// Dipakai manusia & bot. Return true jika pemain menang.
+// Dipakai manusia & bot. Return true jika pemain menang ronde.
 export function playCardOn(state, uid, cardIdx, chosenColor, callUno) {
     const players = S.roomData.players;
     const hand = state.hands[uid];
     const card = hand.splice(cardIdx, 1)[0];
-    const prevColor = state.currentColor;   // warna sebelum kartu ini (dipakai untuk tantangan +4)
+    const f = face(card, state.side);
+    const prevColor = state.currentColor;          // warna sebelum kartu ini (untuk tantangan Wild Draw)
     state.catchable = null;
     state.discardPile.push(card);
-    fx(state, { t: 'play', uid, card, color: chosenColor });
-    if (card.color === 'Black') fx(state, { t: 'picker', color: chosenColor });
-    state.currentColor = chosenColor;
+    fx(state, { t: 'play', uid, card, side: state.side, color: chosenColor });
+    if (f.color === 'Black') fx(state, { t: 'picker', color: chosenColor, side: state.side });
+    state.currentColor = f.color === 'Black' ? chosenColor : f.color;
+    state.logs.push(`<b>${nameOf(uid)}</b> mengeluarkan ${f.value === 'Wild' ? 'Wild' : (NAMES[f.color] + ' ' + f.value)}`);
 
-    const colorStr = card.color !== 'Black' ? card.color : chosenColor;
-    const displayVal = card.value === 'Wild Shuffle Hands' ? 'Acak Kartu' : card.value;
-    state.logs.push(`<b>${nameOf(uid)}</b> mengeluarkan <span class="text-${colorStr.toLowerCase()}-400 font-bold">${displayVal}</span>`);
-
-    // Kartu terakhir: efeknya tetap berjalan (+2/+4 dibagikan, Acak membagi ulang semua kartu).
-    // Menang baru ditetapkan SESUDAH efek, kalau tangannya masih kosong.
+    // Kartu terakhir: efek tetap berjalan, menang ditetapkan sesudahnya jika tangan masih kosong.
     const emptied = hand.length === 0;
     if (emptied) {
         state.unoCalled[uid] = false;
@@ -63,25 +77,24 @@ export function playCardOn(state, uid, cardIdx, chosenColor, callUno) {
         if (callUno) {
             state.unoCalled[uid] = true;
             fx(state, { t: 'uno', uid });
-            state.logs.push(`<b class="text-red-500">${nameOf(uid)} berteriak UNO!</b>`);
+            state.logs.push(`<b>${nameOf(uid)}</b> berteriak UNO!`);
         }
         if (!state.unoCalled[uid]) {
-            state.catchable = uid; // bisa ditangkap sampai ada pemain lain bertindak
-            state.logs.push(`⚠️ <b>${nameOf(uid)}</b> sisa 1 kartu tapi belum bilang UNO!`);
+            state.catchable = uid;
+            state.logs.push(`<b>${nameOf(uid)}</b> sisa 1 kartu tapi belum bilang UNO!`);
         }
     } else {
         state.unoCalled[uid] = false;
     }
-    applyCardEffect(state, card, players.findIndex(p => p.uid === uid), prevColor);
+    applyCardEffect(state, card, f, players.findIndex(p => p.uid === uid), prevColor);
     if (emptied) {
-        if (state.pending) { state.pendingWinner = uid; return false; }   // +4 terakhir: menunggu jawaban pemain berikutnya
+        if (state.pending) { state.pendingWinner = uid; return false; }
         if (state.hands[uid].length === 0) { state.winner = uid; return true; }
-        state.logs.push(`🌀 Kartu <b>${nameOf(uid)}</b> bertambah lagi karena efek kartu terakhir, permainan lanjut!`);
+        state.logs.push(`Kartu <b>${nameOf(uid)}</b> bertambah lagi karena efek kartu terakhir, permainan lanjut!`);
     }
     return false;
 }
 
-// Setelah +4 terakhir dijawab: menang jika tangan pemainnya masih kosong. Return true jika permainan selesai.
 function checkPendingWin(state) {
     const w = state.pendingWinner;
     state.pendingWinner = null;
@@ -89,58 +102,67 @@ function checkPendingWin(state) {
     return false;
 }
 
-export function applyCardEffect(state, card, playerIdx, prevColor) {
-    const pCount = S.roomData.players.length;
+export function applyCardEffect(state, card, f, playerIdx, prevColor) {
+    const players = S.roomData.players, pCount = players.length;
     const nextIdx = (playerIdx + state.direction + pCount) % pCount;
     const nextNextIdx = (nextIdx + state.direction + pCount) % pCount;
-    const nextUid = S.roomData.players[nextIdx].uid;
+    const nextUid = players[nextIdx].uid, me = players[playerIdx].uid;
     state.turnNo = (state.turnNo || 0) + 1;
-    const fxColor = card.color === 'Black' ? state.currentColor : card.color;   // warna efek = warna kartu (Wild: warna pilihan)
+    const c = state.currentColor;
 
-    switch (card.value) {
+    switch (f.value) {
         case 'Skip':
-            state.logs.push(`⏩ Giliran dilewati!`);
-                    fx(state, { t: 'banner', k: 'skip', c: fxColor });
+            state.logs.push('Giliran dilewati!');
+            fx(state, { t: 'banner', k: 'skip', c, side: state.side });
             state.turnIndex = nextNextIdx;
             break;
+        case 'Skip Everyone':
+            state.logs.push('Semua pemain dilewati! Giliran kembali ke pemain yang sama.');
+            fx(state, { t: 'banner', k: 'skipall', c, side: state.side });
+            state.turnIndex = playerIdx;
+            break;
         case 'Reverse':
+            fx(state, { t: 'banner', k: 'reverse', c, side: state.side });
             if (pCount === 2) {
-                state.logs.push(`🔄 Putar Balik -> Lewati!`);
-                    fx(state, { t: 'banner', k: 'reverse', c: fxColor });
+                state.logs.push('Putar balik -> lewati!');
                 state.turnIndex = nextNextIdx;
             } else {
                 state.direction *= -1;
-                state.logs.push(`🔄 Arah berbalik!`);
-                    fx(state, { t: 'banner', k: 'reverse', c: fxColor });
+                state.logs.push('Arah berbalik!');
                 state.turnIndex = (playerIdx + state.direction + pCount) % pCount;
             }
             break;
-        case 'Draw Two':
-            state.logs.push(`💥 +2 Kartu dan dilewati!`);
-                    fx(state, { t: 'banner', k: 'draw2', c: fxColor });
-            giveCards(state, nextUid, 2);
+        case 'Draw One':
+            state.logs.push('+1 kartu dan dilewati!');
+            fx(state, { t: 'banner', k: 'draw1', c, side: state.side });
+            giveCards(state, nextUid, 1);
             state.turnIndex = nextNextIdx;
             break;
-        case 'Wild Draw Four': {
-            // +4 tidak langsung dibagikan: pemain berikutnya memilih menantang atau ambil kartu
-            state.pending = { total: 4, by: S.roomData.players[playerIdx].uid, prevColor };
-            state.logs.push(`+4 dimainkan! ${nameOf(nextUid)} boleh menantang atau ambil kartu.`);
-            fx(state, { t: 'banner', k: 'draw4', c: fxColor });
+        case 'Draw Five':
+            state.logs.push('+5 kartu dan dilewati!');
+            fx(state, { t: 'banner', k: 'draw5', c, side: state.side });
+            giveCards(state, nextUid, 5);
+            state.turnIndex = nextNextIdx;
+            break;
+        case 'Wild Draw Two':
+            state.pending = { type: 'wd2', total: 2, by: me, prevColor, color: c };
+            state.logs.push(`+2 dimainkan! ${nameOf(nextUid)} boleh menantang atau ambil kartu.`);
+            fx(state, { t: 'banner', k: 'draw2', c, side: state.side });
             state.turnIndex = nextIdx;
             break;
-        }
-        case 'Wild Shuffle Hands': {
-            state.logs.push(`🌀 SEMUA KARTU DIACAK!`);
-                    fx(state, { t: 'banner', k: 'shuffle' });
-                    fx(state, { t: 'shuffle' });
-            let all = [];
-            S.roomData.players.forEach(p => { all = all.concat(state.hands[p.uid]); state.hands[p.uid] = []; });
-            shuffle(all);
-            let dealIdx = nextIdx;
-            while (all.length > 0) {
-                state.hands[S.roomData.players[dealIdx].uid].push(all.pop());
-                dealIdx = (dealIdx + state.direction + pCount) % pCount;
-            }
+        case 'Wild Draw Color':
+            state.pending = { type: 'wdc', total: 0, by: me, prevColor, color: c };
+            state.logs.push(`Wild Draw Color (${NAMES[c]})! ${nameOf(nextUid)} boleh menantang atau ambil kartu sampai dapat warna itu.`);
+            fx(state, { t: 'banner', k: 'wdc', c, side: state.side });
+            state.turnIndex = nextIdx;
+            break;
+        case 'Flip': {
+            const to = oppSide(state.side);
+            const nf = face(card, to);                    // sisi lain kartu Flip menjadi warna yang berlaku
+            fx(state, { t: 'flip', from: state.side, to });
+            state.side = to;
+            state.currentColor = nf.color;                // Hitam (Wild) = semua kartu boleh dimainkan
+            state.logs.push(`FLIP! Sekarang sisi ${to === 'dark' ? 'GELAP' : 'TERANG'}.` + (nf.color === 'Black' ? ' Kartu Flip berbalik jadi Wild: semua kartu boleh dimainkan.' : ''));
             state.turnIndex = nextIdx;
             break;
         }
@@ -149,43 +171,50 @@ export function applyCardEffect(state, card, playerIdx, prevColor) {
     }
 }
 
-// UNO aman: sisa 2 kartu & ada yang cocok, atau sisa 1 kartu
 export function canCallUno(state) {
     const hand = state.hands[S.currentUser.uid] || [];
     if (state.unoCalled[S.currentUser.uid]) return false;
-    return hand.length === 1 || (hand.length === 2 && hand.some(isPlayable));
+    return hand.length === 1 || (hand.length === 2 && hand.some(c => isPlayableIn(state, c)));
 }
 
-// Beri kartu ke pemain + catat animasi tarik kartu
-export function giveCards(state, uid, n) {
-    const { cards: got, sides } = drawFrom(state, n);
-    state.hands[uid] = state.hands[uid].concat(got);
-    if (got.length) fx(state, { t: 'draw', uid, n: got.length, sides });
-    return got.length;
-}
-
-// Jawaban atas +4: 'draw' = ambil kartu, 'challenge' = tantang pemain yang memainkan +4
+// Jawaban atas Wild Draw Two / Wild Draw Color: 'draw' = ambil kartu, 'challenge' = tantang
 export function resolvePending(state, uid, choice) {
     const p = state.pending;
     if (!p) return false;
     state.pending = null;
     state.catchable = null;
+    const penalty = (who, extra) => (p.type === 'wdc' ? giveUntil(state, who, p.color) : giveCards(state, who, p.total)) + (extra ? giveCards(state, who, extra, true) : 0);
+    const label = p.type === 'wdc' ? `sampai dapat warna ${NAMES[p.color]}` : `${p.total} kartu`;
     if (choice === 'challenge') {
-        const guilty = state.hands[p.by].some(c => c.color === p.prevColor);   // masih punya kartu warna sebelumnya?
+        const guilty = p.prevColor !== 'Black' && state.hands[p.by].some(c => face(c, state.side).color === p.prevColor);
         fx(state, { t: 'challenge', by: uid, target: p.by, ok: guilty, color: p.prevColor });
         if (guilty) {
-            state.logs.push(`<b>${nameOf(uid)}</b> menantang <b>${nameOf(p.by)}</b>: BENAR! ${nameOf(p.by)} ambil ${p.total} kartu.`);
-            giveCards(state, p.by, p.total);
+            state.logs.push(`<b>${nameOf(uid)}</b> menantang <b>${nameOf(p.by)}</b>: BENAR! ${nameOf(p.by)} ambil kartu ${label}.`);
+            penalty(p.by, 0);
             state.turnNo = (state.turnNo || 0) + 1;   // penantang main seperti biasa
         } else {
-            state.logs.push(`<b>${nameOf(uid)}</b> menantang <b>${nameOf(p.by)}</b>: SALAH! ${nameOf(uid)} ambil ${p.total + 2} kartu.`);
-            giveCards(state, uid, p.total + 2);
+            state.logs.push(`<b>${nameOf(uid)}</b> menantang <b>${nameOf(p.by)}</b>: SALAH! ${nameOf(uid)} ambil kartu ${label} + 2.`);
+            penalty(uid, 2);
             advance(state);
         }
     } else {
-        state.logs.push(`<b>${nameOf(uid)}</b> mengambil ${p.total} kartu.`);
-        giveCards(state, uid, p.total);
+        state.logs.push(`<b>${nameOf(uid)}</b> mengambil kartu ${label}.`);
+        penalty(uid, 0);
         advance(state);
     }
     return checkPendingWin(state);
+}
+export { shuffle };
+
+// Poin kemenangan (seperti klasik): jumlah poin kartu sisa lawan pada SISI YANG SEDANG MAIN saat permainan berakhir.
+export function tallyRound(state) {
+    let pts = 0;
+    const detail = [];
+    S.roomData.players.forEach(p => {
+        if (p.uid === state.winner) return;
+        const cards = state.hands[p.uid] || [];
+        const sc = cards.reduce((a, c) => a + pointOf(face(c, state.side)), 0);
+        pts += sc; detail.push({ uid: p.uid, n: cards.length, pts: sc });
+    });
+    state.roundPts = pts; state.roundDetail = detail; state.scoreSide = state.side;
 }
