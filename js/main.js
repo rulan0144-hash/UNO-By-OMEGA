@@ -1,21 +1,23 @@
-// Titik masuk aplikasi: memuat semua modul lalu menyambung ke server.
-import './actions.js';
-import './local.js';
-import './online.js';
-import './pause.js';
-import './sound.js';
-import { sfx } from './sound.js';
-import { preloadCards, applyScale } from './config.js';
+// Titik masuk aplikasi: memuat modul, menyambung ke server, lalu menampilkan beranda.
+import './core/sound.js';
+import './app/profile.js';
+import './app/settings.js';
+import './app/online-hub.js';
+import './modes/classic/index.js';       // tiap mode baru: tambahkan import './modes/<id>/index.js' di sini
+import { sfx } from './core/sound.js';
+import { preloadCards, applyScale } from './core/config.js';
+import { S } from './core/state.js';
+import { auth, hasFirebase, initialAuthToken, signInAnonymously, signInWithCustomToken } from './core/firebase.js';
+import { updateHomeName, updateOnlineStatus } from './app/profile.js';
+import { renderHome } from './app/home.js';
+import { go } from './app/router.js';
 
-preloadCards();
+preloadCards();   // muat semua gambar lebih dulu
 // bunyi "klik" untuk semua tombol (kecuali tombol suara, yang punya bunyi sendiri)
 document.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('button'); if (b && !b.dataset.nosfx) sfx('click'); });
 applyScale();
 window.addEventListener('resize', applyScale);
-window.addEventListener('orientationchange', applyScale);   // muat semua gambar kartu lebih dulu
-import { S } from './state.js';
-import { auth, hasFirebase, initialAuthToken, signInAnonymously, signInWithCustomToken } from './firebase.js';
-import { updateHomeName, updateOnlineStatus } from './ui.js';
+window.addEventListener('orientationchange', applyScale);
 
 // --- AUTH (tidak lagi macet jika Firebase belum dikonfigurasi) ---
 async function initAuth() {
@@ -28,8 +30,9 @@ async function initAuth() {
         } catch (err) { console.error("Firebase gagal:", err); }
     }
     document.getElementById('loading-screen').classList.add('hidden');
-    document.getElementById(S.myName ? 'home-screen' : 'login-screen').classList.remove('hidden');
+    renderHome();
     updateHomeName();
     updateOnlineStatus();
+    go(S.myName ? 'home-screen' : 'login-screen');
 }
 initAuth();
