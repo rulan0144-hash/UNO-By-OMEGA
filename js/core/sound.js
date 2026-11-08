@@ -10,7 +10,8 @@ const cfg = Object.assign({ music: 0.6, sfx: 0.9, mute: false }, (() => { try { 
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch (e) { /* abaikan */ } };
 
 let ctx = null, master = null, musicBus = null, duckBus = null, sfxBus = null, noiseBuf = null, pulse = null;
-let wantMusic = false;
+let wantMusic = false;   // false | 'game' | 'menu' (lagu yang diinginkan)
+let curTrack = 'game';
 
 // ---------------------------------------------------------------- dasar
 function ensure() {
@@ -49,7 +50,7 @@ function applyVolume() {
 function unlock() {
     ensure();
     if (ctx && ctx.state === 'suspended') ctx.resume();
-    if (wantMusic) startMusic();
+    if (wantMusic) startMusic(wantMusic);
 }
 ['pointerdown', 'touchstart', 'keydown'].forEach(e => window.addEventListener(e, unlock, { passive: true }));
 document.addEventListener('visibilitychange', () => {
@@ -340,25 +341,76 @@ function playStep(n, at) {
     if (n === TOTAL - 1) noise({ t: off, dur: 0.12, vol: 0.28, f: 1800, q: 0.6, bus: musicBus });   // gebrakan penutup putaran
 }
 
+
+// ---- Lagu beranda/lobi: lebih pelan dan lembut (92 bpm, G mayor, 16 birama ~42 detik), beda dari lagu game ----
+const MSTEP = 60 / 92 / 2;
+const MCH = { G: [43, [55, 59, 62]], Em: [40, [52, 55, 59]], C: [36, [48, 52, 55]], D: [38, [50, 54, 57]], Bm: [35, [47, 50, 54]] };
+const MCHORDS = ['G', 'Em', 'C', 'D', 'G', 'Bm', 'C', 'D', 'G', 'Em', 'C', 'D', 'G', 'Bm', 'C', 'D'].map(k => MCH[k]);
+const MMELODY = [
+    [74, -1, -1, 71, 67, -1, 71, 74], [76, -1, -1, 74, 71, -1, 67, -1], [72, -1, 76, -1, 79, -1, 76, 72], [74, -1, -1, 69, 74, -1, 78, -1],
+    [79, -1, -1, 74, 71, -1, 74, 79], [78, -1, -1, 74, 71, -1, 74, 78], [76, -1, 72, -1, 67, -1, 72, 76], [74, -1, -1, -1, 69, -1, 74, -1],
+    [79, -1, 74, 79, 83, -1, 79, 74], [76, -1, 79, 76, 71, -1, 76, 79], [84, -1, 79, 76, 72, -1, 76, 79], [78, -1, 74, 78, 81, -1, 78, 74],
+    [79, -1, 83, 79, 74, -1, 71, 74], [78, -1, 81, 78, 74, -1, 71, 74], [76, -1, 79, 76, 72, -1, 67, 72], [74, -1, -1, 69, 74, -1, -1, -1]
+];
+const MTOTAL = MCHORDS.length * 8;
+
+function playMenuStep(n, at) {
+    const bar = Math.floor(n / 8), s = n % 8, off = at - ctx.currentTime;
+    const [root, ch] = MCHORDS[bar];
+    if (s === 0 || s === 4) tone({ f: mtof(root), type: 'triangle', t: off, dur: MSTEP * 3.4, vol: 0.5, bus: musicBus });
+    // arpeggio lembut (sinus, seperti lonceng kecil)
+    tone({ f: mtof(ch[[0, 1, 2, 1, 2, 1, 2, 1][s]] + 12), type: 'sine', t: off, dur: MSTEP * 1.7, vol: 0.16, bus: musicBus });
+    // melodi (segitiga, seperti seruling)
+    const m = MMELODY[bar][s];
+    if (m > 0) {
+        let len = 1;
+        while (s + len < 8 && MMELODY[bar][s + len] === -1) len++;
+        tone({ f: mtof(m), type: 'triangle', t: off, dur: MSTEP * len * 0.95, vol: 0.2, bus: musicBus, filter: { f: 3200 }, vib: len > 1 ? 4 : 0 });
+    }
+    if (s === 0) tone({ f: 110, f2: 45, type: 'sine', t: off, dur: 0.18, vol: 0.4, bus: musicBus });                 // kick pelan
+    if (s === 4) noise({ t: off, dur: 0.09, vol: 0.12, f: 1600, q: 0.6, bus: musicBus });                           // snare lembut
+    if (s % 2 === 1) noise({ t: off, dur: 0.03, vol: 0.05, type: 'highpass', f: 8000, bus: musicBus });             // hi-hat tipis
+}
+
+const stepOf = () => (curTrack === 'menu' ? MSTEP : STEP);
+const totalOf = () => (curTrack === 'menu' ? MTOTAL : TOTAL);
+
 function pump() {
     if (!ctx || !musicOn) return;
     if (ctx.state !== 'running') { nextT = ctx.currentTime + 0.1; return; }
     while (nextT < ctx.currentTime + 0.3) {
-        playStep(stepNo, nextT);
-        nextT += STEP;
-        stepNo = (stepNo + 1) % TOTAL;
+        if (curTrack === 'menu') playMenuStep(stepNo, nextT); else playStep(stepNo, nextT);
+        nextT += stepOf();
+        stepNo = (stepNo + 1) % totalOf();
     }
 }
 
-export function startMusic() {
-    wantMusic = true;
-    if (!ensure() || musicOn) return;
+function beginTrack(which) {
+    curTrack = which;
     musicOn = true;
     stepNo = 0; nextT = ctx.currentTime + 0.15;
     musicBus.gain.cancelScheduledValues(ctx.currentTime);
     musicBus.gain.setValueAtTime(0, ctx.currentTime);
     musicBus.gain.linearRampToValueAtTime(cfg.mute ? 0 : cfg.music * 0.5, ctx.currentTime + 1.2);
     musicTimer = setInterval(pump, 60);
+}
+
+// startMusic('game') = lagu di dalam permainan, startMusic('menu') = lagu beranda/lobi. Ganti lagu = memudar lalu lagu baru masuk.
+export function startMusic(which = 'game') {
+    wantMusic = which;
+    if (!ensure()) return;
+    if (musicOn) {
+        if (curTrack === which) return;
+        musicOn = false;
+        clearInterval(musicTimer); musicTimer = null;
+        const t = ctx.currentTime;
+        musicBus.gain.cancelScheduledValues(t);
+        musicBus.gain.setValueAtTime(musicBus.gain.value, t);
+        musicBus.gain.linearRampToValueAtTime(0, t + 0.35);
+        setTimeout(() => { if (wantMusic === which && !musicOn) beginTrack(which); }, 380);
+        return;
+    }
+    beginTrack(which);
 }
 
 export function stopMusic(fade = 0.6) {
@@ -371,6 +423,7 @@ export function stopMusic(fade = 0.6) {
     musicBus.gain.setValueAtTime(musicBus.gain.value, t);
     musicBus.gain.linearRampToValueAtTime(0, t + fade);
 }
+export const musicStatus = () => ({ on: musicOn, track: curTrack, want: wantMusic });
 
 // ---------------------------------------------------------------- pengaturan (tombol bisu & penggeser volume)
 function refreshUI() {
