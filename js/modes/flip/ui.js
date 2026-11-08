@@ -1,5 +1,6 @@
 import { syncChallenge } from './challenge.js';
 import { getScale } from '../../core/config.js';
+import { fitOpponents } from '../../core/oppfit.js';
 import { syncTimer } from './timer.js';
 import { S, esc } from '../../core/state.js';
 import { NAMES, HEX, cardSrc, face, imgTag, oppSide } from './deck.js';
@@ -66,6 +67,8 @@ export function renderGame() {
                 <span class="name-tag ${isTurn ? 'name-turn' : ''} ">${esc(p.name)}</span>
             </div>`;
     }
+
+    fitOpponents(oppArea);   // semua lawan muat tanpa geser kanan
 
     // Dek kiri & kanan: kartu teratas tampil dengan sisi seberang
     [['f-draw-l', 'f-count-l', state.deck], ['f-draw-r', 'f-count-r', state.deckR || []]].forEach(([id, cid, deck]) => {
