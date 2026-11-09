@@ -6,49 +6,63 @@
     <title>UNO Multiplayer Real-Time</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=20261109-0829">
-    <link rel="stylesheet" href="css/home.css?v=20261109-0829">
-    <link rel="stylesheet" href="css/flip.css?v=20261109-0829">
+    <link rel="stylesheet" href="css/style.css?v=20261110-1000">
+    <link rel="stylesheet" href="css/home.css?v=20261110-1000">
+    <link rel="stylesheet" href="css/flip.css?v=20261110-1000">
+    <link rel="stylesheet" href="css/flex.css?v=20261110-1000">
     <!-- IMPORTMAP:START (dibuat alat/bump_version.py, jangan diedit manual) -->
     <script type="importmap">
 {
   "imports": {
-    "./js/app/home.js": "./js/app/home.js?v=20261109-0829",
-    "./js/app/modes.js": "./js/app/modes.js?v=20261109-0829",
-    "./js/app/online-hub.js": "./js/app/online-hub.js?v=20261109-0829",
-    "./js/app/profile.js": "./js/app/profile.js?v=20261109-0829",
-    "./js/app/router.js": "./js/app/router.js?v=20261109-0829",
-    "./js/app/settings.js": "./js/app/settings.js?v=20261109-0829",
-    "./js/core/config.js": "./js/core/config.js?v=20261109-0829",
-    "./js/core/countdown.js": "./js/core/countdown.js?v=20261109-0829",
-    "./js/core/firebase.js": "./js/core/firebase.js?v=20261109-0829",
-    "./js/core/loader.js": "./js/core/loader.js?v=20261109-0829",
-    "./js/core/oppfit.js": "./js/core/oppfit.js?v=20261109-0829",
-    "./js/core/sound.js": "./js/core/sound.js?v=20261109-0829",
-    "./js/core/state.js": "./js/core/state.js?v=20261109-0829",
-    "./js/main.js": "./js/main.js?v=20261109-0829",
-    "./js/modes/classic/actions.js": "./js/modes/classic/actions.js?v=20261109-0829",
-    "./js/modes/classic/animations.js": "./js/modes/classic/animations.js?v=20261109-0829",
-    "./js/modes/classic/challenge.js": "./js/modes/classic/challenge.js?v=20261109-0829",
-    "./js/modes/classic/deck.js": "./js/modes/classic/deck.js?v=20261109-0829",
-    "./js/modes/classic/index.js": "./js/modes/classic/index.js?v=20261109-0829",
-    "./js/modes/classic/local.js": "./js/modes/classic/local.js?v=20261109-0829",
-    "./js/modes/classic/online.js": "./js/modes/classic/online.js?v=20261109-0829",
-    "./js/modes/classic/pause.js": "./js/modes/classic/pause.js?v=20261109-0829",
-    "./js/modes/classic/rules.js": "./js/modes/classic/rules.js?v=20261109-0829",
-    "./js/modes/classic/timer.js": "./js/modes/classic/timer.js?v=20261109-0829",
-    "./js/modes/classic/ui.js": "./js/modes/classic/ui.js?v=20261109-0829",
-    "./js/modes/flip/actions.js": "./js/modes/flip/actions.js?v=20261109-0829",
-    "./js/modes/flip/animations.js": "./js/modes/flip/animations.js?v=20261109-0829",
-    "./js/modes/flip/challenge.js": "./js/modes/flip/challenge.js?v=20261109-0829",
-    "./js/modes/flip/data.js": "./js/modes/flip/data.js?v=20261109-0829",
-    "./js/modes/flip/deck.js": "./js/modes/flip/deck.js?v=20261109-0829",
-    "./js/modes/flip/index.js": "./js/modes/flip/index.js?v=20261109-0829",
-    "./js/modes/flip/local.js": "./js/modes/flip/local.js?v=20261109-0829",
-    "./js/modes/flip/pause.js": "./js/modes/flip/pause.js?v=20261109-0829",
-    "./js/modes/flip/rules.js": "./js/modes/flip/rules.js?v=20261109-0829",
-    "./js/modes/flip/timer.js": "./js/modes/flip/timer.js?v=20261109-0829",
-    "./js/modes/flip/ui.js": "./js/modes/flip/ui.js?v=20261109-0829"
+    "./js/app/home.js": "./js/app/home.js?v=20261110-1000",
+    "./js/app/modes.js": "./js/app/modes.js?v=20261110-1000",
+    "./js/app/online-hub.js": "./js/app/online-hub.js?v=20261110-1000",
+    "./js/app/profile.js": "./js/app/profile.js?v=20261110-1000",
+    "./js/app/router.js": "./js/app/router.js?v=20261110-1000",
+    "./js/app/settings.js": "./js/app/settings.js?v=20261110-1000",
+    "./js/core/config.js": "./js/core/config.js?v=20261110-1000",
+    "./js/core/countdown.js": "./js/core/countdown.js?v=20261110-1000",
+    "./js/core/doubletap.js": "./js/core/doubletap.js?v=20261110-1000",
+    "./js/core/firebase.js": "./js/core/firebase.js?v=20261110-1000",
+    "./js/core/loader.js": "./js/core/loader.js?v=20261110-1000",
+    "./js/core/oppfit.js": "./js/core/oppfit.js?v=20261110-1000",
+    "./js/core/sound.js": "./js/core/sound.js?v=20261110-1000",
+    "./js/core/state.js": "./js/core/state.js?v=20261110-1000",
+    "./js/main.js": "./js/main.js?v=20261110-1000",
+    "./js/modes/classic/actions.js": "./js/modes/classic/actions.js?v=20261110-1000",
+    "./js/modes/classic/animations.js": "./js/modes/classic/animations.js?v=20261110-1000",
+    "./js/modes/classic/challenge.js": "./js/modes/classic/challenge.js?v=20261110-1000",
+    "./js/modes/classic/deck.js": "./js/modes/classic/deck.js?v=20261110-1000",
+    "./js/modes/classic/index.js": "./js/modes/classic/index.js?v=20261110-1000",
+    "./js/modes/classic/local.js": "./js/modes/classic/local.js?v=20261110-1000",
+    "./js/modes/classic/online.js": "./js/modes/classic/online.js?v=20261110-1000",
+    "./js/modes/classic/pause.js": "./js/modes/classic/pause.js?v=20261110-1000",
+    "./js/modes/classic/rules.js": "./js/modes/classic/rules.js?v=20261110-1000",
+    "./js/modes/classic/timer.js": "./js/modes/classic/timer.js?v=20261110-1000",
+    "./js/modes/classic/ui.js": "./js/modes/classic/ui.js?v=20261110-1000",
+    "./js/modes/flex/actions.js": "./js/modes/flex/actions.js?v=20261110-1000",
+    "./js/modes/flex/animations.js": "./js/modes/flex/animations.js?v=20261110-1000",
+    "./js/modes/flex/bot.js": "./js/modes/flex/bot.js?v=20261110-1000",
+    "./js/modes/flex/challenge.js": "./js/modes/flex/challenge.js?v=20261110-1000",
+    "./js/modes/flex/data.js": "./js/modes/flex/data.js?v=20261110-1000",
+    "./js/modes/flex/deck.js": "./js/modes/flex/deck.js?v=20261110-1000",
+    "./js/modes/flex/index.js": "./js/modes/flex/index.js?v=20261110-1000",
+    "./js/modes/flex/local.js": "./js/modes/flex/local.js?v=20261110-1000",
+    "./js/modes/flex/pause.js": "./js/modes/flex/pause.js?v=20261110-1000",
+    "./js/modes/flex/rules.js": "./js/modes/flex/rules.js?v=20261110-1000",
+    "./js/modes/flex/timer.js": "./js/modes/flex/timer.js?v=20261110-1000",
+    "./js/modes/flex/ui.js": "./js/modes/flex/ui.js?v=20261110-1000",
+    "./js/modes/flip/actions.js": "./js/modes/flip/actions.js?v=20261110-1000",
+    "./js/modes/flip/animations.js": "./js/modes/flip/animations.js?v=20261110-1000",
+    "./js/modes/flip/challenge.js": "./js/modes/flip/challenge.js?v=20261110-1000",
+    "./js/modes/flip/data.js": "./js/modes/flip/data.js?v=20261110-1000",
+    "./js/modes/flip/deck.js": "./js/modes/flip/deck.js?v=20261110-1000",
+    "./js/modes/flip/index.js": "./js/modes/flip/index.js?v=20261110-1000",
+    "./js/modes/flip/local.js": "./js/modes/flip/local.js?v=20261110-1000",
+    "./js/modes/flip/pause.js": "./js/modes/flip/pause.js?v=20261110-1000",
+    "./js/modes/flip/rules.js": "./js/modes/flip/rules.js?v=20261110-1000",
+    "./js/modes/flip/timer.js": "./js/modes/flip/timer.js?v=20261110-1000",
+    "./js/modes/flip/ui.js": "./js/modes/flip/ui.js?v=20261110-1000"
   }
 }
     </script>
@@ -241,14 +255,20 @@
             <div id="turn-timer" class="turn-timer tt-ok"><span id="turn-time">15.00</span></div>
 
             <!-- Kiri-bawah meja: profil + tombol UNO | kanan-bawah: giliran -->
+            <!-- Di bawah timer: tulisan giliran + tombol Lewati -->
+            <div class="turn-info">
+                <span id="turn-indicator" class="text-lg md:text-2xl font-black text-gray-400 transition-colors">Menunggu...</span>
+                <button onclick="humanPass()" id="btn-pass" class="hidden bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 md:px-6 rounded-full transition active:scale-95 border-2 border-gray-400 text-sm md:text-base">Lewati</button>
+            </div>
+
+            <!-- Kiri-bawah: profil | tengah: UNO | kanan-bawah: tombol UNO kecil untuk menangkap pemain yang lupa -->
             <div class="table-bottom">
                 <div class="tb-left">
                     <div id="me-avatar"></div>
                 </div>
                 <button id="btn-uno" class="uno-btn" onpointerdown="event.preventDefault();pressUno()" aria-label="UNO">UNO!</button>
                 <div class="tb-right">
-                    <span id="turn-indicator" class="text-lg md:text-2xl font-black text-gray-400 transition-colors">Menunggu...</span>
-                    <button onclick="humanPass()" id="btn-pass" class="hidden bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 md:px-6 rounded-full transition active:scale-95 border-2 border-gray-400 text-sm md:text-base">Lewati</button>
+                    <button id="btn-catch" class="catch-btn" onpointerdown="event.preventDefault();catchAny()" aria-label="Tangkap pemain yang lupa UNO"><span>UNO</span><img src="img/effects/hammer.png" alt="" draggable="false"></button>
                 </div>
             </div>
 
@@ -364,14 +384,20 @@
             <div id="f-timer" class="turn-timer tt-ok"><span id="f-time">15.00</span></div>
 
             <!-- Kiri-bawah meja: profil + tombol UNO | kanan-bawah: giliran -->
+            <!-- Di bawah timer: tulisan giliran + tombol Lewati -->
+            <div class="turn-info">
+                <span id="f-turn-ind" class="text-lg md:text-2xl font-black text-gray-400 transition-colors">Menunggu...</span>
+                <button onclick="flipPass()" id="f-btn-pass" class="hidden bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 md:px-6 rounded-full transition active:scale-95 border-2 border-gray-400 text-sm md:text-base">Lewati</button>
+            </div>
+
+            <!-- Kiri-bawah: profil | tengah: UNO | kanan-bawah: tombol UNO kecil untuk menangkap pemain yang lupa -->
             <div class="table-bottom">
                 <div class="tb-left">
                     <div id="f-me-avatar"></div>
                 </div>
                 <button id="f-btn-uno" class="uno-btn" onpointerdown="event.preventDefault();flipUno()" aria-label="UNO">UNO!</button>
                 <div class="tb-right">
-                    <span id="f-turn-ind" class="text-lg md:text-2xl font-black text-gray-400 transition-colors">Menunggu...</span>
-                    <button onclick="flipPass()" id="f-btn-pass" class="hidden bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 md:px-6 rounded-full transition active:scale-95 border-2 border-gray-400 text-sm md:text-base">Lewati</button>
+                    <button id="f-btn-catch" class="catch-btn" onpointerdown="event.preventDefault();flipCatchAny()" aria-label="Tangkap pemain yang lupa UNO"><span>UNO</span><img src="img/effects/hammer.png" alt="" draggable="false"></button>
                 </div>
             </div>
 
@@ -399,6 +425,144 @@
     </div>
 
 
+    <!-- AREA PERMAINAN UNO FLEX (id berawalan x-, dikendalikan js/modes/flex/; meja = talenan dapur, gaya di css/flex.css) -->
+    <div id="flex-screen" class="hidden h-full w-full flex flex-col relative casino">
+
+        <!-- Tombol menu (jeda / keluar) -->
+        <button id="x-btn-menu" onclick="flexOpenMenu()" class="menu-btn" aria-label="Pengaturan"><img src="img/ui/settings.png" alt="" draggable="false"></button>
+
+        <!-- Menu Pengaturan (suara + jeda + ulang + keluar) -->
+        <div id="x-pause-modal" class="pause-modal hidden">
+            <div class="pause-box">
+                <h2 id="x-pause-title" class="pause-title">Pengaturan</h2>
+                <p id="x-pause-note" class="pause-note"></p>
+                <div class="snd-panel">
+                    <button onclick="toggleSound()" data-nosfx="1" class="snd-mute" aria-label="Bisu"><img class="snd-img" src="img/ui/sound-on.png" alt="" draggable="false"></button>
+                    <div class="snd-sliders">
+                        <label>Musik <input class="vol-music" type="range" min="0" max="100" value="60" oninput="setVolume('music', this.value)"></label>
+                        <label>Efek <input class="vol-sfx" type="range" min="0" max="100" value="90" oninput="setVolume('sfx', this.value)"></label>
+                    </div>
+                </div>
+                <button id="x-pause-toggle" onclick="flexTogglePause()" class="pause-btn pause-pause">⏸ Jeda Permainan</button>
+                <button onclick="flexResume()" class="pause-btn pause-resume">✕ Tutup</button>
+                <button id="x-btn-restart" onclick="flexRestart()" class="pause-btn pause-restart">↻ Mulai Ulang</button>
+                <button onclick="flexExit()" class="pause-btn pause-exit">◀ Keluar ke Beranda</button>
+            </div>
+        </div>
+
+        <!-- Pilih warna Wild -->
+        <div id="x-color-modal" class="cp-modal hidden">
+            <div class="cp-box">
+                <h2 class="cp-title">Pilih Warna</h2>
+                <div class="cp-stage">
+                    <img id="x-cp-img" src="img/flex/fx/wild-spin.png" alt="">
+                    <button class="cp-zone cp-Green"  data-c="Green"  onclick="flexPickColor(this.dataset.c)"  aria-label="Hijau"></button>
+                    <button class="cp-zone cp-Blue"   data-c="Blue"   onclick="flexPickColor(this.dataset.c)"   aria-label="Biru"></button>
+                    <button class="cp-zone cp-Yellow" data-c="Yellow" onclick="flexPickColor(this.dataset.c)" aria-label="Kuning"></button>
+                    <button class="cp-zone cp-Red"    data-c="Red"    onclick="flexPickColor(this.dataset.c)"    aria-label="Merah"></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pilih sisi kartu: biasa atau flex (muncul bila kartu cocok di dua sisi) -->
+        <div id="x-side-modal" class="x-ask hidden">
+            <div class="x-ask-box">
+                <h2 class="x-ask-title">Pakai sisi mana?</h2>
+                <img id="x-side-card" class="x-side-card" src="img/flex/cards/back.png" alt="" draggable="false">
+                <button id="x-side-reg" class="x-side-btn" onclick="flexPickSide(false)"></button>
+                <button id="x-side-flex" class="x-side-btn" onclick="flexPickSide(true)"></button>
+                <button class="x-ask-cancel" onclick="flexCancelAsk()">Batal</button>
+            </div>
+        </div>
+
+        <!-- Pilih pemain yang ditunjuk (Wild sisi flex) -->
+        <div id="x-target-modal" class="x-ask hidden">
+            <div class="x-ask-box">
+                <h2 id="x-target-title" class="x-ask-title">Pilih pemain</h2>
+                <div id="x-target-list" class="x-target-list"></div>
+                <button class="x-ask-cancel" onclick="flexCancelAsk()">Batal</button>
+            </div>
+        </div>
+
+        <!-- Kotak Tantangan Wild Draw 4 -->
+        <div id="x-challenge-modal" class="ch-modal hidden">
+            <div class="ch-panel">
+                <p class="ch-title">Apakah <b id="x-ch-name"></b> masih punya kartu <span id="x-ch-color" class="ch-color"></span>?</p>
+                <div class="ch-buttons">
+                    <button id="x-ch-draw" onclick="flexChallenge('draw')" class="ch-btn ch-btn-draw">Ambil Kartu</button>
+                    <button onclick="flexChallenge('challenge')" class="ch-btn ch-btn-challenge">Tantang</button>
+                </div>
+                <p id="x-ch-note" class="ch-note"></p>
+            </div>
+        </div>
+
+        <!-- Modal Game Over -->
+        <div id="x-over-modal" class="over-modal hidden">
+            <div class="bg-gray-800 p-6 md:p-10 rounded-xl border-4 border-yellow-500 text-center w-full max-w-lg shadow-[0_0_50px_rgba(234,179,8,0.3)]">
+                <h1 id="x-winner-text" class="text-4xl md:text-5xl mb-2 text-yellow-400 font-bold">Player Menang!</h1>
+                <p id="x-score-text" class="text-2xl mb-4 font-black text-green-400">Total Skor: 0 Poin</p>
+                <div class="bg-gray-900 border border-gray-700 rounded-lg p-4 mb-6 text-left max-h-48 overflow-y-auto hide-scrollbar">
+                    <h3 class="text-gray-400 text-sm uppercase tracking-widest font-bold mb-2 border-b border-gray-700 pb-2">Rincian Poin</h3>
+                    <div id="x-score-breakdown" class="text-sm text-gray-200 space-y-2"></div>
+                </div>
+                <button onclick="flexLeave()" class="over-btn">Kembali ke Beranda</button>
+            </div>
+        </div>
+
+        <!-- Atas: Lawan -->
+        <div class="row-top w-full pt-2 pb-2 px-3 flex items-end">
+            <div id="x-opps" class="opp-area"></div>
+        </div>
+
+        <!-- Tengah: Meja -->
+        <div class="row-mid flex flex-row items-center justify-center relative w-full px-2">
+            <div class="table-line"></div>
+            <div id="x-dir-ring" class="dir-ring"><img src="img/ui/direction.png" alt="" draggable="false"></div>
+
+            <!-- Hitung mundur giliran (gaya stopwatch) -->
+            <div id="x-timer" class="turn-timer tt-ok"><span id="x-time">15.00</span></div>
+
+            <!-- Di bawah timer: tulisan giliran + tombol Lewati -->
+            <div class="turn-info">
+                <span id="x-turn-ind" class="text-lg md:text-2xl font-black text-gray-400 transition-colors">Menunggu...</span>
+                <button onclick="flexPass()" id="x-btn-pass" class="hidden bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 md:px-6 rounded-full transition active:scale-95 border-2 border-gray-400 text-sm md:text-base">Lewati</button>
+            </div>
+
+            <!-- Kiri-bawah: profil | tengah: UNO | kanan-bawah: Power Card + tombol UNO kecil (tangkap) -->
+            <div class="table-bottom">
+                <div class="tb-left">
+                    <div id="x-me-avatar"></div>
+                </div>
+                <button id="x-btn-uno" class="uno-btn" onpointerdown="event.preventDefault();flexUno()" aria-label="UNO">UNO!</button>
+                <div class="tb-right">
+                    <div id="x-power" class="power-slot" onclick="flexPowerInfo()" role="button" aria-label="Power Card"></div>
+                    <button id="x-btn-catch" class="catch-btn" onpointerdown="event.preventDefault();flexCatchAny()" aria-label="Tangkap pemain yang lupa UNO"><span>UNO</span><img src="img/effects/hammer.png" alt="" draggable="false"></button>
+                </div>
+            </div>
+
+            <!-- Meja: deck kiri | tumpukan buangan (tepat di tengah) | deck kanan -->
+            <div class="table-grid">
+                <div class="deck-slot deck-slot-l">
+                    <div onclick="flexDraw('L')" id="x-draw-l" class="uno-card draw-pile"></div>
+                    <span class="deck-count"><span id="x-count-l">0</span></span>
+                </div>
+                <div class="center-slot">
+                    <div id="x-discard" class="relative"></div>
+                    <div id="x-badge" class="color-badge">Warna: -</div>
+                </div>
+                <div class="deck-slot deck-slot-r">
+                    <div onclick="flexDraw('R')" id="x-draw-r" class="uno-card draw-pile"></div>
+                    <span class="deck-count"><span id="x-count-r">0</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bawah: tangan kartu -->
+        <div class="row-bot flex flex-col items-center justify-start w-full relative player-panel">
+            <div id="x-hand" class="flex gap-2 overflow-x-auto w-full max-w-6xl items-center h-full px-4 md:px-6 hide-scrollbar"></div>
+        </div>
+    </div>
+
         <script>
         // Penjaga: tampilkan penyebab jelas di layar jika file JS gagal dimuat
         (function () {
@@ -420,6 +584,6 @@
             }, 8000);
         })();
     </script>
-    <script type="module" src="js/main.js?v=20261109-0829"></script>
+    <script type="module" src="js/main.js?v=20261110-1000"></script>
 </body>
 </html>
