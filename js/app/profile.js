@@ -38,11 +38,18 @@ let toastTimeout;
 window.showToast = (msg) => {
     const toast = document.getElementById('toast');
     toast.innerText = msg;
+    // taruh tepat di atas tombol UNO yang sedang tampil (kecil, tidak menutupi tombolnya); di luar game = posisi bawaan
+    const uno = [...document.querySelectorAll('.uno-btn')].find(b => b.getClientRects().length && b.getBoundingClientRect().width > 0);
+    if (uno) {
+        const r = uno.getBoundingClientRect();
+        toast.style.left = Math.max(16, Math.min(window.innerWidth - 16, r.left + r.width / 2)) + 'px';
+        toast.style.bottom = Math.round(window.innerHeight - r.top + 10) + 'px';
+    } else { toast.style.left = ''; toast.style.bottom = ''; }
     toast.classList.remove('toast-enter');
     toast.classList.add('toast-show');
     clearTimeout(toastTimeout);
     toastTimeout = setTimeout(() => {
         toast.classList.remove('toast-show');
         toast.classList.add('toast-enter');
-    }, 3000);
+    }, 2600);
 };
