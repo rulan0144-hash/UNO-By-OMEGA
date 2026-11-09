@@ -25,7 +25,7 @@ export const MODES = [
         bots: { min: 1, max: 9, def: 3 }
     },
     {
-        id: 'flex', group: 'other', ready: true, online: false,
+        id: 'flex', group: 'other', ready: true,
         name: 'UNO Flex',
         desc: 'Kartu bisa "flex": ubah warna dengan Power Card, kartu aksi punya sisi kedua!',
         theme: 'green', logo: 'img/ui/logo-flex.png', tag: 'Fleksibel, gunakan dua sisi!', badge: 'img/ui/badge-players-flex.png',
