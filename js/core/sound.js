@@ -266,6 +266,20 @@ const SFX = {
     }
 };
 
+// ---- UNO Flex: bunyi kartu flex (memakai ulang bunyi serupa bila artinya mirip, ditambah perkataan sendiri) ----
+SFX.draw1all = SFX.draw1;          // semua lawan +1
+SFX.alldraw2 = SFX.draw2;          // semua lawan +2
+SFX.target2 = SFX.draw2;           // pemain ditunjuk +2
+SFX.target4 = SFX.draw4;           // pemain ditunjuk +4
+SFX.revskip = SFX.reverse;         // balik arah + lewati
+// Power Card berbalik: dua "tik" kartu lalu denting naik (hijau) / turun (merah)
+SFX.power = function () {
+    duck(0.9);
+    noise({ dur: 0.1, vol: 0.18, f: 3000, f2: 900, q: 0.8 });
+    tone({ f: note(79), f2: note(91), type: 'triangle', t: 0.08, dur: 0.16, vol: 0.2 });
+    tone({ f: note(91), f2: note(79), type: 'triangle', t: 0.26, dur: 0.18, vol: 0.16 });
+};
+
 // getaran singkat di HP (Android) untuk momen besar
 const VIBE = { catch: [60, 40, 120], draw4: [80, 40, 80], draw6: [100, 50, 100, 50, 200], win: [80, 60, 80, 60, 240], challengeWrong: [150] };
 
@@ -292,7 +306,13 @@ const VOICE = {
     draw5: ['Draw five!', 1.1, 1.0, 0.05],
     skipall: ['Skip everyone!', 1.1, 1.0, 0.05],
     wdc: ['Draw color!', 1.1, 1.0, 0.05],
-    flip: ['Flip!', 1.2, 1.0, 0.1]
+    flip: ['Flip!', 1.2, 1.0, 0.1],
+    draw1all: ['Everyone draw one!', 1.2, 1.0, 0.05],
+    alldraw2: ['Everyone draw two!', 1.1, 1.0, 0.05],
+    target2: ['Draw two!', 1.2, 1.0, 0.05],
+    target4: ['Draw four!', 1.1, 1.0, 0.05],
+    revskip: ['Reverse skip!', 1.2, 1.0, 0.05],
+    power: ['Flip power!', 1.2, 1.0, 0.25]
 };
 let voiceObj = null;
 function pickVoice() {
@@ -474,7 +494,40 @@ function playFlipDarkStep(n, at) {
     if (s === 2) noise({ t: off, dur: 0.1, vol: 0.12, f: 900, q: 0.5, bus: musicBus });
 }
 
+// ---- Lagu UNO Flex: groove dapur yang santai-funky (112 bpm, F mayor, 16 birama), beda dari semua lagu lain ----
+const XSTEP = 60 / 112 / 2;
+const XCH = { F: [41, [57, 60, 65]], Dm: [38, [57, 62, 65]], Bb: [34, [58, 62, 65]], C: [36, [55, 60, 64]], Gm: [43, [58, 62, 67]] };
+const XCHORDS = ['F', 'Dm', 'Bb', 'C', 'F', 'Dm', 'Bb', 'C', 'Gm', 'C', 'F', 'Dm', 'Bb', 'C', 'F', 'C'].map(k => XCH[k]);
+const XMELODY = [
+    [72, -1, 69, 72, 77, -1, 72, 69], [69, -1, 74, 69, 65, -1, 69, 74], [70, -1, 74, 77, 74, -1, 70, 74], [72, -1, 76, 72, 67, -1, 72, 76],
+    [77, -1, 76, 72, 69, -1, 72, 77], [74, -1, 77, 74, 69, -1, 65, 69], [74, -1, 77, 81, 77, -1, 74, 70], [72, -1, -1, 67, 72, -1, 76, -1],
+    [74, -1, 70, 74, 79, -1, 74, 70], [76, -1, 72, 76, 79, -1, 76, 72], [77, -1, 81, 77, 72, -1, 77, 81], [74, -1, 77, 81, 77, -1, 74, 69],
+    [70, -1, 74, 77, 82, -1, 77, 74], [72, -1, 76, 79, 76, -1, 72, 67], [77, -1, 72, 69, 72, -1, 77, -1], [79, -1, 76, 72, 67, -1, 72, -1]
+];
+const XTOTAL = XCHORDS.length * 8;
+function playFlexStep(n, at) {
+    const bar = Math.floor(n / 8), s = n % 8, off = at - ctx.currentTime;
+    const [root, ch] = XCHORDS[bar];
+    // bass funky (segitiga memantul)
+    if (s === 0 || s === 3 || s === 6) tone({ f: mtof(s === 3 ? root + 12 : root), type: 'triangle', t: off, dur: XSTEP * 1.5, vol: 0.5, bus: musicBus });
+    if (s === 5) tone({ f: mtof(root + 7), type: 'triangle', t: off, dur: XSTEP * 0.9, vol: 0.32, bus: musicBus });
+    // sentakan akor di ketukan lemah
+    if (s === 2 || s === 5 || s === 7) ch.forEach(c => tone({ f: mtof(c), type: 'square', t: off, dur: XSTEP * 0.5, vol: 0.045, bus: musicBus, filter: { f: 1800 } }));
+    const m = XMELODY[bar][s];
+    if (m > 0) {
+        let len = 1;
+        while (s + len < 8 && XMELODY[bar][s + len] === -1) len++;
+        tone({ f: mtof(m), wave: 'pulse', t: off, dur: XSTEP * len * 0.88, vol: 0.12, bus: musicBus, filter: { f: 3000 }, vib: len > 1 ? 4 : 0 });
+        tone({ f: mtof(m + 12), type: 'sine', t: off, dur: XSTEP * 0.5, vol: 0.04, bus: musicBus });
+    }
+    if (s === 0 || s === 3) tone({ f: 130, f2: 42, type: 'sine', t: off, dur: 0.15, vol: 0.62, bus: musicBus });                       // kick
+    if (s === 4) noise({ t: off, dur: 0.1, vol: 0.24, f: 2200, q: 0.7, bus: musicBus });                                               // snare
+    if (s % 2 === 1) noise({ t: off, dur: 0.03, vol: 0.1, type: 'highpass', f: 8000, bus: musicBus });                                // hi-hat
+    if (s === 7 && bar % 2 === 1) noise({ t: off + XSTEP * 0.5, dur: 0.06, vol: 0.12, type: 'highpass', f: 6500, bus: musicBus });     // hi-hat buka
+}
+
 const TRACKS = {
+    flex: { step: XSTEP, total: XTOTAL, play: playFlexStep },
     menu: { step: MSTEP, total: MTOTAL, play: playMenuStep },
     flipLight: { step: LSTEP, total: LTOTAL, play: playFlipLightStep },
     flipDark: { step: DSTEP, total: DTOTAL, play: playFlipDarkStep }
