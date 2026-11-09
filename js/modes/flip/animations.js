@@ -21,7 +21,7 @@ export const isBusy = () => pending > 0;   // true selama ada animasi berjalan/a
 // ---- Penahan tampilan ----
 // transit = kartu yang sedang dalam perjalanan ke pemain (belum boleh terlihat)
 // side    = sisi lama yang tetap tampil sampai animasi Flip membalik semuanya
-const hold = { transitMe: 0, transit: {}, side: null };
+const hold = { transitMe: 0, transit: {}, side: null, pile: 0 };   // pile = jumlah kartu yang akan diletakkan (kartu teratas baru disembunyikan sampai mendarat)
 let lastFxId = null, cur = null;
 // animasi yang masih berjalan setelah pemain keluar / pindah mode tidak boleh menggambar ulang dengan data mode lain
 const inFlip = () => !!S.roomData && S.roomData.mode === 'flip';
@@ -35,6 +35,9 @@ export function applyHold() {
     const kids = [...hand.children];
     const hideFrom = kids.length - hold.transitMe;
     kids.forEach((k, i) => { k.style.visibility = i >= hideFrom ? 'hidden' : ''; });
+    // kartu yang diambil/dimainkan lawan: jangan tampil di tumpukan tengah sebelum animasi 'play' mendaratkannya
+    const pt = document.querySelector('#f-discard .pile-top');
+    if (pt && hold.pile > 0) pt.style.visibility = 'hidden';
 }
 
 function land(uid) {
@@ -54,6 +57,7 @@ function finish(c) {
     hold.transitMe = Math.max(0, hold.transitMe - Math.max(0, c.me));
     Object.keys(c.opp).forEach(u => { hold.transit[u] = Math.max(0, (hold.transit[u] || 0) - Math.max(0, c.opp[u])); });
     if (c.flip) hold.side = null;
+    hold.pile = Math.max(0, hold.pile - Math.max(0, c.plays || 0));
     restore();
 }
 
@@ -157,6 +161,7 @@ async function challengeFx(ev) {
     const p = S.roomData?.players.find(x => x.uid === ev.by);
     const t = S.roomData?.players.find(x => x.uid === ev.target);
     if (p && t) { const s = document.createElement('small'); s.textContent = `${p.name} menantang ${t.name}`; el.appendChild(s); }
+    if (t && ev.color) { const s2 = document.createElement('small'); s2.textContent = `Warna sebelumnya: ${NAMES[ev.color] || ev.color} — ${t.name} ${ev.ok ? 'masih punya' : 'tidak punya'} kartu warna itu`; el.appendChild(s2); }
     document.body.appendChild(el);
     setTimeout(() => el.remove(), reduce ? 0 : 1600);
     await sleep(1400);
@@ -192,7 +197,10 @@ async function play(ev) {
     sfx('card');
     await fly(cardEl(ev.card, ev.side), from, discardRect(), { dur: 700, rot: pileRot(n - 1) });
     sfx('slap');
-    if (top) top.style.visibility = '';
+    if (cur) cur.plays = (cur.plays || 0) - 1;
+    hold.pile = Math.max(0, hold.pile - 1);
+    const t2 = document.querySelector('#f-discard .pile-top');
+    if (t2 && hold.pile === 0) t2.style.visibility = '';
     if (face(ev.card, ev.side).color === 'Black') flash(ev.color);
 }
 
@@ -356,9 +364,10 @@ export function handleFx(state) {
     lastFxId = f.id;
     if (firstRender && !f.list.some(e => e.t === 'deal')) return;
 
-    const c = { me: 0, opp: {}, flip: false };
+    const c = { me: 0, opp: {}, flip: false, plays: 0 };
     f.list.forEach(ev => {
-        if (ev.t === 'draw') {
+        if (ev.t === 'play') { hold.pile++; c.plays++; }
+        else if (ev.t === 'draw') {
             if (ev.uid === me) { hold.transitMe += ev.n; c.me += ev.n; }
             else { hold.transit[ev.uid] = (hold.transit[ev.uid] || 0) + ev.n; c.opp[ev.uid] = (c.opp[ev.uid] || 0) + ev.n; }
         } else if (ev.t === 'flip') {
@@ -375,4 +384,4 @@ export function handleFx(state) {
 }
 
 // dipanggil saat ronde baru / keluar supaya animasi ronde berikutnya tidak dianggap "lama"
-export function resetFx() { lastFxId = null; hold.transitMe = 0; hold.transit = {}; hold.side = null; }
+export function resetFx() { lastFxId = null; hold.transitMe = 0; hold.transit = {}; hold.side = null; hold.pile = 0; }
