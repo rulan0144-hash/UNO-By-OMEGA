@@ -189,24 +189,39 @@ async function challengeFx(ev) {
     await sleep(1400);
 }
 
-// Palu kayu menghantam profil pemain yang lupa UNO
-async function hammer(uid) {
+// Palu terbang dari tombol UNO kecil (atau dari profil penangkap) ke pemain yang lupa UNO, lalu menghantam
+async function hammer(ev) {
+    const uid = ev.uid, by = ev.by;
     const mine = uid === S.currentUser?.uid;
     const target = mine ? $('human-hand-ui') : $('prof-' + uid);
     const r = rectOf(target) || { left: window.innerWidth / 2 - 40, top: window.innerHeight / 2, width: 80, height: 80 };
     const cx = r.left + r.width / 2;
+    const byMe = by === S.currentUser?.uid;
+    const btn = byMe ? $('btn-catch') : null;
+    const src = rectOf(btn) || rectOf($('prof-' + by)) || { left: window.innerWidth - 90, top: window.innerHeight * 0.6, width: 56, height: 56 };
+    const sx = src.left + src.width / 2, sy = src.top + src.height / 2;       // pusat awal palu (92 x 92 px)
+    const hx = cx, hy = Math.max(r.top - 34, 46);   // pusat palu saat siap mengayun (tetap terlihat walau lawan di baris atas)                                            // pusat palu saat siap mengayun
+    const dx = hx - sx, dy = hy - sy;
     const h = document.createElement('div');
-    h.className = 'fx-hammer'; h.innerHTML = '<img src="img/effects/hammer.png" alt="">';
-    h.style.left = (cx - 46) + 'px'; h.style.top = (r.top - 80) + 'px';
+    h.className = 'fx-hammer fx-hammer-fly'; h.innerHTML = '<img src="img/effects/hammer.png" alt="">';
+    h.style.left = (sx - 46) + 'px'; h.style.top = (sy - 46) + 'px';
     const b = document.createElement('div');
     b.className = 'fx-boom'; b.innerHTML = '<img src="img/effects/boom.png" alt="">';
     b.style.left = (cx - 42) + 'px'; b.style.top = (r.top - 8) + 'px';
+    b.style.animation = 'none';
     document.body.append(h, b);
-    sfx('swing');                      // palu terayun saat profil diketuk
-    sfx('catch', reduce ? 0 : 0.93);   // "bonk" palu tepat saat menghantam, lalu kata "Caught!"
-    setTimeout(() => target && target.classList.add('fx-shake'), reduce ? 0 : 930);
-    setTimeout(() => { h.remove(); b.remove(); target && target.classList.remove('fx-shake'); }, reduce ? 0 : 1600);
-    await sleep(1600);
+    if (btn) { btn.classList.add('catch-press'); setTimeout(() => btn.classList.remove('catch-press'), reduce ? 0 : 500); }
+    const TOTAL = reduce ? 10 : 2000, HIT = reduce ? 0 : 880;                  // palu menghantam ~0,88 dtk setelah berangkat
+    const kf = (o, tx, ty, rot, sc, op) => ({ offset: o, transform: `translate(${tx}px,${ty}px) rotate(${rot}deg) scale(${sc})`, opacity: op });
+    sfx('swing');
+    h.animate([
+        kf(0, 0, 0, -20, .5, 0), kf(.06, dx * .1, dy * .1, -25, .65, 1), kf(.30, dx, dy, -45, 1.05, 1), kf(.38, dx, dy - 8, -56, 1.05, 1),
+        kf(.44, dx, dy + 48, 14, 1.05, 1), kf(.75, dx, dy + 48, 14, 1, 1), kf(1, dx, dy + 48, 14, 1, 0)
+    ], { duration: TOTAL, easing: 'ease-in-out', fill: 'both' });
+    sfx('catch', reduce ? 0 : HIT / 1000);
+    setTimeout(() => { b.style.animation = 'fx-boom .7s ease-out forwards'; target && target.classList.add('fx-shake'); }, HIT);
+    setTimeout(() => { h.remove(); b.remove(); target && target.classList.remove('fx-shake'); }, TOTAL);
+    await sleep(TOTAL);
 }
 
 // Kartu dimainkan: terbang ke tumpukan buangan (kartu di bawahnya tetap terlihat)
@@ -404,7 +419,7 @@ async function run(list, state, c) {
         else if (ev.t === 'picker') await wildPicker(ev.color);
         else if (ev.t === 'challenge') await challengeFx(ev);
         else if (ev.t === 'uno') await banner('uno', ev.uid);
-        else if (ev.t === 'catch') await hammer(ev.uid);
+        else if (ev.t === 'catch') await hammer(ev);
         else if (ev.t === 'draw') await draw(ev);
         await sleep(150);   // jeda singkat antar animasi
     }

@@ -1,3 +1,4 @@
+import { doubleTapTarget } from '../../core/doubletap.js';
 import { syncChallenge } from './challenge.js';
 import { BACK_SRC, cardSrc, imgTag, getScale } from '../../core/config.js';
 import { fitOpponents } from '../../core/oppfit.js';
@@ -109,7 +110,7 @@ export function renderGame() {
         if (S.hasDrawnThisTurn && idx !== myHand.length - 1) isPlay = false;
         const c = document.createElement('div');
         c.className = `uno-card ${isPlay ? 'playable' : 'unplayable'}`;
-        c.onclick = () => tapCard(idx);
+        c.onclick = (e) => tapCard(idx, e);
         c.addEventListener('pointerdown', (e) => startDrag(e, idx, c));
         c.innerHTML = generateCardHTML(card);
         handUI.appendChild(c);
@@ -127,6 +128,11 @@ export function renderGame() {
         const mineCatch = isCatchable(state, me);
         meAv.innerHTML = avatarHTML(meP, isMyTurn(), 'me') + (mineCatch ? `<img class="catch-hammer" src="img/effects/hammer.png" alt="" onclick="showToast('Kamu lupa UNO! Tekan tombol UNO sekarang.')">` : '');
     }
+
+    // Tombol UNO kecil (tangkap): menyala bila ada lawan yang lupa UNO
+    const anyCatch = S.roomData.players.some(p => p.uid !== me && isCatchable(state, p.uid));
+    const btnCatch = document.getElementById('btn-catch');
+    if (btnCatch) btnCatch.classList.toggle('catch-ready', anyCatch);
 
     // Tombol UNO: berdenyut saat sudah boleh ditekan
     const btnUno = document.getElementById('btn-uno');
@@ -252,8 +258,10 @@ window.addEventListener('pointermove', (e) => {
 window.addEventListener('pointerup', (e) => endDrag(e, false));
 window.addEventListener('pointercancel', (e) => endDrag(e, true));
 
-function tapCard(idx) {
+function tapCard(idx, ev) {
     if (justDragged) return;
+    const first = doubleTapTarget(idx, ev);   // ketuk 2x cepat = langsung dimainkan
+    if (first >= 0) { S.selIdx = -1; markSelected(); humanPlayCard(first); return; }
     if (S.selIdx === idx) { S.selIdx = -1; markSelected(); humanPlayCard(idx); return; }
     const hand = S.roomData && S.roomData.gameState.hands[S.currentUser.uid];
     const frozen = frozenHand();
@@ -265,6 +273,8 @@ function tapCard(idx) {
 window.addEventListener('resize', () => requestAnimationFrame(layoutHand));
 window.addEventListener('orientationchange', () => setTimeout(layoutHand, 200));
 document.addEventListener('click', (e) => {
+    const scr = document.getElementById('game-screen');
+    if (!scr || scr.classList.contains('hidden')) return;   // hanya saat layar Klasik tampil (jangan merusak pilihan kartu mode lain)
     if (S.selIdx >= 0 && !(e.target.closest && e.target.closest('#human-hand-ui'))) { S.selIdx = -1; markSelected(); }
 });
 

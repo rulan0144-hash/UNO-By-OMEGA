@@ -125,6 +125,19 @@ window.catchPlayer = (uid) => {
     updateRemoteState(s);
 };
 
+// Tombol UNO kecil di kanan-bawah: tangkap pemain pertama (urut dari pemain setelah kita) yang lupa UNO. Palu terbang dari tombol ini.
+window.catchAny = () => {
+    if (!S.roomData || S.roomData.status !== 'playing') return;
+    const s = cloneState();
+    const me = S.currentUser.uid, pl = S.roomData.players;
+    const myIdx = pl.findIndex(p => p.uid === me);
+    let victim = null;
+    for (let i = 1; i < pl.length && !victim; i++) { const u = pl[(myIdx + i) % pl.length].uid; if (isCatchable(s, u)) victim = u; }
+    if (!victim) { sfx('nope'); return showToast("Tidak ada yang lupa UNO."); }
+    penalize(s, victim, me);
+    updateRemoteState(s);
+};
+
 // Waktu giliran habis: otomatis mainkan kartu cocok dengan poin terkecil;
 // kalau tidak ada yang cocok, ambil 1 kartu dari deck lalu giliran berpindah
 export function timeoutTurn(uid) {
