@@ -23,6 +23,14 @@ export const MODES = [
         theme: 'purple', logo: 'img/ui/logo-flip.png', tag: 'Balik dek, ubah permainan!', badge: 'img/ui/badge-players-flip.png',
         art: ['img/flip/light/Yellow-2.png', 'img/flip/light/Green-3.png', 'img/flip/light/Blue-4.png', 'img/flip/dark/Orange-DrawFive.png', 'img/flip/dark/Teal-5.png'],
         bots: { min: 1, max: 9, def: 3 }
+    },
+    {
+        id: 'flex', group: 'other', ready: true, online: false,
+        name: 'UNO Flex',
+        desc: 'Kartu bisa "flex": ubah warna dengan Power Card, kartu aksi punya sisi kedua!',
+        theme: 'green', logo: 'img/ui/logo-flex.png', tag: 'Fleksibel, gunakan dua sisi!', badge: 'img/ui/badge-players-flex.png',
+        art: ['img/flex/cards/Yellow-2-FlexGreen.png', 'img/flex/cards/Blue-1-FlexRed.png', 'img/flex/cards/Red-6-FlexGreen.png', 'img/flex/cards/Green-Reverse-Flex.png', 'img/flex/cards/Black-WildFlexTargetDraw2.png'],
+        bots: { min: 1, max: 7, def: 3 }
     }
 ];
 
