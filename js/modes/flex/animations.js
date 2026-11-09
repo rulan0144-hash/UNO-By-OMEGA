@@ -271,6 +271,8 @@ async function deal(state) {
 
 // Power Card berbalik: gambar efek besar (GoStop = hijau jadi merah, StopGo = merah jadi hijau) untuk perubahan Power-ku sendiri;
 // kartu Power di kanan-bawah dan Power mini lawan berubah setelah efek
+// Suara balik Power Card: pakai sisi flex / Wild All Flip = "All flip!", reset = "Reset!"; kartu angka berlogo Flip = "Flip!" saja
+const powerSnd = (ev) => ({ flip: 'flip', allflip: 'allflip', reset: 'reset' }[ev.cause] || 'power');
 async function powerFx(ev) {
     const me = S.currentUser?.uid;
     const ch = ev.changes || {};
@@ -280,10 +282,10 @@ async function powerFx(ev) {
         el.className = 'fx-img-banner';
         el.innerHTML = `<img src="img/flex/fx/flip-${ch[me] ? 'StopGo' : 'GoStop'}.png" alt="">`;
         document.body.appendChild(el);
-        sfx('power');
+        sfx(powerSnd(ev));
         setTimeout(() => el.remove(), reduce ? 0 : 1600);
         await sleep(950);
-    } else sfx('power');
+    } else sfx(powerSnd(ev));
     Object.keys(ch).forEach(u => { hold.power[u] = ch[u]; });
     if (inFlex()) renderGame();
     const pw = $('x-power');
