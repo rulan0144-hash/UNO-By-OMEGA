@@ -1,3 +1,10 @@
+/* Anti layar menyusut/membesar (Chrome Android memperkecil halaman otomatis bila ada elemen animasi yang keluar dari layar):
+   html + body dikunci, tanpa zoom/overscroll; viewport meta juga mengunci skala (maximum-scale=1, user-scalable=no). */
+html { overflow: hidden; width: 100%; height: 100%; overscroll-behavior: none; touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { max-width: 100vw; overscroll-behavior: none; contain: paint; }   /* contain: paint = kartu/efek terbang (position: fixed) tidak bisa melewati tepi layar */
+* { -webkit-tap-highlight-color: transparent; }
+#game-screen { overflow: hidden; }
+
 body {
     font-family: 'Fredoka One', cursive;
     user-select: none;
@@ -369,6 +376,11 @@ body.h-screen { height: var(--app-h, 100dvh) !important; }
 /* Notifikasi (toast): hanya tampilan, TIDAK boleh menangkap ketukan. Sebelumnya kotak ini (fixed, z-index 200) tetap ada walau transparan
    sehingga menelan ketukan di tombol UNO, kartu tengah, dan tombol "Kembali ke Beranda" di HP. */
 #toast { pointer-events: none; }
+/* Revisi 10 Nov: pesan kecil, ditaruh DI ATAS tombol UNO (posisi diatur showToast di js/app/profile.js; di luar game tetap di bawah-tengah) */
+#toast { left: 50%; padding: calc(4px * var(--s, 1)) calc(12px * var(--s, 1)) !important; font-size: calc(12px * max(var(--s, 1), .85)) !important; line-height: 1.25 !important;
+         border-width: 1px !important; border-radius: 14px !important; max-width: min(78vw, 360px); width: max-content; box-shadow: 0 4px 12px rgba(0,0,0,.55) !important; }
+#toast.toast-enter { transform: translateX(-50%) translateY(30%) !important; opacity: 0; }
+#toast.toast-show { transform: translateX(-50%) translateY(0) !important; opacity: 1; }
 
 
 /* ===== Revisi 9 Nov: tulisan giliran di bawah timer + tombol UNO kecil (tangkap) di kanan-bawah ===== */
