@@ -29,12 +29,21 @@ export function matchesFlex(st, card) {
     return card.fc === st.currentColor || card.v === topCard(st).v;
 }
 export const powerGreen = (st, uid) => !!(st.power && st.power[uid]);
+// Revisi 10 Nov (butir 6, versi 2): kartu BIASA/AKSI (dimainkan sisi biasanya, efek biasa) juga cocok bila WARNA FLEX kartu teratas sama dengan warnanya,
+// TETAPI harus memakai Power Card (pemain mengetuk Power dulu: hijau -> merah, seperti memakai sisi flex). Wild tidak termasuk; kartu teratas tanpa sisi flex tidak berlaku.
+export function matchesTopFlexSide(st, card) {
+    const top = topCard(st);
+    return !isWild(card) && !!top && !!top.fc && card.c === top.fc;
+}
 // Daftar cara memainkan kartu ini: [{flex:false},{flex:true}] (kosong = tidak bisa dimainkan)
 export function playOptions(st, uid, card) {
     if (st.pending) return [];
     const out = [];
-    if (matchesRegular(st, card)) out.push({ flex: false });
-    if (powerGreen(st, uid) && matchesFlex(st, card)) out.push({ flex: true });
+    if (matchesRegular(st, card) || matchesTopFlexSide(st, uid, card)) out.push({ flex: false });
+    if (powerGreen(st, uid)) {
+        if (matchesFlex(st, card)) out.push({ flex: true });                                    // sisi flex kartu itu sendiri
+        else if (!matchesRegular(st, card) && matchesTopFlexSide(st, card)) out.push({ flex: true, top: true });   // sisi biasa, cocok dengan sisi flex kartu teratas (pakai Power)
+    }
     return out;
 }
 export const isPlayableIn = (st, uid, card) => playOptions(st, uid, card).length > 0;
@@ -90,7 +99,9 @@ export function playCardOn(state, uid, cardIdx, opts = {}) {
     const pl = players(), pCount = pl.length;
     const hand = state.hands[uid];
     const card = hand[cardIdx];
-    const flex = !!opts.flex && hasFlex(card);
+    // opts.flex + kartu tidak cocok lewat sisi flex-nya sendiri tetapi cocok dengan sisi flex kartu teratas = dimainkan sisi BIASA dengan memakai Power
+    const viaTop = !!opts.flex && !(hasFlex(card) && matchesFlex(state, card)) && matchesTopFlexSide(state, card) && !matchesRegular(state, card);
+    const flex = !!opts.flex && hasFlex(card) && !viaTop;
     hand.splice(cardIdx, 1);
     const prevColor = state.currentColor;
     const pIdx = idxOf(uid);
@@ -101,10 +112,10 @@ export function playCardOn(state, uid, cardIdx, opts = {}) {
     if (isWild(card)) fx(state, { t: 'picker', color });
     state.currentColor = color;
     state.turnNo = (state.turnNo || 0) + 1;
-    state.logs.push(`<b>${nameOf(uid)}</b> mengeluarkan ${isWild(card) ? 'Wild' : NAMES[card.c] + ' ' + card.v}${flex ? ' (sisi flex)' : ''}`);
+    state.logs.push(`<b>${nameOf(uid)}</b> mengeluarkan ${isWild(card) ? 'Wild' : NAMES[card.c] + ' ' + card.v}${flex ? ' (sisi flex)' : viaTop ? ' (pakai Power: cocok sisi flex kartu atas)' : ''}`);
 
     // Power: sisi flex dipakai -> merah; ikon Flip -> membalik
-    if (flex) setPower(state, { [uid]: false }, 'flex');
+    if (flex || viaTop) setPower(state, { [uid]: false }, 'flex');
     if (card.fl) { const to = !state.power[uid]; setPower(state, { [uid]: to }, 'flip'); }
 
     // UNO / kartu terakhir (efek tetap berjalan dulu)
