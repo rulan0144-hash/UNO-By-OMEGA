@@ -1,0 +1,56 @@
+/* Gaya khusus mode UNO Flex. Bagian pertama = salinan aturan gaya klasik yang memakai id (#human-hand-ui dst) untuk id Flex (#x-hand dst).
+   Gaya lain (kartu, avatar, tumpukan, menu jeda, efek, tombol tangkap) dipakai bersama dari style.css lewat kelas. */
+#x-turn-ind { text-shadow: 0 2px 0 rgba(0,0,0,.75); font-size: calc(20px * max(var(--s, 1), .7)) !important; line-height: 1.15; }
+#x-me-avatar { position: relative; }
+#x-hand { min-height: 0; flex: 1 1 0; height: auto; }
+#x-hand .uno-card { flex-shrink: 0; }
+#x-hand { overflow: visible !important; padding-left: 8px !important; padding-right: 8px !important; gap: 0 !important; align-items: flex-end !important; padding-bottom: calc(22px * var(--s, 1)); padding-top: calc(30px * var(--s, 1)); }
+#x-hand .uno-card { border-radius: 8px; }
+#x-hand .fan-card { transform-origin: 50% calc(100% + var(--pivot, 170px)); transform: rotate(var(--rot, 0deg)); touch-action: none; }
+#x-hand .fan-card.selected { transform: rotate(var(--rot, 0deg)) translateY(calc(-32px * var(--s, 1))); z-index: 60; filter: drop-shadow(0 10px 14px rgba(0,0,0,.75)); }
+#x-hand .fan-card.dragging { transition: none; z-index: 80; filter: drop-shadow(0 14px 18px rgba(0,0,0,.8)); cursor: grabbing; }
+#x-hand .fan-card.unplayable.selected { filter: brightness(.8) drop-shadow(0 10px 14px rgba(0,0,0,.75)); }
+#x-discard.drop-ready { filter: drop-shadow(0 0 16px #facc15) drop-shadow(0 0 6px #facc15); }
+#x-btn-uno { font-size: calc(18px * max(var(--s, 1), .75)) !important; padding: calc(8px * var(--s, 1)) calc(16px * var(--s, 1)) !important; }
+#x-btn-pass { font-size: calc(14px * max(var(--s, 1), .75)) !important; padding: calc(8px * var(--s, 1)) calc(14px * var(--s, 1)) !important; }
+.deck-void { width: calc(80px * var(--s, 1)); height: calc(116px * var(--s, 1)); border: 2px dashed rgba(255,255,255,.35); border-radius: 8px; }
+.glow-c { filter: drop-shadow(0 0 14px var(--glow)) drop-shadow(0 0 5px var(--glow)) !important; }
+
+/* ===== MEJA UNO FLEX: dapur (talenan kayu penuh bekas sayatan + talenan bulat di tengah) ===== */
+#flex-screen.casino { isolation: isolate; background-color: #9a6a35; background-image: url('../img/flex/table/board.png'); background-size: cover; background-position: center;
+    box-shadow: inset 0 0 0 6px #4a2d12, inset 0 0 0 9px #c58a3c, inset 0 0 0 12px #2e1a09, inset 0 0 80px rgba(40,20,5,.65); overflow: hidden; }
+#flex-screen .table-line { left: 50%; top: 50%; width: min(calc(var(--ring) * 1.5), 94%); height: auto; aspect-ratio: 1; border: 0; border-radius: 0; background: url('../img/flex/table/center.png') center / contain no-repeat; box-shadow: none; }
+#flex-screen .table-line::before, #flex-screen .table-line::after { content: none; }
+#flex-screen .player-panel { background: linear-gradient(rgba(70,35,8,.18), rgba(35,15,3,.6)); border-top: 2px solid rgba(197,138,60,.9); }
+#x-opps .name-tag { background: rgba(40,20,5,.72); }
+#flex-screen .dir-ring { opacity: .7; }
+#flex-screen .color-badge { z-index: 12; }
+
+/* ===== Power Card (kanan-bawah, di atas tombol UNO kecil) + Power mini di profil lawan ===== */
+.power-slot { display: flex; flex-direction: column; align-items: center; gap: calc(3px * var(--s, 1)); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.power-img { width: calc(44px * max(var(--s, 1), .8)); display: block; filter: drop-shadow(0 3px 5px rgba(0,0,0,.65)); transition: filter .3s ease; pointer-events: none; }
+.power-lbl { font-size: calc(10px * max(var(--s, 1), .85)); line-height: 1.2; padding: 1px 8px; border-radius: 999px; background: rgba(0,0,0,.68); border: 1px solid; white-space: nowrap; }
+.power-lbl.pw-go { color: #86efac; border-color: #22c55e; }
+.power-lbl.pw-stop { color: #fca5a5; border-color: #ef4444; }
+.power-slot.pw-flip .power-img { animation: pw-flip .65s ease-in-out; }
+@keyframes pw-flip { 0% { transform: perspective(260px) rotateY(0deg) scale(1); } 50% { transform: perspective(260px) rotateY(90deg) scale(1.25); } 100% { transform: perspective(260px) rotateY(0deg) scale(1); } }
+.opp-power { position: absolute; left: calc(-12px * max(var(--os, 1), .6)); top: calc(2px * var(--os, 1)); width: calc(24px * max(var(--os, 1), .6)); z-index: 15; filter: drop-shadow(0 2px 3px rgba(0,0,0,.7)); pointer-events: none; }
+.opp-power.pw-pop { animation: pw-pop .6s ease-out; }
+@keyframes pw-pop { 0% { transform: scale(1); } 40% { transform: scale(1.7) rotate(8deg); } 100% { transform: scale(1); } }
+
+/* ===== Kotak pilihan: sisi kartu & pemain target ===== */
+.x-ask { position: fixed; inset: 0; z-index: 130; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(0,0,0,.78); }
+.x-ask.hidden { display: none; }
+.x-ask-box { width: min(86vw, 340px); max-height: 92vh; overflow-y: auto; text-align: center; padding: 16px; border-radius: 18px; border: 3px solid #fde68a; background: linear-gradient(#6b4423, #3e2610); box-shadow: 0 0 0 3px #000, 0 14px 30px rgba(0,0,0,.65); animation: fx-picker-pop .35s cubic-bezier(.2, 1.4, .4, 1); }
+.x-ask-title { font-size: 22px; color: #fff; margin-bottom: 10px; text-shadow: 0 2px 0 #000; }
+.x-side-card { height: min(26vh, 190px); width: auto; display: block; margin: 0 auto 12px; filter: drop-shadow(0 6px 8px rgba(0,0,0,.6)); pointer-events: none; }
+.x-side-btn, .x-target-btn { display: block; width: 100%; margin-top: 8px; padding: 12px 10px; min-height: 48px; border-radius: 12px; border: 2px solid #fff; color: #fff; font-size: 15px; line-height: 1.25; text-shadow: 0 1px 0 #000, 0 0 4px rgba(0,0,0,.7); box-shadow: 0 4px 0 rgba(0,0,0,.5); touch-action: manipulation; }
+.x-side-btn:active, .x-target-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.5); }
+.x-target-btn { background: linear-gradient(#475569, #1e293b); display: flex; justify-content: space-between; align-items: center; font-size: 17px; }
+.x-target-btn small { font-size: 13px; opacity: .85; }
+.x-target-list { display: flex; flex-direction: column; }
+.x-ask-cancel { margin-top: 14px; padding: 8px 24px; border-radius: 999px; border: 2px solid #d1d5db; background: rgba(0,0,0,.35); color: #e5e7eb; font-size: 15px; touch-action: manipulation; }
+
+/* dek sedikit lebih tinggi supaya hitungan dek kanan tidak tertutup Power Card di kanan-bawah */
+#flex-screen .deck-slot-l, #flex-screen .deck-slot-r { transform: translateY(calc(-22px * var(--s, 1))); }
+.power-slot.pw-armed .power-img { filter: drop-shadow(0 0 8px #ef4444) drop-shadow(0 3px 5px rgba(0,0,0,.65)); }

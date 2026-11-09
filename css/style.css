@@ -290,7 +290,7 @@ body.h-screen { height: var(--app-h, 100dvh) !important; }
 .table-bottom { position: absolute; left: 0; right: 0; bottom: calc(8px * var(--s, 1)); z-index: 30; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 calc(24px * var(--s, 1)); pointer-events: none; }
 .table-bottom > div { pointer-events: auto; }
 .tb-left { display: flex; align-items: center; gap: calc(8px * var(--s, 1)); }
-.tb-right { display: flex; flex-direction: column; align-items: flex-end; gap: calc(6px * var(--s, 1)); text-align: right; max-width: 50%; }
+.tb-right { display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; gap: calc(8px * var(--s, 1)); }
 
 /* ---- Hitung mundur 5 detik di awal permainan (tampil bersama animasi pembagian kartu; dipakai Klasik & Flip) ---- */
 /* Hitung mundur awal permainan: piringan emas tepat di tengah layar (grid + place-items), label di bawahnya tidak menggeser pusat */
@@ -369,3 +369,26 @@ body.h-screen { height: var(--app-h, 100dvh) !important; }
 /* Notifikasi (toast): hanya tampilan, TIDAK boleh menangkap ketukan. Sebelumnya kotak ini (fixed, z-index 200) tetap ada walau transparan
    sehingga menelan ketukan di tombol UNO, kartu tengah, dan tombol "Kembali ke Beranda" di HP. */
 #toast { pointer-events: none; }
+
+
+/* ===== Revisi 9 Nov: tulisan giliran di bawah timer + tombol UNO kecil (tangkap) di kanan-bawah ===== */
+.turn-info { position: absolute; top: calc(10px * var(--s, 1) + 46px * max(var(--s, 1), .75)); left: 50%; transform: translateX(-50%); z-index: 22;
+    display: flex; align-items: center; justify-content: center; gap: calc(8px * var(--s, 1)); max-width: 72%; pointer-events: none; }
+.turn-info > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; text-shadow: 0 2px 0 rgba(0,0,0,.8), 0 0 8px rgba(0,0,0,.6); }
+.turn-info > button { pointer-events: auto; flex: none; touch-action: manipulation; }
+
+.catch-btn { position: relative; width: calc(56px * max(var(--s, 1), .8)); height: calc(56px * max(var(--s, 1), .8)); padding: 0; border-radius: 50%;
+    border: 3px solid #fde68a; background: radial-gradient(circle at 35% 28%, #fbbf24, #b45309 78%); color: #fff; cursor: pointer; flex: none;
+    box-shadow: 0 3px 0 #78350f, 0 0 10px rgba(0,0,0,.5); opacity: .72; touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+    font-family: 'Fredoka One', system-ui, sans-serif; transition: opacity .2s ease, transform .1s ease; }
+.catch-btn span { display: block; font-size: calc(17px * max(var(--s, 1), .8)); line-height: 1; letter-spacing: .5px; text-shadow: 0 2px 0 rgba(0,0,0,.5); padding-top: calc(4px * var(--s, 1)); }
+.catch-btn img { position: absolute; right: calc(-12px * max(var(--s, 1), .8)); top: calc(-14px * max(var(--s, 1), .8)); width: calc(30px * max(var(--s, 1), .8)); height: calc(30px * max(var(--s, 1), .8)); pointer-events: none; transform: rotate(-18deg); filter: drop-shadow(0 2px 3px rgba(0,0,0,.7)); }
+.catch-btn::before { content: ''; position: absolute; inset: -12px; }   /* area sentuh lebih luas */
+.catch-btn:active { transform: scale(.92); }
+.catch-btn.catch-ready { opacity: 1; animation: catch-ready .6s ease-in-out infinite alternate; }
+.catch-btn.catch-press { animation: catch-press .45s ease-out; }
+@keyframes catch-ready { from { box-shadow: 0 3px 0 #78350f, 0 0 8px rgba(250,204,21,.4); } to { transform: scale(1.1); box-shadow: 0 3px 0 #78350f, 0 0 24px rgba(250,204,21,.95); } }
+@keyframes catch-press { 0% { transform: scale(1); } 30% { transform: scale(.82); } 100% { transform: scale(1); } }
+
+/* palu yang terbang dari tombol (animasinya dari JS, bukan keyframe CSS) */
+.fx-hammer.fx-hammer-fly { animation: none; transform-origin: 50% 92%; opacity: 0; }
