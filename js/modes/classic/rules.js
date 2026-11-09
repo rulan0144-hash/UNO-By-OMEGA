@@ -175,11 +175,11 @@ export function resolvePending(state, uid, choice) {
         const guilty = state.hands[p.by].some(c => c.color === p.prevColor);   // masih punya kartu warna sebelumnya?
         fx(state, { t: 'challenge', by: uid, target: p.by, ok: guilty, color: p.prevColor });
         if (guilty) {
-            state.logs.push(`<b>${nameOf(uid)}</b> menantang <b>${nameOf(p.by)}</b>: BENAR! ${nameOf(p.by)} ambil ${p.total} kartu.`);
+            state.logs.push(`<b>${nameOf(uid)}</b> menantang <b>${nameOf(p.by)}</b> (warna sebelumnya: ${p.prevColor}): BENAR! ${nameOf(p.by)} ambil ${p.total} kartu.`);
             giveCards(state, p.by, p.total);
             state.turnNo = (state.turnNo || 0) + 1;   // penantang main seperti biasa
         } else {
-            state.logs.push(`<b>${nameOf(uid)}</b> menantang <b>${nameOf(p.by)}</b>: SALAH! ${nameOf(uid)} ambil ${p.total + 2} kartu.`);
+            state.logs.push(`<b>${nameOf(uid)}</b> menantang <b>${nameOf(p.by)}</b> (warna sebelumnya: ${p.prevColor}): SALAH! ${nameOf(uid)} ambil ${p.total + 2} kartu.`);
             giveCards(state, uid, p.total);       // +4 dulu (bunyi +4 sudah terdengar saat kartu dimainkan)
             giveCards(state, uid, 2, true);       // lalu hukuman +2 (bunyi "Draw two!")
             advance(state);
