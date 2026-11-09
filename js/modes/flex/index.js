@@ -1,9 +1,10 @@
-// Pintu masuk mode UNO Flex: mendaftarkan diri ke beranda (vs Komputer). Online menyusul (blok `online` seperti Flip).
+// Pintu masuk mode UNO Flex: mendaftarkan diri ke beranda (vs Komputer dan online).
 import './actions.js';
 import './local.js';
 import './pause.js';
 import { registerMode } from '../../app/modes.js';
-import { allCardSrcs } from './deck.js';
+import { allCardSrcs, dealGame } from './deck.js';
+import { handleGameOver, renderGame } from './ui.js';
 
 // semua gambar Flex: dimuat penuh (layar "Memuat") sebelum permainan Flex pertama dimulai
 function flexSrcs() {
@@ -22,5 +23,10 @@ registerMode('flex', {
     startLocal(n) {
         document.getElementById('bot-count').value = String(n);
         window.startFlexLocal();
+    },
+    // online: memakai lobi & Firestore bersama dari classic/online.js (ruangan bermode 'flex', maks. 8 pemain)
+    online: {
+        screen: 'flex-screen', render: renderGame, gameOver: handleGameOver, deal: dealGame,
+        leave: () => window.flexLeave()
     }
 });
