@@ -7,6 +7,8 @@ import { assetsReady, prepareMode, warmMode } from '../../core/loader.js';
 // Online dipakai bersama semua mode: tiap mode mendaftarkan { screen, render, gameOver, deal, leave } lewat registerMode(id, { online }).
 // Mode ruangan disimpan di field `mode` (ruangan lama tanpa field = 'classic').
 const onlineOf = (mode) => { const i = getImpl(mode || 'classic'); return i && i.online; };
+// Batas pemain per mode = jumlah lawan maksimum di modes.js + 1 (Klasik/Flip 10, Flex 8)
+const maxPlayersOf = (mode) => { const m = getMode(mode || 'classic'); return m && m.bots ? m.bots.max + 1 : 10; };
 
 // --- MODE ONLINE ---
 window.createRoom = async () => {
@@ -42,7 +44,7 @@ export async function joinRoomLogic(code) {
     const already = data.players.some(p => p.uid === S.fbUser.uid);
     if (data.status !== 'waiting' && !already) return showToast("Permainan sudah dimulai!");
     if (!already) {
-        if (data.players.length >= 10) return showToast("Ruangan penuh!");
+        if (data.players.length >= maxPlayersOf(roomMode)) return showToast("Ruangan penuh!");
         await updateDoc(roomRef, { players: [...data.players, { uid: S.fbUser.uid, name: S.myName }] });
     }
 
