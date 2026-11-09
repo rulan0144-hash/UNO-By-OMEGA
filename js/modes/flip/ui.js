@@ -1,3 +1,4 @@
+import { doubleTapTarget } from '../../core/doubletap.js';
 import { syncChallenge } from './challenge.js';
 import { getScale } from '../../core/config.js';
 import { fitOpponents } from '../../core/oppfit.js';
@@ -111,7 +112,7 @@ export function renderGame() {
         if (S.hasDrawnThisTurn && idx !== myHand.length - 1) isPlay = false;
         const c = document.createElement('div');
         c.className = `uno-card ${isPlay ? 'playable' : 'unplayable'}`;
-        c.onclick = () => tapCard(idx);
+        c.onclick = (e) => tapCard(idx, e);
         c.addEventListener('pointerdown', (e) => startDrag(e, idx, c));
         c.innerHTML = faceHTML(card, side);
         handUI.appendChild(c);
@@ -128,6 +129,10 @@ export function renderGame() {
         const mineCatch = isCatchable(state, me);
         meAv.innerHTML = avatarHTML(meP, isMyTurn(), 'me') + (mineCatch ? `<img class="catch-hammer" src="img/effects/hammer.png" alt="" onclick="showToast('Kamu lupa UNO! Tekan tombol UNO sekarang.')">` : '');
     }
+
+    const anyCatch = S.roomData.players.some(p => p.uid !== me && isCatchable(state, p.uid));   // tombol UNO kecil (tangkap) menyala bila ada yang lupa UNO
+    const btnCatch = document.getElementById('f-btn-catch');
+    if (btnCatch) btnCatch.classList.toggle('catch-ready', anyCatch);
 
     const btnUno = document.getElementById('f-btn-uno');
     btnUno.classList.toggle('animate-pulse', canCallUno(state));
@@ -244,8 +249,10 @@ window.addEventListener('pointermove', (e) => {
 window.addEventListener('pointerup', (e) => endDrag(e, false));
 window.addEventListener('pointercancel', (e) => endDrag(e, true));
 
-function tapCard(idx) {
+function tapCard(idx, ev) {
     if (justDragged) return;
+    const first = doubleTapTarget(idx, ev);   // ketuk 2x cepat = langsung dimainkan
+    if (first >= 0) { S.selIdx = -1; markSelected(); flipPlay(first); return; }
     if (S.selIdx === idx) { S.selIdx = -1; markSelected(); flipPlay(idx); return; }
     const hand = S.roomData && S.roomData.gameState.hands[S.currentUser.uid];
     S.selIdx = idx;
@@ -256,6 +263,8 @@ function tapCard(idx) {
 window.addEventListener('resize', () => requestAnimationFrame(layoutHand));
 window.addEventListener('orientationchange', () => setTimeout(layoutHand, 200));
 document.addEventListener('click', (e) => {
+    const scr = document.getElementById('flip-screen');
+    if (!scr || scr.classList.contains('hidden')) return;   // hanya saat layar Flip tampil (jangan merusak pilihan kartu mode lain)
     if (S.selIdx >= 0 && !(e.target.closest && e.target.closest('#f-hand'))) { S.selIdx = -1; markSelected(); }
 });
 
