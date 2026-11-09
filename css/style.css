@@ -365,3 +365,7 @@ body.h-screen { height: var(--app-h, 100dvh) !important; }
 
 /* Menu Pengaturan: tombol Jeda di dalam menu */
 .pause-pause { background: #d97706; }
+
+/* Notifikasi (toast): hanya tampilan, TIDAK boleh menangkap ketukan. Sebelumnya kotak ini (fixed, z-index 200) tetap ada walau transparan
+   sehingga menelan ketukan di tombol UNO, kartu tengah, dan tombol "Kembali ke Beranda" di HP. */
+#toast { pointer-events: none; }
