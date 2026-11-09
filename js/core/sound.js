@@ -280,6 +280,9 @@ SFX.power = function () {
     tone({ f: note(91), f2: note(79), type: 'triangle', t: 0.26, dur: 0.18, vol: 0.16 });
 };
 
+SFX.allflip = SFX.power;           // Wild All Flip: nada Power + kata "All flip!"
+SFX.reset = SFX.power;             // semua Power merah -> kembali hijau: nada Power + kata "Reset!"
+
 // getaran singkat di HP (Android) untuk momen besar
 const VIBE = { catch: [60, 40, 120], draw4: [80, 40, 80], draw6: [100, 50, 100, 50, 200], win: [80, 60, 80, 60, 240], challengeWrong: [150] };
 
@@ -312,7 +315,9 @@ const VOICE = {
     target2: ['Draw two!', 1.2, 1.0, 0.05],
     target4: ['Draw four!', 1.1, 1.0, 0.05],
     revskip: ['Reverse skip!', 1.2, 1.0, 0.05],
-    power: ['Flip power!', 1.2, 1.0, 0.25]
+    power: ['Flex power!', 1.2, 1.0, 0.25],
+    allflip: ['All flip!', 1.2, 1.0, 0.25],
+    reset: ['Reset!', 1.2, 1.0, 0.25]
 };
 let voiceObj = null;
 function pickVoice() {
