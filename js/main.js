@@ -3,6 +3,7 @@ import './core/sound.js';
 import './app/profile.js';
 import './app/settings.js';
 import './app/online-hub.js';
+import './app/rounds.js';
 import './modes/classic/index.js';
 import './modes/flex/index.js';
 import './modes/flip/index.js';       // tiap mode baru: tambahkan import './modes/<id>/index.js' di sini
