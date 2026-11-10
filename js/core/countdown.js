@@ -1,4 +1,5 @@
 import { sfx } from './sound.js';
+import { roundText } from './series.js';
 
 // Hitung mundur 5 detik di awal permainan: piringan emas TEPAT di tengah layar (angka di dalam piringan, cincin waktu
 // menyusut tiap detik, tulisan "Mulai!" di akhir). Berjalan BERSAMA animasi pembagian kartu (keduanya ~5 detik).
@@ -6,7 +7,7 @@ import { sfx } from './sound.js';
 export async function runCountdown(cancelled) {
     const el = document.createElement('div');
     el.className = 'f-countdown';
-    el.innerHTML = '<div class="cd-disc"><div class="cd-ring"></div><div class="cd-num"></div></div><div class="cd-label">Permainan dimulai dalam</div>';
+    el.innerHTML = '<div class="cd-disc"><div class="cd-ring"></div><div class="cd-num"></div></div><div class="cd-label">' + (roundText() ? '<div class="cd-round">' + roundText() + '</div>' : '') + 'Permainan dimulai dalam</div>';
     document.body.appendChild(el);
     const disc = el.querySelector('.cd-disc'), num = el.querySelector('.cd-num'), ring = el.querySelector('.cd-ring');
     const restart = (node) => { node.style.animation = 'none'; void node.offsetWidth; node.style.animation = ''; };
