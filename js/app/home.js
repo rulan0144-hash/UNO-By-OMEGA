@@ -2,7 +2,8 @@
 import { S, esc } from '../core/state.js';
 import { GROUPS, MODES, getImpl, getMode } from './modes.js';
 import { go } from './router.js';
-import { prepareMode, warmMode } from '../core/loader.js';
+import { warmMode } from '../core/loader.js';
+import { askRounds } from './rounds.js';
 
 const store = {
     get(k, d) { try { return localStorage.getItem(k) ?? d; } catch (e) { return d; } },
@@ -55,13 +56,12 @@ window.stepBots = (id, d) => {
     renderHome();
 };
 
-window.playMode = async (id) => {
+window.playMode = (id) => {
     const m = getMode(id), impl = getImpl(id);
     if (!m || !m.ready || !impl) return showToast('Mode ini belum tersedia.');
     S.mode = id;
     if (tab === 'offline') {
-        await prepareMode(id);   // tunggu semua gambar termuat dulu (layar "Memuat isi game")
-        impl.startLocal(botsOf(m));
+        askRounds(id, botsOf(m));   // pop-up "Main berapa ronde?"; gambar dimuat & permainan dimulai setelah memilih (rounds.js)
     } else {
         warmMode(id);            // online: gambar dimuat diam-diam selagi di halaman online / lobi
         window.openOnlineHub(id);
