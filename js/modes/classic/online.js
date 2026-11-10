@@ -3,6 +3,7 @@ import { S, emptyState, esc } from '../../core/state.js';
 import { firebaseConfig, getDoc, onSnapshot, roomDoc, setDoc, updateDoc, deleteDoc } from '../../core/firebase.js';
 import { getImpl, getMode } from '../../app/modes.js';
 import { assetsReady, prepareMode, warmMode } from '../../core/loader.js';
+import { renderLobbyRounds } from '../../app/rounds.js';
 
 // Online dipakai bersama semua mode: tiap mode mendaftarkan { screen, render, gameOver, deal, leave } lewat registerMode(id, { online }).
 // Mode ruangan disimpan di field `mode` (ruangan lama tanpa field = 'classic').
@@ -19,7 +20,7 @@ window.createRoom = async () => {
     warmMode(mode);
     const code = Math.random().toString(36).substring(2, 7).toUpperCase();
     await setDoc(roomDoc(code), {
-        mode, hostId: S.fbUser.uid, status: 'waiting',
+        mode, hostId: S.fbUser.uid, status: 'waiting', rounds: 1, round: 1, history: [],
         players: [{ uid: S.fbUser.uid, name: S.myName }], gameState: emptyState()
     });
     joinRoomLogic(code);
@@ -62,6 +63,7 @@ export function subscribeToRoom(code) {
     let waiting = false;
     const show = () => {
         const o = onlineOf(S.roomData.mode);
+        if (S.roomData.status !== 'finished') document.querySelectorAll('.over-modal').forEach(el => el.classList.add('hidden'));   // ronde/permainan baru dimulai host: tutup layar akhir lama
         go(o.screen);
         o.render();
         if (S.roomData.status === 'finished') o.gameOver();
@@ -92,6 +94,7 @@ export function renderLobby() {
         return `<li class="border-b border-gray-700 py-2">👤 ${esc(p.name)}${isMe}${isHost}</li>`;
     }).join('');
     document.getElementById('player-count').innerText = S.roomData.players.length;
+    renderLobbyRounds();   // pilihan jumlah ronde (host bisa ubah, pemain lain hanya melihat)
 
     const isHost = S.roomData.hostId === S.currentUser.uid;
     const startBtn = document.getElementById('btn-start-game');
@@ -110,7 +113,7 @@ window.startGame = async () => {
     if (!o) return;
     await prepareMode(S.roomData.mode || 'classic');   // host: pastikan gambar siap sebelum permainan dimulai
     // JSON: buang field undefined (Firestore menolaknya)
-    await updateDoc(roomDoc(S.currentRoomCode), { status: 'playing', gameState: JSON.parse(JSON.stringify(o.deal(S.roomData.players))) });
+    await updateDoc(roomDoc(S.currentRoomCode), { status: 'playing', round: 1, history: [], gameId: Math.random().toString(36).slice(2, 10), gameState: JSON.parse(JSON.stringify(o.deal(S.roomData.players))) });
 };
 
 // Keluar ke beranda lewat fungsi keluar milik mode ruangan saat ini

@@ -10,6 +10,7 @@ import { canCallUno, isCatchable, isMyTurn, isPlayable } from './rules.js';
 import { applyHold, frozenHand, handleFx, shownCount, whenIdle } from './animations.js';
 import { sfx, sayAsync, startMusic, stopMusic } from '../../core/sound.js';
 import { go } from '../../app/router.js';
+import { fillOver } from '../../core/series.js';
 
 window.leaveRoom = () => {
     if (S.roomUnsubscribe) { S.roomUnsubscribe(); S.roomUnsubscribe = null; }
@@ -299,9 +300,10 @@ export function handleGameOver() {
     document.getElementById('winner-text').innerText = (winnerUid === S.currentUser.uid) ? "Kamu Menang!" : `${winnerObj ? winnerObj.name : '?'} Menang!`;
     document.getElementById('score-text').innerText = `Total Skor: ${totalScore} Poin`;
     document.getElementById('score-breakdown').innerHTML = breakdownHTML || '<div class="text-center text-gray-500">Tidak ada sisa poin.</div>';
+    fillOver('', winnerUid, totalScore);   // papan skor ronde + tombol Lanjut ronde / Main Lagi / Beranda
 
     // Urutan: animasi kartu terakhir selesai -> terdengar "UNO game!" -> layar poin muncul + nada menang/kalah
-    const key = S.currentRoomCode + ':' + (state.turnNo || 0) + ':' + winnerUid;
+    const key = S.currentRoomCode + ':' + (S.roomData.gameId || '') + ':' + (state.turnNo || 0) + ':' + winnerUid;
     if (S.winShown === key) { document.getElementById('game-over-modal').classList.remove('hidden'); return; }
     if (S.winSoundKey === key) return;
     S.winSoundKey = key;
