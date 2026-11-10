@@ -10,6 +10,7 @@ import { actorUid, canCallUno, isCatchable, isMyTurn, isPlayableIn, playOptions,
 import { applyHold, handleFx, resetFx, shownCount, shownPower, whenIdle } from './animations.js';
 import { sfx, sayAsync, startMusic, stopMusic } from '../../core/sound.js';
 import { go } from '../../app/router.js';
+import { fillOver } from '../../core/series.js';
 
 const $ = (id) => document.getElementById(id);
 const imgTag = (src) => `<img class="card-img" src="${src}" alt="" draggable="false">`;
@@ -345,9 +346,10 @@ export function handleGameOver() {
     $('x-winner-text').innerText = (winnerUid === S.currentUser.uid) ? 'Kamu Menang!' : `${winnerObj ? winnerObj.name : '?'} Menang!`;
     $('x-score-text').innerText = `Total Skor: ${state.roundPts || 0} Poin`;
     $('x-score-breakdown').innerHTML = breakdownHTML || '<div class="text-center text-gray-500">Tidak ada sisa poin.</div>';
+    fillOver('x-', winnerUid, state.roundPts || 0);   // papan skor ronde + tombol Lanjut ronde / Main Lagi / Beranda
 
     // Urutan: animasi kartu terakhir selesai -> "UNO game!" -> layar poin + nada menang/kalah
-    const key = S.currentRoomCode + ':' + (state.turnNo || 0) + ':' + winnerUid;
+    const key = S.currentRoomCode + ':' + (S.roomData.gameId || '') + ':' + (state.turnNo || 0) + ':' + winnerUid;
     if (S.winShown === key) { $('x-over-modal').classList.remove('hidden'); return; }
     if (S.winSoundKey === key) return;
     S.winSoundKey = key;

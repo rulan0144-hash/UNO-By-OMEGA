@@ -1,32 +1,29 @@
 import { S } from '../../core/state.js';
 import { pauseTimer, resumeTimer, stopTimer } from './timer.js';
 import { scheduleBot } from './local.js';
+import { newSeries, roundText } from '../../core/series.js';
 
 window.stopFlexTimerHook = stopTimer;   // dipakai ui.js / local.js tanpa impor melingkar
 
-// Menu jeda (vs Komputer): permainan benar-benar berhenti (bot & batas 15 detik).
+// Menu Pengaturan. Offline (vs Komputer): MEMBUKA menu langsung menjeda permainan (bot & batas 15 detik berhenti);
+// permainan lanjut lagi saat menekan "Lanjutkan". Online: permainan tidak bisa dijeda (pemain lain tetap main).
 const $ = (id) => document.getElementById(id);
-const setPauseLabel = () => { $('x-pause-toggle').textContent = S.paused ? '▶ Lanjutkan Permainan' : '⏸ Jeda Permainan'; };
 
-// Menu Pengaturan: suara, Jeda, Mulai Ulang, Keluar. Membuka menu TIDAK menjeda; jeda hanya lewat tombol "Jeda Permainan" (khusus vs Komputer).
 window.flexOpenMenu = () => {
     if (!S.roomData) return;
+    // offline + sedang main: langsung pause
+    if (S.localMode && S.roomData.status === 'playing' && !S.paused) { S.paused = true; clearTimeout(S.botTimer); pauseTimer(); }
+    const rt = roundText();
     $('x-pause-title').textContent = 'Pengaturan';
-    $('x-pause-note').textContent = S.localMode ? '' : 'Permainan online tidak bisa dijeda; pemain lain tetap bermain.';
+    $('x-pause-note').textContent = S.localMode
+        ? (rt ? rt + ' - permainan dijeda' : 'Permainan dijeda')
+        : (rt ? rt + '. ' : '') + 'Permainan online tidak bisa dijeda; pemain lain tetap bermain.';
     $('x-btn-restart').classList.toggle('hidden', !S.localMode);
-    $('x-pause-toggle').classList.toggle('hidden', !S.localMode);
-    setPauseLabel();
+    $('flexResume-btn').textContent = S.localMode ? '▶ Lanjutkan' : '✕ Tutup';
     $('x-pause-modal').classList.remove('hidden');
 };
 
-window.flexTogglePause = () => {
-    if (!S.localMode || !S.roomData) return;
-    if (!S.paused) { S.paused = true; clearTimeout(S.botTimer); pauseTimer(); }
-    else { S.paused = false; resumeTimer(); scheduleBot(); }
-    setPauseLabel();
-};
-
-// Tutup menu (kalau sedang dijeda, permainan dilanjutkan)
+// Tutup menu (offline: permainan dilanjutkan)
 window.flexResume = () => {
     $('x-pause-modal').classList.add('hidden');
     if (S.localMode && S.paused) { S.paused = false; resumeTimer(); scheduleBot(); }
@@ -36,16 +33,19 @@ window.flexResume = () => {
 window.flexExit = () => {
     $('x-pause-modal').classList.add('hidden');
     S.paused = false;
+    S.series = null; S.lastRound = null;
     window.flexLeave();
 };
 
-// Mulai ulang = permainan baru dengan jumlah lawan yang sama
+// Mulai ulang = seri baru dari ronde 1 dengan jumlah ronde & lawan yang sama
 window.flexRestart = () => {
     if (!S.localMode || !S.roomData) return;
     const n = S.roomData.players.length - 1;
     $('x-pause-modal').classList.add('hidden');
     S.paused = false;
     clearTimeout(S.botTimer);
+    if (S.series) S.series = newSeries(S.series.total);
+    S.lastRound = null;
     document.getElementById('bot-count').value = String(n);
     window.startFlexLocal();
 };
