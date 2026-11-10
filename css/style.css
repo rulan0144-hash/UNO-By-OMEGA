@@ -404,3 +404,22 @@ body.h-screen { height: var(--app-h, 100dvh) !important; }
 
 /* palu yang terbang dari tombol (animasinya dari JS, bukan keyframe CSS) */
 .fx-hammer.fx-hammer-fly { animation: none; transform-origin: 50% 92%; opacity: 0; }
+
+/* ===== Ronde: layar akhir (papan skor + tombol), tulisan ronde di hitung mundur ===== */
+.over-modal > div { max-height: 94vh; overflow-y: auto; }
+.over-series { margin-bottom: 14px; text-align: left; }
+.over-series.hidden { display: none; }
+.ov-round { margin-bottom: 6px; text-align: center; font-size: 14px; font-weight: 800; letter-spacing: .5px; color: #93c5fd; }
+.ov-champ { margin-bottom: 8px; padding: 8px 10px; border-radius: 12px; text-align: center; font-size: 22px; font-weight: 900; color: #fde68a; background: rgba(212,167,44,.18); border: 2px solid #d4a72c; }
+.ov-board { max-height: 24vh; overflow-y: auto; border: 1px solid #374151; border-radius: 10px; background: #111827; }
+.ov-row { display: grid; grid-template-columns: 22px 1fr auto auto; gap: 8px; align-items: center; padding: 7px 10px; font-size: 14px; color: #e5e7eb; border-bottom: 1px solid #1f2937; }
+.ov-row:last-child { border-bottom: 0; }
+.ov-row.ov-top { background: rgba(212,167,44,.16); }
+.ov-rank { font-weight: 900; color: #9ca3af; }
+.ov-name { font-weight: 800; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ov-win { color: #9ca3af; font-size: 12px; }
+.ov-pts { font-weight: 900; color: #4ade80; }
+.over-actions { display: flex; flex-direction: column; gap: 10px; position: sticky; bottom: -1px; padding-top: 8px; background: #1f2937; z-index: 2; }   /* tombol selalu terlihat walau isi layar akhir panjang (menggulir) */
+.over-btn-alt { background: linear-gradient(#6b7280, #4b5563); border-color: #d1d5db; box-shadow: 0 4px 0 #1f2937; }
+.ov-wait { margin: 0; padding: 8px 4px; font-size: 15px; font-style: italic; color: #9ca3af; text-align: center; }
+.f-countdown .cd-round { margin-bottom: 4px; font-size: 1.25em; color: #fde68a; }
