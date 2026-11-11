@@ -15,25 +15,35 @@ const modeOfNow = () => (S.roomData && S.roomData.mode) || S.mode || 'classic';
 const newId = () => Math.random().toString(36).slice(2, 10);
 
 // ---------- pop-up "Main berapa ronde?" (offline) ----------
-let pendingMode = null, pendingBots = 3;
+let pendingMode = null, pendingBots = 3, pendingRounds = 1, choosing = false;
 
 export function askRounds(modeId, bots) {
     const m = getMode(modeId); if (!m) return;
-    pendingMode = modeId; pendingBots = bots;
+    pendingMode = modeId; pendingBots = bots; choosing = false;
     const last = parseInt(store.get('uno_rounds', '1')) || 1;
+    pendingRounds = ROUND_CHOICES.includes(last) ? last : 1;
     $('round-sub').textContent = `${m.name} - ${bots} lawan`;
     $('round-grid').innerHTML = ROUND_CHOICES.map(n =>
-        `<button class="round-chip ${n === last ? 'on' : ''}" onclick="chooseRounds(${n})"><b>${n}</b><span>ronde</span></button>`).join('');
+        `<button class="round-chip ${n === pendingRounds ? 'on' : ''}" data-n="${n}" onclick="chooseRounds(${n})"><b>${n}</b><span>ronde</span></button>`).join('');
     $('round-modal').classList.remove('hidden');
 }
 
-window.closeRounds = () => { $('round-modal').classList.add('hidden'); pendingMode = null; };
+window.closeRounds = () => { if (choosing) return; $('round-modal').classList.add('hidden'); pendingMode = null; };
 
-window.chooseRounds = async (n) => {
-    const id = pendingMode, impl = id && getImpl(id);
+// Ketuk angka = hanya memilih (sorotan pindah). Game baru mulai setelah menekan tombol "Mulai Main".
+window.chooseRounds = (n) => {
+    if (choosing || !pendingMode) return;
+    pendingRounds = n;
+    document.querySelectorAll('#round-grid .round-chip').forEach(b => b.classList.toggle('on', Number(b.dataset.n) === n));
+};
+
+window.startRounds = async () => {
+    if (choosing || !pendingMode) return;
+    choosing = true;
+    const id = pendingMode, impl = getImpl(id), n = pendingRounds;
     $('round-modal').classList.add('hidden');
+    pendingMode = null; choosing = false;
     if (!impl) return;
-    pendingMode = null;
     store.set('uno_rounds', String(n));
     S.mode = id;
     await prepareMode(id);        // tunggu semua gambar termuat dulu (layar "Memuat isi game")
