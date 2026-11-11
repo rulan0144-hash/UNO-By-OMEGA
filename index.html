@@ -6,65 +6,76 @@
     <title>UNO Multiplayer Real-Time</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=20261110-simbol-flex">
-    <link rel="stylesheet" href="css/home.css?v=20261110-simbol-flex">
-    <link rel="stylesheet" href="css/flip.css?v=20261110-simbol-flex">
-    <link rel="stylesheet" href="css/flex.css?v=20261110-simbol-flex">
+    <link rel="stylesheet" href="css/style.css?v=20261112-sfx-allwild">
+    <link rel="stylesheet" href="css/home.css?v=20261112-sfx-allwild">
+    <link rel="stylesheet" href="css/flip.css?v=20261112-sfx-allwild">
+    <link rel="stylesheet" href="css/flex.css?v=20261112-sfx-allwild">
+    <link rel="stylesheet" href="css/allwild.css?v=20261112-sfx-allwild">
     <!-- IMPORTMAP:START (dibuat alat/bump_version.py, jangan diedit manual) -->
     <script type="importmap">
 {
   "imports": {
-    "./js/app/home.js": "./js/app/home.js?v=20261110-simbol-flex",
-    "./js/app/modes.js": "./js/app/modes.js?v=20261110-simbol-flex",
-    "./js/app/online-hub.js": "./js/app/online-hub.js?v=20261110-simbol-flex",
-    "./js/app/profile.js": "./js/app/profile.js?v=20261110-simbol-flex",
-    "./js/app/rounds.js": "./js/app/rounds.js?v=20261110-simbol-flex",
-    "./js/app/router.js": "./js/app/router.js?v=20261110-simbol-flex",
-    "./js/app/settings.js": "./js/app/settings.js?v=20261110-simbol-flex",
-    "./js/core/config.js": "./js/core/config.js?v=20261110-simbol-flex",
-    "./js/core/countdown.js": "./js/core/countdown.js?v=20261110-simbol-flex",
-    "./js/core/doubletap.js": "./js/core/doubletap.js?v=20261110-simbol-flex",
-    "./js/core/firebase.js": "./js/core/firebase.js?v=20261110-simbol-flex",
-    "./js/core/loader.js": "./js/core/loader.js?v=20261110-simbol-flex",
-    "./js/core/oppfit.js": "./js/core/oppfit.js?v=20261110-simbol-flex",
-    "./js/core/series.js": "./js/core/series.js?v=20261110-simbol-flex",
-    "./js/core/sound.js": "./js/core/sound.js?v=20261110-simbol-flex",
-    "./js/core/state.js": "./js/core/state.js?v=20261110-simbol-flex",
-    "./js/main.js": "./js/main.js?v=20261110-simbol-flex",
-    "./js/modes/classic/actions.js": "./js/modes/classic/actions.js?v=20261110-simbol-flex",
-    "./js/modes/classic/animations.js": "./js/modes/classic/animations.js?v=20261110-simbol-flex",
-    "./js/modes/classic/challenge.js": "./js/modes/classic/challenge.js?v=20261110-simbol-flex",
-    "./js/modes/classic/deck.js": "./js/modes/classic/deck.js?v=20261110-simbol-flex",
-    "./js/modes/classic/index.js": "./js/modes/classic/index.js?v=20261110-simbol-flex",
-    "./js/modes/classic/local.js": "./js/modes/classic/local.js?v=20261110-simbol-flex",
-    "./js/modes/classic/online.js": "./js/modes/classic/online.js?v=20261110-simbol-flex",
-    "./js/modes/classic/pause.js": "./js/modes/classic/pause.js?v=20261110-simbol-flex",
-    "./js/modes/classic/rules.js": "./js/modes/classic/rules.js?v=20261110-simbol-flex",
-    "./js/modes/classic/timer.js": "./js/modes/classic/timer.js?v=20261110-simbol-flex",
-    "./js/modes/classic/ui.js": "./js/modes/classic/ui.js?v=20261110-simbol-flex",
-    "./js/modes/flex/actions.js": "./js/modes/flex/actions.js?v=20261110-simbol-flex",
-    "./js/modes/flex/animations.js": "./js/modes/flex/animations.js?v=20261110-simbol-flex",
-    "./js/modes/flex/bot.js": "./js/modes/flex/bot.js?v=20261110-simbol-flex",
-    "./js/modes/flex/challenge.js": "./js/modes/flex/challenge.js?v=20261110-simbol-flex",
-    "./js/modes/flex/data.js": "./js/modes/flex/data.js?v=20261110-simbol-flex",
-    "./js/modes/flex/deck.js": "./js/modes/flex/deck.js?v=20261110-simbol-flex",
-    "./js/modes/flex/index.js": "./js/modes/flex/index.js?v=20261110-simbol-flex",
-    "./js/modes/flex/local.js": "./js/modes/flex/local.js?v=20261110-simbol-flex",
-    "./js/modes/flex/pause.js": "./js/modes/flex/pause.js?v=20261110-simbol-flex",
-    "./js/modes/flex/rules.js": "./js/modes/flex/rules.js?v=20261110-simbol-flex",
-    "./js/modes/flex/timer.js": "./js/modes/flex/timer.js?v=20261110-simbol-flex",
-    "./js/modes/flex/ui.js": "./js/modes/flex/ui.js?v=20261110-simbol-flex",
-    "./js/modes/flip/actions.js": "./js/modes/flip/actions.js?v=20261110-simbol-flex",
-    "./js/modes/flip/animations.js": "./js/modes/flip/animations.js?v=20261110-simbol-flex",
-    "./js/modes/flip/challenge.js": "./js/modes/flip/challenge.js?v=20261110-simbol-flex",
-    "./js/modes/flip/data.js": "./js/modes/flip/data.js?v=20261110-simbol-flex",
-    "./js/modes/flip/deck.js": "./js/modes/flip/deck.js?v=20261110-simbol-flex",
-    "./js/modes/flip/index.js": "./js/modes/flip/index.js?v=20261110-simbol-flex",
-    "./js/modes/flip/local.js": "./js/modes/flip/local.js?v=20261110-simbol-flex",
-    "./js/modes/flip/pause.js": "./js/modes/flip/pause.js?v=20261110-simbol-flex",
-    "./js/modes/flip/rules.js": "./js/modes/flip/rules.js?v=20261110-simbol-flex",
-    "./js/modes/flip/timer.js": "./js/modes/flip/timer.js?v=20261110-simbol-flex",
-    "./js/modes/flip/ui.js": "./js/modes/flip/ui.js?v=20261110-simbol-flex"
+    "./js/app/home.js": "./js/app/home.js?v=20261112-sfx-allwild",
+    "./js/app/modes.js": "./js/app/modes.js?v=20261112-sfx-allwild",
+    "./js/app/online-hub.js": "./js/app/online-hub.js?v=20261112-sfx-allwild",
+    "./js/app/profile.js": "./js/app/profile.js?v=20261112-sfx-allwild",
+    "./js/app/rounds.js": "./js/app/rounds.js?v=20261112-sfx-allwild",
+    "./js/app/router.js": "./js/app/router.js?v=20261112-sfx-allwild",
+    "./js/app/settings.js": "./js/app/settings.js?v=20261112-sfx-allwild",
+    "./js/core/config.js": "./js/core/config.js?v=20261112-sfx-allwild",
+    "./js/core/countdown.js": "./js/core/countdown.js?v=20261112-sfx-allwild",
+    "./js/core/doubletap.js": "./js/core/doubletap.js?v=20261112-sfx-allwild",
+    "./js/core/firebase.js": "./js/core/firebase.js?v=20261112-sfx-allwild",
+    "./js/core/loader.js": "./js/core/loader.js?v=20261112-sfx-allwild",
+    "./js/core/oppfit.js": "./js/core/oppfit.js?v=20261112-sfx-allwild",
+    "./js/core/series.js": "./js/core/series.js?v=20261112-sfx-allwild",
+    "./js/core/sound.js": "./js/core/sound.js?v=20261112-sfx-allwild",
+    "./js/core/state.js": "./js/core/state.js?v=20261112-sfx-allwild",
+    "./js/main.js": "./js/main.js?v=20261112-sfx-allwild",
+    "./js/modes/allwild/actions.js": "./js/modes/allwild/actions.js?v=20261112-sfx-allwild",
+    "./js/modes/allwild/animations.js": "./js/modes/allwild/animations.js?v=20261112-sfx-allwild",
+    "./js/modes/allwild/bot.js": "./js/modes/allwild/bot.js?v=20261112-sfx-allwild",
+    "./js/modes/allwild/deck.js": "./js/modes/allwild/deck.js?v=20261112-sfx-allwild",
+    "./js/modes/allwild/index.js": "./js/modes/allwild/index.js?v=20261112-sfx-allwild",
+    "./js/modes/allwild/local.js": "./js/modes/allwild/local.js?v=20261112-sfx-allwild",
+    "./js/modes/allwild/pause.js": "./js/modes/allwild/pause.js?v=20261112-sfx-allwild",
+    "./js/modes/allwild/rules.js": "./js/modes/allwild/rules.js?v=20261112-sfx-allwild",
+    "./js/modes/allwild/timer.js": "./js/modes/allwild/timer.js?v=20261112-sfx-allwild",
+    "./js/modes/allwild/ui.js": "./js/modes/allwild/ui.js?v=20261112-sfx-allwild",
+    "./js/modes/classic/actions.js": "./js/modes/classic/actions.js?v=20261112-sfx-allwild",
+    "./js/modes/classic/animations.js": "./js/modes/classic/animations.js?v=20261112-sfx-allwild",
+    "./js/modes/classic/challenge.js": "./js/modes/classic/challenge.js?v=20261112-sfx-allwild",
+    "./js/modes/classic/deck.js": "./js/modes/classic/deck.js?v=20261112-sfx-allwild",
+    "./js/modes/classic/index.js": "./js/modes/classic/index.js?v=20261112-sfx-allwild",
+    "./js/modes/classic/local.js": "./js/modes/classic/local.js?v=20261112-sfx-allwild",
+    "./js/modes/classic/online.js": "./js/modes/classic/online.js?v=20261112-sfx-allwild",
+    "./js/modes/classic/pause.js": "./js/modes/classic/pause.js?v=20261112-sfx-allwild",
+    "./js/modes/classic/rules.js": "./js/modes/classic/rules.js?v=20261112-sfx-allwild",
+    "./js/modes/classic/timer.js": "./js/modes/classic/timer.js?v=20261112-sfx-allwild",
+    "./js/modes/classic/ui.js": "./js/modes/classic/ui.js?v=20261112-sfx-allwild",
+    "./js/modes/flex/actions.js": "./js/modes/flex/actions.js?v=20261112-sfx-allwild",
+    "./js/modes/flex/animations.js": "./js/modes/flex/animations.js?v=20261112-sfx-allwild",
+    "./js/modes/flex/bot.js": "./js/modes/flex/bot.js?v=20261112-sfx-allwild",
+    "./js/modes/flex/challenge.js": "./js/modes/flex/challenge.js?v=20261112-sfx-allwild",
+    "./js/modes/flex/data.js": "./js/modes/flex/data.js?v=20261112-sfx-allwild",
+    "./js/modes/flex/deck.js": "./js/modes/flex/deck.js?v=20261112-sfx-allwild",
+    "./js/modes/flex/index.js": "./js/modes/flex/index.js?v=20261112-sfx-allwild",
+    "./js/modes/flex/local.js": "./js/modes/flex/local.js?v=20261112-sfx-allwild",
+    "./js/modes/flex/pause.js": "./js/modes/flex/pause.js?v=20261112-sfx-allwild",
+    "./js/modes/flex/rules.js": "./js/modes/flex/rules.js?v=20261112-sfx-allwild",
+    "./js/modes/flex/timer.js": "./js/modes/flex/timer.js?v=20261112-sfx-allwild",
+    "./js/modes/flex/ui.js": "./js/modes/flex/ui.js?v=20261112-sfx-allwild",
+    "./js/modes/flip/actions.js": "./js/modes/flip/actions.js?v=20261112-sfx-allwild",
+    "./js/modes/flip/animations.js": "./js/modes/flip/animations.js?v=20261112-sfx-allwild",
+    "./js/modes/flip/challenge.js": "./js/modes/flip/challenge.js?v=20261112-sfx-allwild",
+    "./js/modes/flip/data.js": "./js/modes/flip/data.js?v=20261112-sfx-allwild",
+    "./js/modes/flip/deck.js": "./js/modes/flip/deck.js?v=20261112-sfx-allwild",
+    "./js/modes/flip/index.js": "./js/modes/flip/index.js?v=20261112-sfx-allwild",
+    "./js/modes/flip/local.js": "./js/modes/flip/local.js?v=20261112-sfx-allwild",
+    "./js/modes/flip/pause.js": "./js/modes/flip/pause.js?v=20261112-sfx-allwild",
+    "./js/modes/flip/rules.js": "./js/modes/flip/rules.js?v=20261112-sfx-allwild",
+    "./js/modes/flip/timer.js": "./js/modes/flip/timer.js?v=20261112-sfx-allwild",
+    "./js/modes/flip/ui.js": "./js/modes/flip/ui.js?v=20261112-sfx-allwild"
   }
 }
     </script>
@@ -583,6 +594,119 @@
         </div>
     </div>
 
+    <div id="aw-screen" class="hidden h-full w-full flex flex-col relative casino">
+
+        <!-- Tombol menu (jeda / keluar) -->
+        <button id="w-btn-menu" onclick="awOpenMenu()" class="menu-btn" aria-label="Pengaturan"><img src="img/ui/settings.png" alt="" draggable="false"></button>
+
+        <!-- Menu Pengaturan (suara + jeda + ulang + keluar) -->
+        <div id="w-pause-modal" class="pause-modal hidden">
+            <div class="pause-box">
+                <h2 id="w-pause-title" class="pause-title">Pengaturan</h2>
+                <p id="w-pause-note" class="pause-note"></p>
+                <div class="snd-panel">
+                    <button onclick="toggleSound()" data-nosfx="1" class="snd-mute" aria-label="Bisu"><img class="snd-img" src="img/ui/sound-on.png" alt="" draggable="false"></button>
+                    <div class="snd-sliders">
+                        <label>Musik <input class="vol-music" type="range" min="0" max="100" value="60" oninput="setVolume('music', this.value)"></label>
+                        <label>Efek <input class="vol-sfx" type="range" min="0" max="100" value="90" oninput="setVolume('sfx', this.value)"></label>
+                    </div>
+                </div>
+                <button id="awResume-btn" onclick="awResume()" class="pause-btn pause-resume">▶ Lanjutkan</button>
+                <button id="w-btn-restart" onclick="awRestart()" class="pause-btn pause-restart">↻ Mulai Ulang</button>
+                <button onclick="awExit()" class="pause-btn pause-exit">◀ Keluar ke Beranda</button>
+            </div>
+        </div>
+
+        <!-- Pilih warna Wild -->
+        <div id="w-color-modal" class="cp-modal hidden">
+            <div class="cp-box">
+                <h2 class="cp-title">Pilih Warna</h2>
+                <div class="cp-stage">
+                    <img id="w-cp-img" src="img/allwild/fx/wild-spin.png" alt="">
+                    <button class="cp-zone cp-Green"  data-c="Green"  onclick="awPickColor(this.dataset.c)"  aria-label="Hijau"></button>
+                    <button class="cp-zone cp-Blue"   data-c="Blue"   onclick="awPickColor(this.dataset.c)"   aria-label="Biru"></button>
+                    <button class="cp-zone cp-Yellow" data-c="Yellow" onclick="awPickColor(this.dataset.c)" aria-label="Kuning"></button>
+                    <button class="cp-zone cp-Red"    data-c="Red"    onclick="awPickColor(this.dataset.c)"    aria-label="Merah"></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pilih pemain (Targeted Draw Two / Forced Swap) -->
+        <div id="w-target-modal" class="w-ask hidden">
+            <div class="w-ask-box">
+                <h2 id="w-target-title" class="w-ask-title">Pilih pemain</h2>
+                <div id="w-target-list" class="w-target-list"></div>
+                <button class="w-ask-cancel" onclick="awCancelAsk()">Batal</button>
+            </div>
+        </div>
+
+        <!-- Modal Game Over -->
+        <div id="w-over-modal" class="over-modal hidden">
+            <div class="bg-gray-800 p-6 md:p-10 rounded-xl border-4 border-yellow-500 text-center w-full max-w-lg shadow-[0_0_50px_rgba(234,179,8,0.3)]">
+                <h1 id="w-winner-text" class="text-4xl md:text-5xl mb-2 text-yellow-400 font-bold">Player Menang!</h1>
+                <p id="w-score-text" class="text-2xl mb-4 font-black text-green-400">Total Skor: 0 Poin</p>
+                <div class="bg-gray-900 border border-gray-700 rounded-lg p-4 mb-6 text-left max-h-48 overflow-y-auto hide-scrollbar">
+                    <h3 class="text-gray-400 text-sm uppercase tracking-widest font-bold mb-2 border-b border-gray-700 pb-2">Rincian Poin</h3>
+                    <div id="w-score-breakdown" class="text-sm text-gray-200 space-y-2"></div>
+                </div>
+                <div id="w-over-series" class="over-series hidden"></div>
+                <div id="w-over-actions" class="over-actions"></div>
+            </div>
+        </div>
+
+        <!-- Atas: Lawan -->
+        <div class="row-top w-full pt-2 pb-2 px-3 flex items-end">
+            <div id="w-opps" class="opp-area"></div>
+        </div>
+
+        <!-- Tengah: Meja -->
+        <div class="row-mid flex flex-row items-center justify-center relative w-full px-2">
+            <div class="table-line"></div>
+            <div id="w-dir-ring" class="dir-ring"><img src="img/ui/direction.png" alt="" draggable="false"></div>
+
+            <!-- Hitung mundur giliran (gaya stopwatch) -->
+            <div id="w-timer" class="turn-timer tt-ok"><span id="w-time">15.00</span></div>
+
+            <!-- Di bawah timer: tulisan giliran + tombol Lewati -->
+            <div class="turn-info">
+                <span id="w-turn-ind" class="text-lg md:text-2xl font-black text-gray-400 transition-colors">Menunggu...</span>
+                <button onclick="awPass()" id="w-btn-pass" class="hidden bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 md:px-6 rounded-full transition active:scale-95 border-2 border-gray-400 text-sm md:text-base">Lewati</button>
+            </div>
+
+            <!-- Kiri-bawah: profil | tengah: UNO | kanan-bawah: tombol UNO kecil (tangkap) -->
+            <div class="table-bottom">
+                <div class="tb-left">
+                    <div id="w-me-avatar"></div>
+                </div>
+                <button id="w-btn-uno" class="uno-btn" onpointerdown="event.preventDefault();awUno()" aria-label="UNO">UNO!</button>
+                <div class="tb-right">
+                    <button id="w-btn-catch" class="catch-btn" onpointerdown="event.preventDefault();awCatchAny()" aria-label="Tangkap pemain yang lupa UNO"><span>UNO</span><img src="img/effects/hammer.png" alt="" draggable="false"></button>
+                </div>
+            </div>
+
+            <!-- Meja: deck kiri | tumpukan buangan (tepat di tengah) | deck kanan -->
+            <div class="table-grid">
+                <div class="deck-slot deck-slot-l">
+                    <div onclick="awDraw('L')" id="w-draw-l" class="uno-card draw-pile"></div>
+                    <span class="deck-count"><span id="w-count-l">0</span></span>
+                </div>
+                <div class="center-slot">
+                    <div id="w-discard" class="relative"></div>
+                    <div id="w-badge" class="color-badge">Warna: -</div>
+                </div>
+                <div class="deck-slot deck-slot-r">
+                    <div onclick="awDraw('R')" id="w-draw-r" class="uno-card draw-pile"></div>
+                    <span class="deck-count"><span id="w-count-r">0</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bawah: tangan kartu -->
+        <div class="row-bot flex flex-col items-center justify-start w-full relative player-panel">
+            <div id="w-hand" class="flex gap-2 overflow-x-auto w-full max-w-6xl items-center h-full px-4 md:px-6 hide-scrollbar"></div>
+        </div>
+    </div>
+
         <script>
         // Penjaga: tampilkan penyebab jelas di layar jika file JS gagal dimuat
         (function () {
@@ -604,6 +728,6 @@
             }, 8000);
         })();
     </script>
-    <script type="module" src="js/main.js?v=20261110-simbol-flex"></script>
+    <script type="module" src="js/main.js?v=20261112-sfx-allwild"></script>
 </body>
 </html>

@@ -31,6 +31,14 @@ export const MODES = [
         theme: 'green', logo: 'img/ui/logo-flex.png', tag: 'Fleksibel, gunakan dua sisi!', badge: 'img/ui/badge-players-flex.png',
         art: ['img/flex/cards/Yellow-2-FlexGreen.png', 'img/flex/cards/Blue-1-FlexRed.png', 'img/flex/cards/Red-6-FlexGreen.png', 'img/flex/cards/Green-Reverse-Flex.png', 'img/flex/cards/Black-WildFlexTargetDraw2.png'],
         bots: { min: 1, max: 7, def: 3 }
+    },
+    {
+        id: 'allwild', group: 'other', ready: true,
+        name: 'UNO All Wild',
+        desc: 'Semua kartu adalah Wild: tidak perlu cocok warna atau angka, pilih warna tiap giliran!',
+        theme: 'allwild', logo: 'img/ui/logo-allwild.png', tag: 'Semua kartu adalah Wild!', badge: 'img/ui/badge-players-allwild.png',
+        art: ['img/allwild/Black-Wild.png', 'img/allwild/Black-WildSkip.png', 'img/allwild/Black-WildDrawTwo.png', 'img/allwild/Black-WildForcedSwap.png', 'img/allwild/Black-WildDrawFour.png'],
+        bots: { min: 1, max: 9, def: 3 }
     }
 ];
 

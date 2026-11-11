@@ -272,6 +272,37 @@ SFX.alldraw2 = SFX.draw2;          // semua lawan +2
 SFX.target2 = SFX.draw2;           // pemain ditunjuk +2
 SFX.target4 = SFX.draw4;           // pemain ditunjuk +4
 SFX.revskip = SFX.reverse;         // balik arah + lewati
+// ---- Efek khusus All Wild ----
+// Wild Skip Two: dua "wuss" turun beruntun + dentuman ganda (dua pemain dilewati)
+SFX.skip2 = function () {
+    duck(1.4);
+    [0, 0.27].forEach((t, i) => {
+        tone({ f: 1000 - i * 150, f2: 170, type: 'square', t, dur: 0.22, vol: 0.17, filter: { f: 2400 } });
+        noise({ t, dur: 0.16, vol: 0.12, f: 3500, f2: 600, q: 1.1 });
+        tone({ f: 130 - i * 15, type: 'sine', t: t + 0.2, dur: 0.13, vol: 0.5 });
+    });
+    tone({ f: 98, type: 'sine', t: 0.62, dur: 0.6, vol: 0.5 });
+    noise({ t: 0.62, dur: 0.25, vol: 0.16, type: 'lowpass', f: 1600 });
+};
+// Wild Forced Swap: kipasan kartu, dua nada saling bersilang naik-turun, lalu "ting" tanda tukar selesai
+SFX.swap = function () {
+    duck(1.2);
+    for (let i = 0; i < 5; i++) noise({ t: i * 0.06, dur: 0.05, vol: 0.16, f: 3400 + i * 220, q: 1.2 });
+    tone({ f: note(64), f2: note(88), type: 'triangle', dur: 0.4, vol: 0.16 });
+    tone({ f: note(88), f2: note(64), type: 'triangle', t: 0.05, dur: 0.4, vol: 0.16 });
+    for (let i = 0; i < 5; i++) noise({ t: 0.32 + i * 0.06, dur: 0.05, vol: 0.16, f: 4400 - i * 220, q: 1.2 });
+    tone({ f: note(84), type: 'sine', t: 0.66, dur: 0.3, vol: 0.3 });
+    tone({ f: note(91), type: 'sine', t: 0.72, dur: 0.38, vol: 0.22 });
+};
+// Wild Targeted Draw Two: bidikan (bip makin cepat) -> kunci -> hantaman -> dua nada ambil kartu
+SFX.awtarget2 = function () {
+    duck(1.4);
+    [0, 0.14, 0.26, 0.36].forEach((t, i) => tone({ f: 1300 + i * 180, type: 'square', t, dur: 0.07, vol: 0.13, filter: { f: 3500 } }));
+    tone({ f: note(96), type: 'sine', t: 0.46, dur: 0.22, vol: 0.22, vib: 6 });
+    tone({ f: 110, f2: 45, type: 'sine', t: 0.5, dur: 0.18, vol: 0.55 });
+    noise({ t: 0.5, dur: 0.1, vol: 0.2, f: 2600, q: 0.8 });
+    [[72, 0.7], [79, 0.82]].forEach(([m, t]) => { tone({ f: note(m), f2: note(m + 5), type: 'sine', t, dur: 0.14, vol: 0.35 }); tone({ f: note(m + 12), type: 'triangle', t, dur: 0.1, vol: 0.1 }); });
+};
 // Power Card berbalik: dua "tik" kartu lalu denting naik (hijau) / turun (merah)
 SFX.power = function () {
     duck(0.9);
@@ -315,6 +346,9 @@ const VOICE = {
     target2: ['Draw two!', 1.2, 1.0, 0.05],
     target4: ['Draw four!', 1.1, 1.0, 0.05],
     revskip: ['Reverse skip!', 1.2, 1.0, 0.05],
+    skip2: ['Skip two!', 1.1, 1.0, 0.05],
+    swap: ['Swap!', 1.2, 1.0, 0.05],
+    awtarget2: ['Draw two!', 1.2, 1.0, 0.5],
     power: ['Flex power!', 1.2, 1.0, 0.25],
     allflip: ['All flip!', 1.2, 1.0, 0.25],
     reset: ['Reset!', 1.2, 1.0, 0.25]
@@ -531,8 +565,44 @@ function playFlexStep(n, at) {
     if (s === 7 && bar % 2 === 1) noise({ t: off + XSTEP * 0.5, dur: 0.06, vol: 0.12, type: 'highpass', f: 6500, bus: musicBus });     // hi-hat buka
 }
 
+// ---- Lagu UNO All Wild: petualangan luar angkasa (118 bpm, E minor, 16 birama): pad lebar, bass gergaji, kilau bintang, melodi terang ----
+const WSTEP = 60 / 118 / 2;
+const WCH = { Em: [40, [64, 67, 71]], C: [36, [60, 64, 67]], G: [43, [59, 62, 67]], D: [38, [62, 66, 69]], Am: [45, [60, 64, 69]], B7: [35, [63, 66, 69]] };
+const WCHORDS = ['Em', 'C', 'G', 'D', 'Em', 'C', 'G', 'B7', 'Am', 'Em', 'C', 'D', 'Em', 'C', 'D', 'B7'].map(k => WCH[k]);
+const WMELODY = [
+    [76, -1, 83, -1, 81, 79, 76, -1], [84, -1, 79, -1, 76, 79, 84, -1], [83, -1, 79, -1, 74, 79, 83, -1], [78, -1, 81, -1, 86, -1, 81, 78],
+    [76, 79, 83, -1, 88, -1, 83, 79], [84, -1, 88, -1, 84, 79, 76, -1], [79, 83, 86, -1, 83, -1, 79, 74], [78, -1, 81, -1, 87, -1, 83, -1],
+    [81, -1, 84, -1, 88, -1, 84, 81], [83, -1, 79, 76, 79, -1, 83, -1], [84, -1, 88, -1, 91, -1, 88, 84], [86, -1, 81, 78, 81, -1, 86, -1],
+    [88, -1, 83, -1, 79, 83, 88, -1], [84, -1, 79, -1, 76, -1, 79, 84], [86, -1, 90, -1, 86, 81, 78, -1], [83, -1, 87, -1, 83, 81, 78, 0]
+];
+const WTOTAL = WCHORDS.length * 8;
+function playAllWildStep(n, at) {
+    const bar = Math.floor(n / 8), s = n % 8, off = at - ctx.currentTime;
+    const [root, ch] = WCHORDS[bar];
+    if (s === 0) ch.forEach(c => tone({ f: mtof(c), type: 'sine', t: off, dur: WSTEP * 7.6, vol: 0.05, atk: 0.25, bus: musicBus }));        // pad panjang
+    // bass gergaji tersaring: akar panjang, lalu sentakan oktaf dan kuinta
+    if (s === 0) tone({ f: mtof(root), type: 'sawtooth', t: off, dur: WSTEP * 2.6, vol: 0.2, bus: musicBus, filter: { f: 520 } });
+    if (s === 3) tone({ f: mtof(root + 12), type: 'sawtooth', t: off, dur: WSTEP * 0.9, vol: 0.12, bus: musicBus, filter: { f: 700 } });
+    if (s === 4) tone({ f: mtof(root), type: 'sawtooth', t: off, dur: WSTEP * 1.8, vol: 0.17, bus: musicBus, filter: { f: 520 } });
+    if (s === 7) tone({ f: mtof(root + 7), type: 'sawtooth', t: off, dur: WSTEP * 0.9, vol: 0.1, bus: musicBus, filter: { f: 650 } });
+    // kilau bintang: arpeggio sinus tinggi di ketukan lemah
+    if (s % 2 === 1) tone({ f: mtof(ch[(s >> 1) % 3] + 24), type: 'sine', t: off, dur: WSTEP * 0.8, vol: 0.06, bus: musicBus });
+    const m = WMELODY[bar][s];
+    if (m > 0) {
+        let len = 1;
+        while (s + len < 8 && WMELODY[bar][s + len] === -1) len++;
+        tone({ f: mtof(m), type: 'triangle', t: off, dur: WSTEP * len * 0.92, vol: 0.2, bus: musicBus, filter: { f: 3600 }, vib: len > 1 ? 5 : 0 });
+        tone({ f: mtof(m + 12), type: 'sine', t: off, dur: WSTEP * Math.min(len, 2) * 0.6, vol: 0.05, bus: musicBus });
+    }
+    if (s === 0 || s === 4) tone({ f: 120, f2: 42, type: 'sine', t: off, dur: 0.17, vol: 0.6, bus: musicBus });                              // kick
+    if (s === 2 || s === 6) noise({ t: off, dur: 0.2, vol: 0.16, f: 1500, q: 0.5, bus: musicBus });                                           // tepukan berekor
+    if (s % 2 === 1) noise({ t: off, dur: 0.03, vol: 0.07, type: 'highpass', f: 8500, bus: musicBus });                                       // hi-hat tipis
+    if (s === 7 && bar % 4 === 3) noise({ t: off + WSTEP * 0.5, dur: 0.14, vol: 0.14, f: 2200, q: 0.6, bus: musicBus });                      // gebrakan tiap 4 birama
+}
+
 const TRACKS = {
     flex: { step: XSTEP, total: XTOTAL, play: playFlexStep },
+    allwild: { step: WSTEP, total: WTOTAL, play: playAllWildStep },
     menu: { step: MSTEP, total: MTOTAL, play: playMenuStep },
     flipLight: { step: LSTEP, total: LTOTAL, play: playFlipLightStep },
     flipDark: { step: DSTEP, total: DTOTAL, play: playFlipDarkStep }
