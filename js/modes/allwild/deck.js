@@ -1,6 +1,6 @@
 // Dek UNO All Wild: 112 kartu, SEMUA kartu hitam (Wild). Maks. 10 pemain. Aturan: MEMORI-UNO-BY-OMEGA.md bagian 6ac & 6ak.
 // Kartu = { id, c: 'Black', v: nilai/efek, img }.  v: Wild | Skip | Reverse | Draw Two | Skip Two | Draw Four | Target Draw Two | Forced Swap
-import { emptyState } from '../../core/state.js';
+import { emptyState, esc } from '../../core/state.js';
 
 export const COLORS = ['Red', 'Yellow', 'Green', 'Blue'];
 export const NAMES = { Red: 'Merah', Yellow: 'Kuning', Green: 'Hijau', Blue: 'Biru', Black: 'Bebas' };
@@ -36,6 +36,7 @@ export function shuffle(a) {
 
 // Bagi 7 kartu. Kartu pertama dibuka apa adanya; bila kartu aksi, efeknya DIABAIKAN (aturan resmi). Warna awal acak.
 export function dealGame(players) {
+    const starter = Math.floor(Math.random() * players.length);   // pemain pertama DIACAK (bukan selalu pemain 1/host)
     const deck = buildDeck();
     shuffle(deck);
     const hands = {};
@@ -43,8 +44,8 @@ export function dealGame(players) {
     for (let i = 0; i < 7; i++) players.forEach(p => hands[p.uid].push(deck.pop()));
     const first = deck.pop();
     const state = {
-        ...emptyState(), discardPile: [first], hands, currentColor: COLORS[Math.floor(Math.random() * COLORS.length)],
-        logs: ['Permainan dimulai!'],
+        ...emptyState(), turnIndex: starter, discardPile: [first], hands, currentColor: COLORS[Math.floor(Math.random() * COLORS.length)],
+        logs: [`Permainan dimulai! Giliran pertama: <b>${esc(players[starter].name)}</b> (diacak).`],
         fx: { id: 'deal' + Math.random().toString(36).slice(2), list: [{ t: 'deal' }] }
     };
     splitDeck(state, deck);

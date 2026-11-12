@@ -1,7 +1,7 @@
 // Dek UNO Flex: 104 kartu main (+ 1 Power Card per pemain, dibuat di dealGame). Maks. 8 pemain.
 // Kartu = { id, c: warna biasa (oval tengah), v: nilai biasa, fc: warna flex | null, fv: nilai/efek flex | null, fl: 1 jika ikon Flip, img }
 import { CARDS } from './data.js';
-import { emptyState } from '../../core/state.js';
+import { emptyState, esc } from '../../core/state.js';
 
 export const COLORS = ['Red', 'Yellow', 'Green', 'Blue'];
 export const NAMES = { Red: 'Merah', Yellow: 'Kuning', Green: 'Hijau', Blue: 'Biru', Black: 'Bebas' };
@@ -33,6 +33,7 @@ export function shuffle(a) {
 
 // Bagi 7 kartu + 1 Power Card (mulai hijau). Kartu pertama harus kartu angka (aksi/Wild dikembalikan ke dasar dek).
 export function dealGame(players) {
+    const starter = Math.floor(Math.random() * players.length);   // pemain pertama DIACAK (bukan selalu pemain 1/host)
     const deck = buildDeck();
     shuffle(deck);
     const hands = {}, power = {};
@@ -41,8 +42,8 @@ export function dealGame(players) {
     let first = deck.pop();
     while (!isNum(first)) { deck.unshift(first); first = deck.pop(); }
     const state = {
-        ...emptyState(), discardPile: [first], hands, power, currentColor: first.c, topFlex: false,
-        logs: ['Permainan dimulai!'],
+        ...emptyState(), turnIndex: starter, discardPile: [first], hands, power, currentColor: first.c, topFlex: false,
+        logs: [`Permainan dimulai! Giliran pertama: <b>${esc(players[starter].name)}</b> (diacak).`],
         fx: { id: 'deal' + Math.random().toString(36).slice(2), list: [{ t: 'deal' }] }
     };
     splitDeck(state, deck);

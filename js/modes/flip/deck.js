@@ -1,6 +1,6 @@
 // Dek UNO Flip: 112 kartu fisik, tiap kartu punya sisi terang (l) dan sisi gelap (d).
 import { PAIRS } from './data.js';
-import { emptyState } from '../../core/state.js';
+import { emptyState, esc } from '../../core/state.js';
 
 export const LIGHT = ['Red', 'Yellow', 'Green', 'Blue'];
 export const DARK = ['Pink', 'Teal', 'Orange', 'Purple'];
@@ -34,6 +34,7 @@ export function shuffle(a) {
 
 // Bagi 7 kartu per pemain. Kartu pertama (sisi terang) harus angka. Permainan mulai di sisi terang.
 export function dealGame(players) {
+    const starter = Math.floor(Math.random() * players.length);   // pemain pertama DIACAK (bukan selalu pemain 1/host)
     const deck = buildDeck();
     shuffle(deck);
     const hands = {};
@@ -42,8 +43,8 @@ export function dealGame(players) {
     let first = deck.pop();
     while (!isNum(first.l)) { deck.unshift(first); first = deck.pop(); }
     const state = {
-        ...emptyState(), side: 'light', discardPile: [first], hands, currentColor: first.l.color,
-        logs: ['Permainan dimulai di sisi terang!'],
+        ...emptyState(), turnIndex: starter, side: 'light', discardPile: [first], hands, currentColor: first.l.color,
+        logs: [`Permainan dimulai di sisi terang! Giliran pertama: <b>${esc(players[starter].name)}</b> (diacak).`],
         fx: { id: 'deal' + Math.random().toString(36).slice(2), list: [{ t: 'deal' }] }
     };
     splitDeck(state, deck);

@@ -1,5 +1,5 @@
 import { ACTIONS, COLORS } from '../../core/config.js';
-import { emptyState, fx } from '../../core/state.js';
+import { emptyState, fx, esc } from '../../core/state.js';
 
 // --- LOGIKA GAME ---
 export function buildDeck() {
@@ -30,6 +30,7 @@ export function shuffle(array) {
 }
 
 export function dealGame(players) {
+    const starter = Math.floor(Math.random() * players.length);   // pemain pertama DIACAK (bukan selalu pemain 1/host)
     const deck = buildDeck();
     shuffle(deck);
     const hands = {};
@@ -37,7 +38,7 @@ export function dealGame(players) {
     for (let i = 0; i < 7; i++) players.forEach(p => hands[p.uid].push(deck.pop()));
     let first = deck.pop();
     while (first.type !== 'number') { deck.unshift(first); first = deck.pop(); }
-    const state = { ...emptyState(), discardPile: [first], hands, currentColor: first.color, logs: ["Permainan dimulai!"], fx: { id: 'deal' + Math.random().toString(36).slice(2), list: [{ t: 'deal' }] } };
+    const state = { ...emptyState(), turnIndex: starter, discardPile: [first], hands, currentColor: first.color, logs: [`Permainan dimulai! Giliran pertama: <b>${esc(players[starter].name)}</b> (diacak).`], fx: { id: 'deal' + Math.random().toString(36).slice(2), list: [{ t: 'deal' }] } };
     splitDeck(state, deck);   // sisa kartu dibagi rata: deck kiri & deck kanan
     return state;
 }
