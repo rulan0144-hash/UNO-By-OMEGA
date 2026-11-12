@@ -16,7 +16,7 @@ export function chooseTarget(st, players, uid) {
 }
 
 // Kartu yang bisa menghentikan pemain berikut yang hampir menang
-const isStopper = (c, n) => c.v === 'Skip' || c.v === 'Skip Two' || c.v === 'Draw Two' || c.v === 'Draw Four' || (c.v === 'Reverse' && n > 2);
+export const isStopper = (c, n) => c.v === 'Skip' || c.v === 'Skip Two' || c.v === 'Draw Two' || c.v === 'Draw Four' || (c.v === 'Reverse' && n > 2);
 
 // Ambil kartu alih-alih main: bila pemain berikut sisa 1 kartu dan tidak ada kartu penghenti di tangan (aturan "ONE MORE THING").
 export function shouldDraw(st, players, uid) {
