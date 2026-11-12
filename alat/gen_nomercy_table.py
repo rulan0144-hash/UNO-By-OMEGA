@@ -154,10 +154,15 @@ SKULL = ('<g transform="translate({x:.1f} {y:.1f}) scale(1.15)"><path d="M-7,-1 
          '<path d="M0,2 L-1.2,4 L1.2,4 Z" fill="#000"/><path d="M-1.6,5.2 V7.4 M0,5.2 V7.4 M1.6,5.2 V7.4" stroke="#000" stroke-width=".9"/></g>')
 
 
+POLOS = True   # True = tengah TANPA warna-warni (tanpa matras 4 warna, cakar, tiang berwarna); center-<Warna>.png = salinan center.png
+
+
 def center(active=None):
+    if POLOS:
+        active = None
     quad = {'Red': (180, 270), 'Blue': (270, 360), 'Green': (0, 90), 'Yellow': (90, 180)}
     defs, glows, mats, claws, pads = '', '', '', '', ''
-    for n, (a0, a1) in quad.items():
+    for n, (a0, a1) in ([] if POLOS else quad.items()):
         on = active == n
         op = 1 if on else (.92 if active is None else .26)
         poly = quad_poly(a0, a1, 108, 206)
@@ -178,7 +183,7 @@ def center(active=None):
         pads += ((f'<circle cx="{px:.1f}" cy="{py:.1f}" r="26" fill="{COL[n]}" opacity=".9" filter="url(#gl)"/>' if on else '')
                  + f'<circle cx="{px:.1f}" cy="{py:.1f}" r="15" fill="url(#g{n})" opacity="{1 if (on or active is None) else .45}" stroke="#fff" stroke-width="3"/>'
                  f'<circle cx="{px - 4:.1f}" cy="{py - 4:.1f}" r="4" fill="#fff" opacity=".45"/>')
-    for a in (0, 90, 180, 270):                              # tiang sudut bergambar tengkorak
+    for a in ((0, 45, 90, 135, 180, 225, 270, 315) if POLOS else (0, 90, 180, 270)):   # tiang bergambar tengkorak
         px, py = pt(226, a)
         pads += f'<circle cx="{px:.1f}" cy="{py:.1f}" r="17" fill="#0c0709" stroke="#fff" stroke-width="3"/>' + SKULL.format(x=px, y=py)
     mesh = f'<polygon points="{octo(240)}" fill="url(#mesh)" opacity=".55"/>'
