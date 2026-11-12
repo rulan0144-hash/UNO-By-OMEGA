@@ -322,7 +322,7 @@ export function handleGameOver() {
     $('w-winner-text').innerText = (winnerUid === S.currentUser.uid) ? 'Kamu Menang!' : `${winnerObj ? winnerObj.name : '?'} Menang!`;
     $('w-score-text').innerText = `Total Skor: ${state.roundPts || 0} Poin`;
     $('w-score-breakdown').innerHTML = breakdownHTML || '<div class="text-center text-gray-500">Tidak ada sisa poin.</div>';
-    fillOver('x-', winnerUid, state.roundPts || 0);   // papan skor ronde + tombol Lanjut ronde / Main Lagi / Beranda
+    fillOver('w-', winnerUid, state.roundPts || 0);   // papan skor ronde + tombol Lanjut ronde / Main Lagi / Beranda
 
     // Urutan: animasi kartu terakhir selesai -> "UNO game!" -> layar poin + nada menang/kalah
     const key = S.currentRoomCode + ':' + (S.roomData.gameId || '') + ':' + (state.turnNo || 0) + ':' + winnerUid;
