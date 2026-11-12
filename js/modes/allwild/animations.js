@@ -1,12 +1,12 @@
 import { getScale } from '../../core/config.js';
 import { S } from '../../core/state.js';
-import { NAMES, HEX, backSrc } from './deck.js';
-import { generateCardHTML, pileRot, renderGame } from './ui.js';
+import { backSrc } from './deck.js';
+import { generateCardHTML, paintColor, pileRot, renderGame } from './ui.js';
 import { sfx } from '../../core/sound.js';
 import { runCountdown } from '../../core/countdown.js';
 
 // Semua animasi permainan All Wild. Dipicu oleh daftar peristiwa (state.fx) yang dicatat di rules.js.
-// Peristiwa: deal, play, draw, banner, picker, uno, catch.
+// Peristiwa: deal, play, draw, banner, swap, uno, catch. (Tidak ada lagi efek ganti warna Wild di tengah layar: meja berwarna yang menunjukkan warna.)
 
 const reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 const $ = (id) => document.getElementById(id);
@@ -19,11 +19,17 @@ export const isBusy = () => pending > 0;   // true selama ada animasi berjalan/a
 
 // ---- Penahan tampilan ----
 // transit = kartu dalam perjalanan ke pemain (belum boleh terlihat); pile = kartu yang akan diletakkan.
-const hold = { transitMe: 0, transit: {}, pile: 0 };
+// swap = animasi Forced Swap: tangan LAMA kedua pemain ditampilkan sampai kartu selesai bertukar; colorFrom = warna meja lama sampai kartu mendarat.
+const hold = { transitMe: 0, transit: {}, pile: 0, swap: null, colorFrom: null };
 let lastFxId = null, cur = null;
 const inAw = () => !!S.roomData && S.roomData.mode === 'allwild';
 
-export function shownCount(uid, actual) { return Math.max(0, actual - (hold.transit[uid] || 0)); }
+export function shownCount(uid, actual) {
+    const sw = hold.swap && hold.swap.hands[uid];
+    return Math.max(0, (sw ? sw.length : actual) - (hold.transit[uid] || 0));
+}
+export function shownHand(uid, actual) { return (hold.swap && !hold.swap.meDone && hold.swap.hands[uid]) || actual; }
+export const heldColor = () => hold.colorFrom;
 
 export function applyHold() {
     const hand = $('w-hand');
@@ -52,6 +58,8 @@ function finish(c) {
     hold.transitMe = Math.max(0, hold.transitMe - Math.max(0, c.me));
     Object.keys(c.opp).forEach(u => { hold.transit[u] = Math.max(0, (hold.transit[u] || 0) - Math.max(0, c.opp[u])); });
     hold.pile = Math.max(0, hold.pile - Math.max(0, c.plays || 0));
+    if (c.swap) hold.swap = null;
+    hold.colorFrom = null;
     restore();
 }
 
@@ -100,16 +108,6 @@ function fly(html, from, to, { dur = 700, delay = 0, rot = 0 } = {}) {
 const cardEl = (card) => `<div class="uno-card">${generateCardHTML(card)}</div>`;
 const backEl = () => `<div class="uno-card"><img class="card-img" src="${backSrc()}" alt="" draggable="false"></div>`;
 
-function flash(color) {
-    const f = $('fx-flash');
-    if (!f || reduce) return;
-    f.style.background = HEX[color] || '#fff';
-    f.classList.remove('on');
-    void f.offsetWidth;
-    f.classList.add('on');
-    setTimeout(() => f.classList.remove('on'), 1100);
-}
-
 // Gambar besar di tengah layar. Berkas: img/allwild/fx/<jenis>-<Warna>.png (UNO! memakai img/effects/uno.png)
 const SND = { uno: 'uno', skip: 'skip', skip2: 'skip2', reverse: 'reverse', draw2: 'draw2', draw4: 'draw4', target2: 'awtarget2', swap: 'swap' };
 async function banner(ev) {
@@ -125,29 +123,6 @@ async function banner(ev) {
     document.body.appendChild(el);
     setTimeout(() => el.remove(), reduce ? 0 : 1600);
     await sleep(k === 'uno' ? 1500 : 1300);
-}
-
-// Pemilih warna Wild: empat balok berputar, lalu warna pilihan menonjol
-async function wildPicker(color) {
-    const imgOf = (c) => c ? `img/allwild/fx/wild-${c}.png` : 'img/allwild/fx/wild-spin.png';
-    const el = document.createElement('div');
-    el.className = 'fx-picker';
-    el.innerHTML = `<img class="fx-picker-img fx-picker-spin" src="${imgOf()}" alt=""><div class="fx-picker-name"></div>`;
-    document.body.appendChild(el);
-    sfx('spin');
-    await sleep(900);
-    sfx('c_' + color);
-    const img = el.querySelector('img');
-    img.classList.remove('fx-picker-spin');
-    img.src = imgOf(color);
-    img.classList.add('fx-picker-pop');
-    const name = el.querySelector('.fx-picker-name');
-    name.textContent = NAMES[color] || color;
-    name.className = 'fx-picker-name fx-pn-' + color;
-    await sleep(1100);
-    el.classList.add('fx-picker-out');
-    setTimeout(() => el.remove(), reduce ? 0 : 400);
-    await sleep(350);
 }
 
 // Palu terbang dari tombol UNO kecil (atau dari profil penangkap) ke pemain yang lupa UNO, lalu menghantam
@@ -185,6 +160,107 @@ async function hammer(ev) {
     await sleep(TOTAL);
 }
 
+// Terbang melengkung (busur) dari satu titik ke titik lain; dua rombongan dengan arah berlawanan saling berpapasan
+function flyArc(html, from, to, { dur = 900, delay = 0, bend = 60, rot = 0 } = {}) {
+    if (reduce || !from || !to) return Promise.resolve();
+    const el = document.createElement('div');
+    el.className = 'fly-card';
+    el.innerHTML = html;
+    const a = center(from), b = center(to);
+    el.style.left = (a.x - 40) + 'px';
+    el.style.top = (a.y - 58) + 'px';
+    document.body.appendChild(el);
+    const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1;
+    const mx = dx / 2 + (-dy / d) * bend, my = dy / 2 + (dx / d) * bend;       // titik tengah digeser tegak lurus -> busur
+    const s0 = from.width / 80, s1 = to.width / 80, sm = Math.max(.8, (s0 + s1) / 2);
+    const anim = el.animate([
+        { transform: `translate(0px,0px) scale(${s0}) rotate(0deg)`, offset: 0 },
+        { transform: `translate(${mx}px,${my}px) scale(${sm}) rotate(${rot / 2}deg)`, offset: .5 },
+        { transform: `translate(${dx}px,${dy}px) scale(${s1}) rotate(${rot}deg)`, offset: 1 }
+    ], { duration: dur, delay, easing: 'ease-in-out', fill: 'both' });
+    return anim.finished.catch(() => {}).then(() => el.remove());
+}
+
+// Forced Swap: dua pemain saling bertukar tangan. Punggung kartu terbang melengkung dari tangan A ke B dan dari B ke A (saling berpapasan);
+// kedua pemain menyala, ikon tukar berputar di antara mereka. Selama itu tampilan memegang tangan LAMA (hold.swap), baru berganti di akhir.
+async function swap(ev) {
+    const sw = hold.swap;
+    const A = ev.a, B = ev.b, me = S.currentUser?.uid;
+    sfx('swap');
+    const ring = (uid) => uid === me ? $('w-me-avatar') : $('wprof-' + uid);
+    const pA = posOfPlayer(A), pB = posOfPlayer(B);
+    const nA = sw ? sw.hands[A].length : 0, nB = sw ? sw.hands[B].length : 0;
+    const MAXC = 5, GAP = 130, DUR = 950;
+    const kidsOf = (uid) => uid === me ? [...$('w-hand').children] : [];
+    const launch = (uid, n, from, to, bendSign) => {
+        const kids = kidsOf(uid), k = Math.min(kids.length ? 8 : MAXC, n), out = [];   // tangan sendiri: tiap kartu terbang satu per satu
+        const dist = from && to ? Math.hypot(center(from).x - center(to).x, center(from).y - center(to).y) : 0;
+        const bend = bendSign * Math.min(110, Math.max(40, dist * 0.28));
+        for (let i = 0; i < k; i++) {
+            const kid = kids.length ? kids[Math.round(i * (kids.length - 1) / Math.max(1, k - 1))] : null;
+            const start = kid ? (clampRect(rectOf(kid)) || from) : from;
+            const delay = i * (kids.length ? 100 : GAP);
+            if (kid) setTimeout(() => { kid.style.visibility = 'hidden'; }, reduce ? 0 : delay);   // kartu meninggalkan tangan saat terbang
+            out.push(flyArc(backEl(), start, to, { dur: DUR, delay, bend, rot: (i % 2 ? 1 : -1) * (14 + i * 4) * bendSign }));
+        }
+        return out;
+    };
+    // badge ikon tukar di tengah antara dua pemain
+    let badge = null;
+    if (!reduce && pA && pB) {
+        const a = center(pA), b = center(pB);
+        badge = document.createElement('div');
+        badge.className = 'aw-swap-badge';
+        badge.style.left = ((a.x + b.x) / 2 - 42) + 'px';
+        badge.style.top = ((a.y + b.y) / 2 - 42) + 'px';
+        badge.innerHTML = `<img src="img/allwild/fx/swap-${ev.c || 'Blue'}.png" alt="">`;
+        document.body.appendChild(badge);
+    }
+    [A, B].forEach(u => { const r = ring(u); if (r) r.classList.add('aw-swap-glow'); });
+    const meIn = A === me || B === me, other = A === me ? B : A;
+    let jobs;
+    if (!meIn) jobs = [...launch(A, nA, pA, pB, 1), ...launch(B, nB, pB, pA, 1)];
+    else {
+        // Tangan sendiri: kartu hilang dari tangan tepat saat terbang ke tengah; kartu baru MUNCUL di tangan tepat saat kartunya mendarat.
+        const pO = posOfPlayer(other), nOut = sw ? sw.hands[me].length : 0, nIn = sw ? sw.hands[other].length : 0;
+        const out = launch(me, nOut, posOfPlayer(me), pO, 1);
+        const incoming = (async () => {
+            await sleep(Math.max(0, Math.min(nOut, 8) - 1) * 100 + 60);          // semua kartu lama sudah berangkat
+            [...$('w-hand').children].forEach(k => { k.style.visibility = 'hidden'; });
+            hold.swap.meDone = true;                                              // tampilan tangan = tangan baru (semua kartu disembunyikan dulu)
+            if (inAw() && S.roomData.gameState) renderGame();
+            [A, B].forEach(u => { const r = ring(u); if (r) r.classList.add('aw-swap-glow'); });   // renderGame membangun ulang profil lawan
+            const nk = [...$('w-hand').children];
+            nk.forEach(k => { k.style.visibility = 'hidden'; });
+            const k = Math.min(8, nk.length), land = [];
+            for (let i = 0; i < k; i++) {
+                const upTo = i === k - 1 ? nk.length - 1 : Math.round(i * (nk.length - 1) / Math.max(1, k - 1));
+                const to = clampRect(rectOf(nk[upTo])) || posOfPlayer(me);
+                land.push(flyArc(backEl(), pO, to, { dur: 850, delay: i * 110, bend: -50, rot: (i % 2 ? 1 : -1) * 12 }).then(() => {
+                    for (let x = (i ? Math.round((i - 1) * (nk.length - 1) / Math.max(1, k - 1)) + 1 : 0); x <= upTo; x++) { nk[x].style.visibility = ''; nk[x].classList.add('aw-card-in'); }
+                    sfx('card');
+                }));
+            }
+            if (!k) land.push(Promise.resolve());
+            await Promise.all(land);
+            nk.forEach(x => { x.style.visibility = ''; });
+        })();
+        jobs = [...out, incoming];
+    }
+    await Promise.all(jobs);
+    // selesai: tampilan kembali ke state asli, tumpukan lawan berdenyut
+    hold.swap = null;
+    if (badge) badge.remove();
+    if (inAw() && S.roomData.gameState) renderGame();
+    [A, B].forEach(u => {
+        const st = $('wstack-' + u);
+        if (st && u !== me) { st.classList.add('aw-stack-bump'); setTimeout(() => st.classList.remove('aw-stack-bump'), 600); }
+    });
+    sfx('slap');
+    await sleep(450);
+    [A, B].forEach(u => { const r = ring(u); if (r) r.classList.remove('aw-swap-glow'); });
+}
+
 // Kartu dimainkan: terbang ke tumpukan buangan (menghadap depan)
 async function play(ev) {
     const mine = ev.uid === S.currentUser?.uid;
@@ -200,7 +276,8 @@ async function play(ev) {
     hold.pile = Math.max(0, hold.pile - 1);
     const t2 = document.querySelector('#w-discard .pile-top');
     if (t2 && hold.pile === 0) t2.style.visibility = '';
-    flash(ev.color);   // semua kartu Wild: kilatan warna pilihan
+    hold.colorFrom = null; paintColor(ev.color);   // meja berganti warna begitu kartu mendarat (tanpa efek di tengah layar)
+    sfx('c_' + ev.color);
 }
 
 // Kartu ditarik: terbang dari dek (punggung kartu) ke tangan / profil pemain
@@ -283,7 +360,6 @@ function effectsFirst(list) {
         if (ev.t !== 'play') { out.push(ev); continue; }
         let k = i + 1;
         const pre = [], between = [];
-        while (k < list.length && list[k].t === 'picker') pre.push(list[k++]);
         while (k < list.length && list[k].t === 'uno') between.push(list[k++]);
         while (k < list.length && list[k].t === 'banner') pre.push(list[k++]);
         // preFx: ada efek yang tampil sebelum kartu mendarat -> kartu bayangan diam di tempat asal
@@ -299,7 +375,7 @@ async function run(list, state, c) {
     const ordered = effectsFirst(list);
     for (let i = 0; i < ordered.length; i++) {
         const ev = ordered[i];
-        if (!ghost && (ev.t === 'picker' || ev.t === 'banner')) {
+        if (!ghost && ev.t === 'banner') {
             const pl = ordered.slice(i).find(e => e.t === 'play' && e.preFx);
             const between = ordered.slice(0, i).some(e => e.t === 'play');
             if (pl && !between) {
@@ -317,7 +393,7 @@ async function run(list, state, c) {
         }
         else if (ev.t === 'play') await play(ev);
         else if (ev.t === 'banner') await banner(ev);
-        else if (ev.t === 'picker') await wildPicker(ev.color);
+        else if (ev.t === 'swap') await swap(ev);
         else if (ev.t === 'uno') await banner({ k: 'uno', uid: ev.uid });
         else if (ev.t === 'catch') await hammer(ev);
         else if (ev.t === 'draw') await draw(ev);
@@ -336,9 +412,18 @@ export function handleFx(state) {
     lastFxId = f.id;
     if (firstRender && !f.list.some(e => e.t === 'deal')) return;
 
-    const c = { me: 0, opp: {}, plays: 0 };
+    const c = { me: 0, opp: {}, plays: 0, swap: false };
     f.list.forEach(ev => {
-        if (ev.t === 'play') { hold.pile++; c.plays++; }
+        if (ev.t === 'play') {
+            hold.pile++; c.plays++;
+            const scr = $('aw-screen');
+            if (scr && scr.dataset.awc && scr.dataset.awc !== ev.color) hold.colorFrom = scr.dataset.awc;   // meja berganti warna saat kartu mendarat
+        }
+        else if (ev.t === 'swap') {
+            // state sudah memuat hasil tukar: tangan LAMA pemain A = tangan baru pemain B (dan sebaliknya)
+            hold.swap = { a: ev.a, b: ev.b, hands: { [ev.a]: (state.hands[ev.b] || []).slice(), [ev.b]: (state.hands[ev.a] || []).slice() } };
+            c.swap = true;
+        }
         else if (ev.t === 'draw') {
             if (ev.uid === me) { hold.transitMe += ev.n; c.me += ev.n; }
             else { hold.transit[ev.uid] = (hold.transit[ev.uid] || 0) + ev.n; c.opp[ev.uid] = (c.opp[ev.uid] || 0) + ev.n; }
@@ -353,4 +438,4 @@ export function handleFx(state) {
 }
 
 // dipanggil saat permainan baru / keluar supaya animasi berikutnya tidak dianggap "lama"
-export function resetFx() { lastFxId = null; hold.transitMe = 0; hold.transit = {}; hold.pile = 0; }
+export function resetFx() { lastFxId = null; hold.transitMe = 0; hold.transit = {}; hold.pile = 0; hold.swap = null; hold.colorFrom = null; }

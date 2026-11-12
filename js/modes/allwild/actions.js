@@ -7,6 +7,7 @@ import { askColor, askTarget, closeAsks, handleGameOver, renderGame } from './ui
 import { scheduleBot } from './local.js';
 import { sfx } from '../../core/sound.js';
 import { roomDoc, updateDoc } from '../../core/firebase.js';
+import { autoColor, awColorMode } from './colormode.js';
 
 // Semua perubahan state lewat sini. Offline: langsung ke S.roomData. Online: ditulis ke Firestore, semua pemain (termasuk kita) menerimanya lewat onSnapshot.
 export async function updateRemoteState(newState, extra = {}) {
@@ -24,7 +25,7 @@ export async function updateRemoteState(newState, extra = {}) {
 }
 
 // --- AKSI PEMAIN ---
-// Mengetuk kartu (kedua kali) = memainkan. Semua kartu hitam: SELALU pilih warna; kartu target/tukar: pilih pemain.
+// Mengetuk kartu (kedua kali) = memainkan. Warna: otomatis atau pilih sendiri (Pengaturan); kartu target/tukar: pilih pemain.
 let busyAsk = false;
 window.awPlay = async (idx) => {
     if (busyAsk) return;
@@ -41,7 +42,9 @@ window.awPlay = async (idx) => {
     try {
         let target;
         if (needsTarget(card)) { target = await askTarget(st0, card); if (!target) return; }
-        const color = await askColor(st0); if (!color) return;
+        // Otomatis: sistem memilih warna (meja langsung berganti). Manual: pemain memilih lewat kotak "Pilih Warna".
+        const color = awColorMode() === 'auto' ? autoColor(st0.currentColor) : await askColor(st0);
+        if (!color) return;
         await processPlayCard(idx, { color, target });
     } finally { busyAsk = false; }
 };

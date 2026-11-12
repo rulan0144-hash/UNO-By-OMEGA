@@ -6,7 +6,7 @@ import { syncTimer } from './timer.js';
 import { S, esc } from '../../core/state.js';
 import { NAMES, HEX, cardSrc, backSrc } from './deck.js';
 import { actorUid, canCallUno, isCatchable, isMyTurn } from './rules.js';
-import { applyHold, handleFx, resetFx, shownCount, whenIdle } from './animations.js';
+import { applyHold, handleFx, heldColor, resetFx, shownCount, shownHand, whenIdle } from './animations.js';
 import { sfx, sayAsync, startMusic, stopMusic } from '../../core/sound.js';
 import { go } from '../../app/router.js';
 import { fillOver } from '../../core/series.js';
@@ -35,6 +35,26 @@ window.awLeave = () => {
     ['w-pause-modal', 'w-over-modal', 'w-color-modal', 'w-target-modal'].forEach(id => $(id).classList.add('hidden'));
     go('home-screen');
 };
+
+// Warna meja & lencana. Meja berganti warna mengikuti kartu yang dimainkan (tidak ada lagi efek ganti Wild di tengah layar);
+// bila warna berubah, cincin tengah berdenyut sebentar.
+export function paintColor(color) {
+    const badge = $('w-badge');
+    if (badge) {
+        badge.className = 'color-badge text-white border-2 border-white';
+        badge.style.background = HEX[color] || '#374151';
+        badge.innerText = `Warna: ${NAMES[color] || color}`;
+    }
+    const scr = $('aw-screen');
+    if (!scr) return;
+    const prev = scr.dataset.awc;
+    ['Red', 'Yellow', 'Green', 'Blue'].forEach(c => scr.classList.toggle('aw-c-' + c, c === color));
+    scr.dataset.awc = color || '';
+    if (prev && color && prev !== color) {
+        scr.classList.remove('ring-pop'); void scr.offsetWidth; scr.classList.add('ring-pop');
+        setTimeout(() => scr.classList.remove('ring-pop'), 800);
+    }
+}
 
 // ---------- RENDER ----------
 export function renderGame() {
@@ -91,17 +111,12 @@ export function renderGame() {
         stack += `<div class="uno-card pile-card pile-top${glow}" style="--dx:0px;--dy:0px;--rot:${pileRot(n - 1)}deg;--glow:${HEX[glowC] || '#fff'}">${generateCardHTML(top)}</div>`;
         $('w-discard').innerHTML = `<div class="pile-wrap">${stack}</div>`;
     }
-    const badge = $('w-badge');
-    badge.className = 'color-badge text-white border-2 border-white';
-    badge.style.background = HEX[state.currentColor] || '#374151';
-    badge.innerText = `Warna: ${NAMES[state.currentColor] || state.currentColor}`;
-    const scr = $('aw-screen');
-    if (scr) { ['Red', 'Yellow', 'Green', 'Blue'].forEach(c => scr.classList.toggle('aw-c-' + c, c === state.currentColor)); }   // meja berganti warna mengikuti warna terpilih
+    paintColor(heldColor() || state.currentColor);   // lencana + meja berganti warna (ditahan sampai kartu mendarat)
 
     // Tangan
     const handUI = $('w-hand');
     handUI.innerHTML = '';
-    const myHand = state.hands[me] || [];
+    const myHand = shownHand(me, state.hands[me] || []);   // saat animasi tukar: tampilkan tangan lama dulu
     myHand.forEach((card, idx) => {
         let isPlay = isMyTurn();                                   // semua kartu boleh dimainkan
         if (S.hasDrawnThisTurn && idx !== myHand.length - 1) isPlay = false;

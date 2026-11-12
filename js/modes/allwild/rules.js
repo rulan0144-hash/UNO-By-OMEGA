@@ -1,5 +1,5 @@
 // Mesin aturan UNO All Wild (murni, tanpa DOM). Aturan: MEMORI-UNO-BY-OMEGA.md bagian 6ac & 6ak.
-// Semua kartu boleh dimainkan kapan saja (tanpa cocok warna/angka); pemain TETAP memilih warna tiap kali main (hanya hiasan, tidak memengaruhi apa pun).
+// Semua kartu boleh dimainkan kapan saja (tanpa cocok warna/angka); tiap kali main ada warna (dipilih pemain atau otomatis, lihat colormode.js) - hanya hiasan, tidak memengaruhi aturan.
 // Tidak ada tantangan +4. Ambil kartu (alih-alih main) boleh kapan saja: kartu yang diambil dimainkan atau giliran lewat.
 import { S, fx, nameOf } from '../../core/state.js';
 import { drawFrom, needsTarget, pointOf, NAMES } from './deck.js';
@@ -78,7 +78,6 @@ export function playCardOn(state, uid, cardIdx, opts = {}) {
     const color = opts.color || 'Red';
     state.discardPile.push(card);
     fx(state, { t: 'play', uid, card, color });
-    fx(state, { t: 'picker', color });
     state.currentColor = color;
     state.turnNo = (state.turnNo || 0) + 1;
     state.logs.push(`<b>${nameOf(uid)}</b> mengeluarkan ${LABEL[card.v]} (${NAMES[color]})`);
@@ -138,7 +137,7 @@ function applyEffect(state, card, pIdx, target) {
             const mine = state.hands[me], theirs = state.hands[t];
             state.hands[me] = theirs; state.hands[t] = mine;
             state.logs.push(`<b>${nameOf(me)}</b> menukar tangan dengan <b>${nameOf(t)}</b>!`);
-            fxb({ target: t });
+            fx(state, { t: 'swap', a: me, b: t, c });                 // animasi: dua pemain saling bertukar kartu (tanpa banner di tengah)
             [me, t].forEach(u => {                                       // pemegang 1 kartu setelah tukar harus ingat berteriak UNO
                 state.unoCalled[u] = false;
                 if (state.hands[u].length === 1) { (state.forgot = state.forgot || {})[u] = true; state.logs.push(`<b>${nameOf(u)}</b> sisa 1 kartu tapi belum bilang UNO!`); }

@@ -1,8 +1,8 @@
 // Otak bot UNO All Wild (murni, tanpa DOM, diuji di alat/sim_allwild.mjs). Dipakai local.js (vs Komputer) dan timeoutTurn.
 import { COLORS, pointOf, needsTarget } from './deck.js';
 
-// Warna hanya hiasan: pilih warna terbanyak di antara pilihan acak
-export const chooseColor = () => COLORS[Math.floor(Math.random() * COLORS.length)];
+// Warna hanya hiasan: pilih acak, usahakan beda dari warna meja sekarang supaya perubahan terlihat
+export const chooseColor = (except) => { const pool = COLORS.filter(c => c !== except); return pool[Math.floor(Math.random() * pool.length)]; };
 
 const others = (st, players, uid) => players.filter(p => p.uid !== uid);
 const nextOf = (st, players, uid) => { const i = players.findIndex(p => p.uid === uid); return players[(i + st.direction + players.length * 2) % players.length]; };
@@ -58,7 +58,7 @@ export function choosePlay(st, players, uid) {
             target = chooseTarget(st, players, uid);
         } else target = chooseTarget(st, players, uid);
     }
-    return { idx: best, color: chooseColor(), target };
+    return { idx: best, color: chooseColor(st.currentColor), target };
 }
 
 // Kartu terkecil untuk main otomatis saat waktu habis. onlyIdx = hanya kartu itu (kartu yang baru diambil).
@@ -71,5 +71,5 @@ export function chooseTimeoutPlay(st, players, uid, onlyIdx) {
     });
     if (!best) return null;
     const card = hand[best.idx];
-    return { idx: best.idx, color: chooseColor(), target: needsTarget(card) ? chooseTarget(st, players, uid) : undefined };
+    return { idx: best.idx, color: chooseColor(st.currentColor), target: needsTarget(card) ? chooseTarget(st, players, uid) : undefined };
 }

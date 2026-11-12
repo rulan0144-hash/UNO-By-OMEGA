@@ -63,7 +63,7 @@ export function botTurn(bot) {
             hand.push(d);
             fx(s, { t: 'draw', uid, n: 1, sides: got.sides, cards: got.cards });
             s.logs.push(`<b>${esc(bot.name)}</b> mengambil kartu.`);
-            if (isStopper(d, players.length)) mv = { idx: hand.length - 1, color: chooseColor(), target: needsTarget(d) ? chooseTarget(s, players, uid) : undefined };
+            if (isStopper(d, players.length)) mv = { idx: hand.length - 1, color: chooseColor(s.currentColor), target: needsTarget(d) ? chooseTarget(s, players, uid) : undefined };
         }
     } else mv = choosePlay(s, players, uid);
     if (!mv) { advance(s); updateRemoteState(s); return; }
