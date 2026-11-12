@@ -316,7 +316,7 @@ body.h-screen { height: var(--app-h, 100dvh) !important; }
 .f-countdown .cd-last .cd-ring { background: conic-gradient(from 0deg, #fb7185 var(--cdp), rgba(255,255,255,.14) 0); filter: drop-shadow(0 0 7px rgba(251,113,133,.7)); }
 .f-countdown .cd-go .cd-num { font-size: calc(var(--cd-size) * .27); color: #86efac; text-shadow: 0 .05em 0 #166534, 0 .1em 0 rgba(0,0,0,.5), 0 0 .3em rgba(134,239,172,.6); animation: cd-go .6s cubic-bezier(.2, .9, .3, 1.3) both; }
 .f-countdown .cd-go .cd-ring { background: conic-gradient(#86efac 100%, #86efac 0); animation: none; filter: drop-shadow(0 0 8px rgba(134,239,172,.7)); }
-.f-countdown .cd-label { grid-area: 1 / 1; align-self: center; margin-top: calc(var(--cd-size) + 84px); font-size: calc(17px * max(var(--s, 1), .8)); font-weight: 800; color: #fff; letter-spacing: .5px; text-shadow: 0 2px 0 #000, 0 0 12px rgba(0,0,0,.8); }
+.f-countdown .cd-label { grid-area: 1 / 1; align-self: center; justify-self: center; text-align: center; margin-top: calc(var(--cd-size) + 84px); font-size: calc(17px * max(var(--s, 1), .8)); font-weight: 800; color: #fff; letter-spacing: .5px; text-shadow: 0 2px 0 #000, 0 0 12px rgba(0,0,0,.8); }
 @keyframes cd-pop { 0% { transform: scale(1.7); opacity: 0; } 20% { transform: scale(1); opacity: 1; } 82% { transform: scale(.96); opacity: 1; } 100% { transform: scale(.8); opacity: .25; } }
 @keyframes cd-sweep { from { --cdp: 100%; } to { --cdp: 0%; } }
 @keyframes cd-go { 0% { transform: scale(.4); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
