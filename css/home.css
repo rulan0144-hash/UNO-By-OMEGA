@@ -68,7 +68,7 @@
 .mc-red { background: repeating-conic-gradient(from 0deg at 50% 36%, #ef4444 0deg 7.5deg, #c21f1f 7.5deg 15deg); }
 .mc-purple { height: 262px; background: repeating-conic-gradient(from 0deg at 50% 36%, #8b5cf6 0deg 7.5deg, #6d33d6 7.5deg 15deg); }
 .mc-green { height: 262px; background: repeating-conic-gradient(from 0deg at 50% 36%, #3dba5a 0deg 7.5deg, #2c9a47 7.5deg 15deg); }
-.mc-allwild { height: 262px; background: #0b0a22 url('../img/allwild/table/board.png') 50% 35% / cover no-repeat; }
+.mc-allwild { height: 262px; background: repeating-conic-gradient(from 0deg at 50% 36%, #2b2b30 0deg 7.5deg, #121216 7.5deg 15deg); }   /* sinar bintang berbasis HITAM, sama pola dengan poster mode lain */
 .mc-poster::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 34%, rgba(255,255,255,.18), rgba(0,0,0,0) 45%, rgba(0,0,0,.38) 100%); }
 .mc-poster .mc-logo { position: relative; top: auto; left: auto; transform: none; width: 64%; max-width: 270px; z-index: 2; }
 .mc-tag { position: relative; z-index: 2; margin-top: 4px; padding: 0 8px; text-align: center; font-size: 17px; font-weight: 800; color: #fff; transform: rotate(-2deg);

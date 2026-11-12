@@ -47,3 +47,32 @@
 #aw-screen.aw-c-Yellow .table-line { background-image: url('../img/allwild/table/center-Yellow.png'); }
 #aw-screen.aw-c-Green .table-line { background-image: url('../img/allwild/table/center-Green.png'); }
 #aw-screen.aw-c-Blue .table-line { background-image: url('../img/allwild/table/center-Blue.png'); }
+
+
+/* ===== Pengaturan ganti warna Wild: Otomatis / Manual (menu dalam game + Pengaturan beranda) ===== */
+.aw-cm { margin: 10px 0 12px; padding: 10px 10px 8px; border-radius: 14px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.18); text-align: center; }
+.aw-cm-title { font-size: 13px; font-weight: 800; letter-spacing: .02em; color: #e5e7eb; margin-bottom: 8px; }
+.aw-cm-seg { display: flex; gap: 0; border-radius: 999px; overflow: hidden; border: 2px solid #fff; background: rgba(0,0,0,.35); }
+.aw-cm-btn { flex: 1; background: transparent; border: 0; min-height: 40px; padding: 6px 8px; font-size: 15px; font-weight: 800; color: #cbd5e1; touch-action: manipulation; transition: background .15s, color .15s; }
+.aw-cm-btn + .aw-cm-btn { border-left: 2px solid rgba(255,255,255,.55); }
+.aw-cm-btn.on { background: linear-gradient(#fde047, #f59e0b); color: #1f1300; text-shadow: 0 1px 0 rgba(255,255,255,.5); }
+.aw-cm-note { margin-top: 6px; font-size: 12px; line-height: 1.3; color: #cbd5e1; }
+
+/* ===== Warna meja berganti: cincin tengah berdenyut sebentar (menggantikan efek ganti Wild di tengah layar) ===== */
+#aw-screen.ring-pop .table-line { animation: aw-ring-pop .75s ease-out; }
+@keyframes aw-ring-pop { 0% { transform: translate(-50%, -50%) scale(.93); filter: brightness(1.9) saturate(1.4); } 45% { transform: translate(-50%, -50%) scale(1.05); filter: brightness(1.45); } 100% { transform: translate(-50%, -50%) scale(1); filter: none; } }
+
+/* ===== Animasi Forced Swap: dua pemain saling bertukar kartu ===== */
+.aw-swap-badge { position: fixed; z-index: 310; width: 84px; height: 84px; pointer-events: none; animation: aw-swap-badge 1.9s ease-in-out forwards; }
+.aw-swap-badge img { width: 100%; height: 100%; display: block; filter: drop-shadow(0 4px 8px rgba(0,0,0,.6)); }
+@keyframes aw-swap-badge { 0% { transform: scale(.2) rotate(-180deg); opacity: 0; } 22% { transform: scale(1.05) rotate(0deg); opacity: 1; } 78% { transform: scale(1) rotate(180deg); opacity: 1; } 100% { transform: scale(.2) rotate(360deg); opacity: 0; } }
+.aw-swap-glow { animation: aw-swap-glow .8s ease-in-out infinite alternate; }
+@keyframes aw-swap-glow { from { filter: drop-shadow(0 0 4px #fde047); transform: scale(1); } to { filter: drop-shadow(0 0 14px #fde047) drop-shadow(0 0 6px #fff); transform: scale(1.08); } }
+.aw-stack-bump { animation: aw-stack-bump .55s ease-out; }
+@keyframes aw-stack-bump { 0% { transform: scale(1); } 35% { transform: scale(1.22); } 100% { transform: scale(1); } }
+#w-hand.aw-hand-in { animation: aw-hand-in .6s cubic-bezier(.2, .9, .3, 1.1); }
+@keyframes aw-hand-in { 0% { opacity: 0; transform: translateY(28px) scale(.92); } 100% { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .aw-swap-badge, .aw-swap-glow, .aw-stack-bump, #w-hand.aw-hand-in, #aw-screen.ring-pop .table-line { animation-duration: .01s; animation-iteration-count: 1; } }
+
+#w-hand .aw-card-in { animation: aw-card-in .35s ease-out; }
+@keyframes aw-card-in { 0% { opacity: 0; translate: 0 36px; } 100% { opacity: 1; translate: 0 0; } }
