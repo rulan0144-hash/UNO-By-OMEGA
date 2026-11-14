@@ -1,0 +1,93 @@
+/* Gaya khusus mode UNO Show 'Em No Mercy (disalin dari flex.css; Power Card dibuang). Bagian pertama = salinan aturan gaya klasik yang memakai id (#human-hand-ui dst) untuk id All Wild (#n-hand dst).
+   Gaya lain (kartu, avatar, tumpukan, menu jeda, efek, tombol tangkap) dipakai bersama dari style.css lewat kelas. */
+#n-turn-ind { text-shadow: 0 2px 0 rgba(0,0,0,.75); font-size: calc(20px * max(var(--s, 1), .7)) !important; line-height: 1.15; }
+#n-me-avatar { position: relative; }
+#n-hand { min-height: 0; flex: 1 1 0; height: auto; }
+#n-hand .uno-card { flex-shrink: 0; }
+#n-hand { overflow: visible !important; padding-left: 8px !important; padding-right: 8px !important; gap: 0 !important; align-items: flex-end !important; padding-bottom: calc(22px * var(--s, 1)); padding-top: calc(30px * var(--s, 1)); }
+#n-hand .uno-card { border-radius: 8px; }
+#n-hand .fan-card { transform-origin: 50% calc(100% + var(--pivot, 170px)); transform: rotate(var(--rot, 0deg)); touch-action: none; }
+#n-hand .fan-card.selected { transform: rotate(var(--rot, 0deg)) translateY(calc(-32px * var(--s, 1))); z-index: 60; filter: drop-shadow(0 10px 14px rgba(0,0,0,.75)); }
+#n-hand .fan-card.dragging { transition: none; z-index: 80; filter: drop-shadow(0 14px 18px rgba(0,0,0,.8)); cursor: grabbing; }
+#n-hand .fan-card.unplayable.selected { filter: brightness(.8) drop-shadow(0 10px 14px rgba(0,0,0,.75)); }
+#n-discard.drop-ready { filter: drop-shadow(0 0 16px #facc15) drop-shadow(0 0 6px #facc15); }
+#n-btn-uno { font-size: calc(18px * max(var(--s, 1), .75)) !important; padding: calc(8px * var(--s, 1)) calc(16px * var(--s, 1)) !important; }
+#n-btn-pass { font-size: calc(14px * max(var(--s, 1), .75)) !important; padding: calc(8px * var(--s, 1)) calc(14px * var(--s, 1)) !important; }
+.deck-void { width: calc(80px * var(--s, 1)); height: calc(116px * var(--s, 1)); border: 2px dashed rgba(255,255,255,.35); border-radius: 8px; }
+.glow-c { filter: drop-shadow(0 0 14px var(--glow)) drop-shadow(0 0 5px var(--glow)) !important; }
+
+/* ===== MEJA UNO ALL WILD: luar angkasa (bintang & nebula) + cincin warna di tengah yang berganti sesuai warna terpilih ===== */
+#nm-screen.casino { isolation: isolate; background-color: #140505; background-image: url('../img/nomercy/table/board.png'); background-size: cover; background-position: center;
+    box-shadow: inset 0 0 0 6px #2a0808, inset 0 0 0 9px #b91c1c, inset 0 0 0 12px #0a0303, inset 0 0 80px rgba(20,2,2,.75); overflow: hidden; }
+#nm-screen .table-line { left: 50%; top: 50%; width: min(calc(var(--ring) * 1.5), 94%); height: auto; aspect-ratio: 1; border: 0; border-radius: 0; background: url('../img/nomercy/table/center.png') center / contain no-repeat; box-shadow: none; }
+#nm-screen .table-line::before, #nm-screen .table-line::after { content: none; }
+#nm-screen .player-panel { background: linear-gradient(rgba(60,10,10,.15), rgba(24,4,4,.7)); border-top: 2px solid rgba(185,28,28,.9); }
+#n-opps .name-tag { background: rgba(24,4,4,.78); }
+#nm-screen .dir-ring { opacity: .7; }
+#nm-screen .color-badge { z-index: 12; }
+
+/* ===== Kotak pilihan: sisi kartu & pemain target ===== */
+.n-ask { position: fixed; inset: 0; z-index: 130; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(0,0,0,.78); }
+.n-ask.hidden { display: none; }
+.n-ask-box { width: min(86vw, 340px); max-height: 92vh; overflow-y: auto; text-align: center; padding: 16px; border-radius: 18px; border: 3px solid #fde68a; background: linear-gradient(#4a1010, #1a0606); box-shadow: 0 0 0 3px #000, 0 14px 30px rgba(0,0,0,.65); animation: fx-picker-pop .35s cubic-bezier(.2, 1.4, .4, 1); }
+.n-ask-title { font-size: 22px; color: #fff; margin-bottom: 10px; text-shadow: 0 2px 0 #000; }
+.n-side-card { height: min(26vh, 190px); width: auto; display: block; margin: 0 auto 12px; filter: drop-shadow(0 6px 8px rgba(0,0,0,.6)); pointer-events: none; }
+.n-side-btn, .n-target-btn { display: block; width: 100%; margin-top: 8px; padding: 12px 10px; min-height: 48px; border-radius: 12px; border: 2px solid #fff; color: #fff; font-size: 15px; line-height: 1.25; text-shadow: 0 1px 0 #000, 0 0 4px rgba(0,0,0,.7); box-shadow: 0 4px 0 rgba(0,0,0,.5); touch-action: manipulation; }
+.n-side-btn:active, .n-target-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.5); }
+.n-target-btn { background: linear-gradient(#475569, #1e293b); display: flex; justify-content: space-between; align-items: center; font-size: 17px; }
+.n-target-btn small { font-size: 13px; opacity: .85; }
+.n-target-list { display: flex; flex-direction: column; }
+.n-ask-cancel { margin-top: 14px; padding: 8px 24px; border-radius: 999px; border: 2px solid #d1d5db; background: rgba(0,0,0,.35); color: #e5e7eb; font-size: 15px; touch-action: manipulation; }
+
+/* dek sedikit lebih tinggi, sama seperti Flex */
+#nm-screen .deck-slot-l, #nm-screen .deck-slot-r { transform: translateY(calc(-22px * var(--s, 1))); }
+
+/* cincin tengah meja berganti sesuai warna yang dipilih pemain terakhir */
+#nm-screen.nm-c-Red .table-line { background-image: url('../img/nomercy/table/center-Red.png'); }
+#nm-screen.nm-c-Yellow .table-line { background-image: url('../img/nomercy/table/center-Yellow.png'); }
+#nm-screen.nm-c-Green .table-line { background-image: url('../img/nomercy/table/center-Green.png'); }
+#nm-screen.nm-c-Blue .table-line { background-image: url('../img/nomercy/table/center-Blue.png'); }
+
+
+/* ===== Warna meja berganti: cincin tengah berdenyut sebentar (menggantikan efek ganti Wild di tengah layar) ===== */
+#nm-screen.ring-pop .table-line { animation: nm-ring-pop .75s ease-out; }
+@keyframes nm-ring-pop { 0% { transform: translate(-50%, -50%) scale(.93); filter: brightness(1.9) saturate(1.4); } 45% { transform: translate(-50%, -50%) scale(1.05); filter: brightness(1.45); } 100% { transform: translate(-50%, -50%) scale(1); filter: none; } }
+
+/* ===== Animasi Forced Swap: dua pemain saling bertukar kartu ===== */
+.nm-swap-glow { animation: nm-swap-glow .8s ease-in-out infinite alternate; }
+@keyframes nm-swap-glow { from { filter: drop-shadow(0 0 4px #fde047); transform: scale(1); } to { filter: drop-shadow(0 0 14px #fde047) drop-shadow(0 0 6px #fff); transform: scale(1.08); } }
+.nm-stack-bump { animation: nm-stack-bump .55s ease-out; }
+@keyframes nm-stack-bump { 0% { transform: scale(1); } 35% { transform: scale(1.22); } 100% { transform: scale(1); } }
+#n-hand.nm-hand-in { animation: nm-hand-in .6s cubic-bezier(.2, .9, .3, 1.1); }
+@keyframes nm-hand-in { 0% { opacity: 0; transform: translateY(28px) scale(.92); } 100% { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { 
+#n-hand .nm-card-in { animation: nm-card-in .35s ease-out; }
+@keyframes nm-card-in { 0% { opacity: 0; translate: 0 36px; } 100% { opacity: 1; translate: 0 0; } }
+
+/* ===== Khusus No Mercy: meter Mercy (25 kartu = tersingkir), pemain tersingkir, tumpukan hukuman Draw ===== */
+#n-opps .count-badge.mercy-warn { background: #f59e0b; color: #1f1300; border-color: #fff; }
+#n-opps .count-badge.mercy-danger { background: #dc2626; color: #fff; border-color: #fff; animation: nm-danger .6s ease-in-out infinite alternate; }
+@keyframes nm-danger { from { transform: scale(1); } to { transform: scale(1.22); } }
+#n-opps .opp-profile.opp-out { filter: grayscale(1) brightness(.7); opacity: .5; pointer-events: none; }
+#n-opps .out-tag { position: absolute; left: 50%; top: 38%; z-index: 30; transform: translate(-50%, -50%) rotate(-12deg); padding: 1px 6px; border: 2px solid #fff; border-radius: 6px; background: #b91c1c; color: #fff; font-size: calc(10px * max(var(--s, 1), .8)); font-weight: 900; letter-spacing: .04em; white-space: nowrap; }
+
+#n-mercy-me { position: absolute; right: calc(6px * var(--s, 1)); top: calc(-4px * var(--s, 1)); z-index: 24; padding: 2px 10px; border-radius: 999px; border: 2px solid #fff; background: rgba(0,0,0,.55); color: #fff; font-weight: 900; font-size: calc(14px * max(var(--s, 1), .8)); text-shadow: 0 1px 0 #000; pointer-events: none; }
+#n-mercy-me.mercy-warn { background: #f59e0b; color: #1f1300; text-shadow: none; }
+#n-mercy-me.mercy-danger { background: #dc2626; animation: nm-danger .6s ease-in-out infinite alternate; }
+#n-mercy-me.hidden { display: none; }
+
+/* tumpukan hukuman di slot kanan meja */
+#n-stack { position: relative; width: calc(86px * var(--s, 1)); margin: 0 auto; text-align: center; pointer-events: none; transform: translateY(calc(-22px * var(--s, 1))); }
+#n-stack.hidden { visibility: hidden; }
+#n-stack img { width: 100%; display: block; filter: drop-shadow(0 4px 8px rgba(0,0,0,.7)); animation: nm-stack-pop .5s ease-out; }
+#n-stack b { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-62%); font-size: calc(30px * max(var(--s, 1), .8)); color: #fff; -webkit-text-stroke: 3px #000; paint-order: stroke fill; font-weight: 900; line-height: 1; }
+#n-stack small { display: block; margin-top: -4px; font-size: calc(12px * max(var(--s, 1), .8)); font-weight: 800; color: #fde68a; text-shadow: 0 2px 0 #000; }
+@keyframes nm-stack-pop { 0% { transform: scale(.3); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
+
+/* tombol ambil hukuman (menggantikan tombol Lewati) */
+#n-btn-pen { background: linear-gradient(#ef4444, #991b1b); color: #fff; font-weight: 900; border: 2px solid #fff; border-radius: 999px; touch-action: manipulation; font-size: calc(14px * max(var(--s, 1), .75)); padding: calc(8px * var(--s, 1)) calc(14px * var(--s, 1)); text-shadow: 0 1px 0 #000; }
+#n-btn-pen:active { transform: translateY(2px); }
+#n-btn-pen.hidden { display: none; }
+#n-draw.deck-ready { animation: nm-deck-pulse 1s ease-in-out infinite; }
+@keyframes nm-deck-pulse { 0%, 100% { filter: drop-shadow(0 0 0 #facc15); } 50% { filter: drop-shadow(0 0 12px #facc15); } }
+.nm-mercy-note { font-size: 12px; opacity: .85; }

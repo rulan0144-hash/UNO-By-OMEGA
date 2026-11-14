@@ -6,77 +6,88 @@
     <title>UNO Multiplayer Real-Time</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=20261112-0623">
-    <link rel="stylesheet" href="css/home.css?v=20261112-0623">
-    <link rel="stylesheet" href="css/flip.css?v=20261112-0623">
-    <link rel="stylesheet" href="css/flex.css?v=20261112-0623">
-    <link rel="stylesheet" href="css/allwild.css?v=20261112-0623">
+    <link rel="stylesheet" href="css/style.css?v=20261114-0107">
+    <link rel="stylesheet" href="css/home.css?v=20261114-0107">
+    <link rel="stylesheet" href="css/flip.css?v=20261114-0107">
+    <link rel="stylesheet" href="css/flex.css?v=20261114-0107">
+    <link rel="stylesheet" href="css/allwild.css?v=20261114-0107">
+    <link rel="stylesheet" href="css/nomercy.css?v=20261114-0107">
     <!-- IMPORTMAP:START (dibuat alat/bump_version.py, jangan diedit manual) -->
     <script type="importmap">
 {
   "imports": {
-    "./js/app/home.js": "./js/app/home.js?v=20261112-0623",
-    "./js/app/modes.js": "./js/app/modes.js?v=20261112-0623",
-    "./js/app/online-hub.js": "./js/app/online-hub.js?v=20261112-0623",
-    "./js/app/profile.js": "./js/app/profile.js?v=20261112-0623",
-    "./js/app/rounds.js": "./js/app/rounds.js?v=20261112-0623",
-    "./js/app/router.js": "./js/app/router.js?v=20261112-0623",
-    "./js/app/settings.js": "./js/app/settings.js?v=20261112-0623",
-    "./js/core/config.js": "./js/core/config.js?v=20261112-0623",
-    "./js/core/countdown.js": "./js/core/countdown.js?v=20261112-0623",
-    "./js/core/doubletap.js": "./js/core/doubletap.js?v=20261112-0623",
-    "./js/core/firebase.js": "./js/core/firebase.js?v=20261112-0623",
-    "./js/core/loader.js": "./js/core/loader.js?v=20261112-0623",
-    "./js/core/oppfit.js": "./js/core/oppfit.js?v=20261112-0623",
-    "./js/core/series.js": "./js/core/series.js?v=20261112-0623",
-    "./js/core/sound.js": "./js/core/sound.js?v=20261112-0623",
-    "./js/core/state.js": "./js/core/state.js?v=20261112-0623",
-    "./js/main.js": "./js/main.js?v=20261112-0623",
-    "./js/modes/allwild/actions.js": "./js/modes/allwild/actions.js?v=20261112-0623",
-    "./js/modes/allwild/animations.js": "./js/modes/allwild/animations.js?v=20261112-0623",
-    "./js/modes/allwild/bot.js": "./js/modes/allwild/bot.js?v=20261112-0623",
-    "./js/modes/allwild/colormode.js": "./js/modes/allwild/colormode.js?v=20261112-0623",
-    "./js/modes/allwild/deck.js": "./js/modes/allwild/deck.js?v=20261112-0623",
-    "./js/modes/allwild/index.js": "./js/modes/allwild/index.js?v=20261112-0623",
-    "./js/modes/allwild/local.js": "./js/modes/allwild/local.js?v=20261112-0623",
-    "./js/modes/allwild/pause.js": "./js/modes/allwild/pause.js?v=20261112-0623",
-    "./js/modes/allwild/rules.js": "./js/modes/allwild/rules.js?v=20261112-0623",
-    "./js/modes/allwild/timer.js": "./js/modes/allwild/timer.js?v=20261112-0623",
-    "./js/modes/allwild/ui.js": "./js/modes/allwild/ui.js?v=20261112-0623",
-    "./js/modes/classic/actions.js": "./js/modes/classic/actions.js?v=20261112-0623",
-    "./js/modes/classic/animations.js": "./js/modes/classic/animations.js?v=20261112-0623",
-    "./js/modes/classic/challenge.js": "./js/modes/classic/challenge.js?v=20261112-0623",
-    "./js/modes/classic/deck.js": "./js/modes/classic/deck.js?v=20261112-0623",
-    "./js/modes/classic/index.js": "./js/modes/classic/index.js?v=20261112-0623",
-    "./js/modes/classic/local.js": "./js/modes/classic/local.js?v=20261112-0623",
-    "./js/modes/classic/online.js": "./js/modes/classic/online.js?v=20261112-0623",
-    "./js/modes/classic/pause.js": "./js/modes/classic/pause.js?v=20261112-0623",
-    "./js/modes/classic/rules.js": "./js/modes/classic/rules.js?v=20261112-0623",
-    "./js/modes/classic/timer.js": "./js/modes/classic/timer.js?v=20261112-0623",
-    "./js/modes/classic/ui.js": "./js/modes/classic/ui.js?v=20261112-0623",
-    "./js/modes/flex/actions.js": "./js/modes/flex/actions.js?v=20261112-0623",
-    "./js/modes/flex/animations.js": "./js/modes/flex/animations.js?v=20261112-0623",
-    "./js/modes/flex/bot.js": "./js/modes/flex/bot.js?v=20261112-0623",
-    "./js/modes/flex/challenge.js": "./js/modes/flex/challenge.js?v=20261112-0623",
-    "./js/modes/flex/data.js": "./js/modes/flex/data.js?v=20261112-0623",
-    "./js/modes/flex/deck.js": "./js/modes/flex/deck.js?v=20261112-0623",
-    "./js/modes/flex/index.js": "./js/modes/flex/index.js?v=20261112-0623",
-    "./js/modes/flex/local.js": "./js/modes/flex/local.js?v=20261112-0623",
-    "./js/modes/flex/pause.js": "./js/modes/flex/pause.js?v=20261112-0623",
-    "./js/modes/flex/rules.js": "./js/modes/flex/rules.js?v=20261112-0623",
-    "./js/modes/flex/timer.js": "./js/modes/flex/timer.js?v=20261112-0623",
-    "./js/modes/flex/ui.js": "./js/modes/flex/ui.js?v=20261112-0623",
-    "./js/modes/flip/actions.js": "./js/modes/flip/actions.js?v=20261112-0623",
-    "./js/modes/flip/animations.js": "./js/modes/flip/animations.js?v=20261112-0623",
-    "./js/modes/flip/challenge.js": "./js/modes/flip/challenge.js?v=20261112-0623",
-    "./js/modes/flip/data.js": "./js/modes/flip/data.js?v=20261112-0623",
-    "./js/modes/flip/deck.js": "./js/modes/flip/deck.js?v=20261112-0623",
-    "./js/modes/flip/index.js": "./js/modes/flip/index.js?v=20261112-0623",
-    "./js/modes/flip/local.js": "./js/modes/flip/local.js?v=20261112-0623",
-    "./js/modes/flip/pause.js": "./js/modes/flip/pause.js?v=20261112-0623",
-    "./js/modes/flip/rules.js": "./js/modes/flip/rules.js?v=20261112-0623",
-    "./js/modes/flip/timer.js": "./js/modes/flip/timer.js?v=20261112-0623",
-    "./js/modes/flip/ui.js": "./js/modes/flip/ui.js?v=20261112-0623"
+    "./js/app/home.js": "./js/app/home.js?v=20261114-0107",
+    "./js/app/modes.js": "./js/app/modes.js?v=20261114-0107",
+    "./js/app/online-hub.js": "./js/app/online-hub.js?v=20261114-0107",
+    "./js/app/profile.js": "./js/app/profile.js?v=20261114-0107",
+    "./js/app/rounds.js": "./js/app/rounds.js?v=20261114-0107",
+    "./js/app/router.js": "./js/app/router.js?v=20261114-0107",
+    "./js/app/settings.js": "./js/app/settings.js?v=20261114-0107",
+    "./js/core/config.js": "./js/core/config.js?v=20261114-0107",
+    "./js/core/countdown.js": "./js/core/countdown.js?v=20261114-0107",
+    "./js/core/doubletap.js": "./js/core/doubletap.js?v=20261114-0107",
+    "./js/core/firebase.js": "./js/core/firebase.js?v=20261114-0107",
+    "./js/core/loader.js": "./js/core/loader.js?v=20261114-0107",
+    "./js/core/oppfit.js": "./js/core/oppfit.js?v=20261114-0107",
+    "./js/core/series.js": "./js/core/series.js?v=20261114-0107",
+    "./js/core/sound.js": "./js/core/sound.js?v=20261114-0107",
+    "./js/core/state.js": "./js/core/state.js?v=20261114-0107",
+    "./js/main.js": "./js/main.js?v=20261114-0107",
+    "./js/modes/allwild/actions.js": "./js/modes/allwild/actions.js?v=20261114-0107",
+    "./js/modes/allwild/animations.js": "./js/modes/allwild/animations.js?v=20261114-0107",
+    "./js/modes/allwild/bot.js": "./js/modes/allwild/bot.js?v=20261114-0107",
+    "./js/modes/allwild/colormode.js": "./js/modes/allwild/colormode.js?v=20261114-0107",
+    "./js/modes/allwild/deck.js": "./js/modes/allwild/deck.js?v=20261114-0107",
+    "./js/modes/allwild/index.js": "./js/modes/allwild/index.js?v=20261114-0107",
+    "./js/modes/allwild/local.js": "./js/modes/allwild/local.js?v=20261114-0107",
+    "./js/modes/allwild/pause.js": "./js/modes/allwild/pause.js?v=20261114-0107",
+    "./js/modes/allwild/rules.js": "./js/modes/allwild/rules.js?v=20261114-0107",
+    "./js/modes/allwild/timer.js": "./js/modes/allwild/timer.js?v=20261114-0107",
+    "./js/modes/allwild/ui.js": "./js/modes/allwild/ui.js?v=20261114-0107",
+    "./js/modes/classic/actions.js": "./js/modes/classic/actions.js?v=20261114-0107",
+    "./js/modes/classic/animations.js": "./js/modes/classic/animations.js?v=20261114-0107",
+    "./js/modes/classic/challenge.js": "./js/modes/classic/challenge.js?v=20261114-0107",
+    "./js/modes/classic/deck.js": "./js/modes/classic/deck.js?v=20261114-0107",
+    "./js/modes/classic/index.js": "./js/modes/classic/index.js?v=20261114-0107",
+    "./js/modes/classic/local.js": "./js/modes/classic/local.js?v=20261114-0107",
+    "./js/modes/classic/online.js": "./js/modes/classic/online.js?v=20261114-0107",
+    "./js/modes/classic/pause.js": "./js/modes/classic/pause.js?v=20261114-0107",
+    "./js/modes/classic/rules.js": "./js/modes/classic/rules.js?v=20261114-0107",
+    "./js/modes/classic/timer.js": "./js/modes/classic/timer.js?v=20261114-0107",
+    "./js/modes/classic/ui.js": "./js/modes/classic/ui.js?v=20261114-0107",
+    "./js/modes/flex/actions.js": "./js/modes/flex/actions.js?v=20261114-0107",
+    "./js/modes/flex/animations.js": "./js/modes/flex/animations.js?v=20261114-0107",
+    "./js/modes/flex/bot.js": "./js/modes/flex/bot.js?v=20261114-0107",
+    "./js/modes/flex/challenge.js": "./js/modes/flex/challenge.js?v=20261114-0107",
+    "./js/modes/flex/data.js": "./js/modes/flex/data.js?v=20261114-0107",
+    "./js/modes/flex/deck.js": "./js/modes/flex/deck.js?v=20261114-0107",
+    "./js/modes/flex/index.js": "./js/modes/flex/index.js?v=20261114-0107",
+    "./js/modes/flex/local.js": "./js/modes/flex/local.js?v=20261114-0107",
+    "./js/modes/flex/pause.js": "./js/modes/flex/pause.js?v=20261114-0107",
+    "./js/modes/flex/rules.js": "./js/modes/flex/rules.js?v=20261114-0107",
+    "./js/modes/flex/timer.js": "./js/modes/flex/timer.js?v=20261114-0107",
+    "./js/modes/flex/ui.js": "./js/modes/flex/ui.js?v=20261114-0107",
+    "./js/modes/flip/actions.js": "./js/modes/flip/actions.js?v=20261114-0107",
+    "./js/modes/flip/animations.js": "./js/modes/flip/animations.js?v=20261114-0107",
+    "./js/modes/flip/challenge.js": "./js/modes/flip/challenge.js?v=20261114-0107",
+    "./js/modes/flip/data.js": "./js/modes/flip/data.js?v=20261114-0107",
+    "./js/modes/flip/deck.js": "./js/modes/flip/deck.js?v=20261114-0107",
+    "./js/modes/flip/index.js": "./js/modes/flip/index.js?v=20261114-0107",
+    "./js/modes/flip/local.js": "./js/modes/flip/local.js?v=20261114-0107",
+    "./js/modes/flip/pause.js": "./js/modes/flip/pause.js?v=20261114-0107",
+    "./js/modes/flip/rules.js": "./js/modes/flip/rules.js?v=20261114-0107",
+    "./js/modes/flip/timer.js": "./js/modes/flip/timer.js?v=20261114-0107",
+    "./js/modes/flip/ui.js": "./js/modes/flip/ui.js?v=20261114-0107",
+    "./js/modes/nomercy/actions.js": "./js/modes/nomercy/actions.js?v=20261114-0107",
+    "./js/modes/nomercy/animations.js": "./js/modes/nomercy/animations.js?v=20261114-0107",
+    "./js/modes/nomercy/bot.js": "./js/modes/nomercy/bot.js?v=20261114-0107",
+    "./js/modes/nomercy/deck.js": "./js/modes/nomercy/deck.js?v=20261114-0107",
+    "./js/modes/nomercy/index.js": "./js/modes/nomercy/index.js?v=20261114-0107",
+    "./js/modes/nomercy/local.js": "./js/modes/nomercy/local.js?v=20261114-0107",
+    "./js/modes/nomercy/pause.js": "./js/modes/nomercy/pause.js?v=20261114-0107",
+    "./js/modes/nomercy/rules.js": "./js/modes/nomercy/rules.js?v=20261114-0107",
+    "./js/modes/nomercy/timer.js": "./js/modes/nomercy/timer.js?v=20261114-0107",
+    "./js/modes/nomercy/ui.js": "./js/modes/nomercy/ui.js?v=20261114-0107"
   }
 }
     </script>
@@ -716,6 +727,120 @@
         </div>
     </div>
 
+
+    <!-- ============ UNO SHOW 'EM NO MERCY (id berawalan n-, fungsi window nm*) ============ -->
+    <div id="nm-screen" class="hidden h-full w-full flex flex-col relative casino">
+
+        <button id="n-btn-menu" onclick="nmOpenMenu()" class="menu-btn" aria-label="Pengaturan"><img src="img/ui/settings.png" alt="" draggable="false"></button>
+
+        <!-- Menu Pengaturan (suara + jeda + ulang + keluar) -->
+        <div id="n-pause-modal" class="pause-modal hidden">
+            <div class="pause-box">
+                <h2 id="n-pause-title" class="pause-title">Pengaturan</h2>
+                <p id="n-pause-note" class="pause-note"></p>
+                <div class="snd-panel">
+                    <button onclick="toggleSound()" data-nosfx="1" class="snd-mute" aria-label="Bisu"><img class="snd-img" src="img/ui/sound-on.png" alt="" draggable="false"></button>
+                    <div class="snd-sliders">
+                        <label>Musik <input class="vol-music" type="range" min="0" max="100" value="60" oninput="setVolume('music', this.value)"></label>
+                        <label>Efek <input class="vol-sfx" type="range" min="0" max="100" value="90" oninput="setVolume('sfx', this.value)"></label>
+                    </div>
+                </div>
+                <button id="nmResume-btn" onclick="nmResume()" class="pause-btn pause-resume">▶ Lanjutkan</button>
+                <button id="n-btn-restart" onclick="nmRestart()" class="pause-btn pause-restart">↻ Mulai Ulang</button>
+                <button onclick="nmExit()" class="pause-btn pause-exit">◀ Keluar ke Beranda</button>
+            </div>
+        </div>
+
+        <!-- Pilih warna (Wild +N dan korban Color Roulette) -->
+        <div id="n-color-modal" class="cp-modal hidden">
+            <div class="cp-box">
+                <h2 id="n-cp-title" class="cp-title">Pilih Warna</h2>
+                <div class="cp-stage">
+                    <img id="n-cp-img" src="img/nomercy/fx/wild-spin.png" alt="">
+                    <button class="cp-zone cp-Green"  data-c="Green"  onclick="nmPickColor(this.dataset.c)"  aria-label="Hijau"></button>
+                    <button class="cp-zone cp-Blue"   data-c="Blue"   onclick="nmPickColor(this.dataset.c)"   aria-label="Biru"></button>
+                    <button class="cp-zone cp-Yellow" data-c="Yellow" onclick="nmPickColor(this.dataset.c)" aria-label="Kuning"></button>
+                    <button class="cp-zone cp-Red"    data-c="Red"    onclick="nmPickColor(this.dataset.c)"    aria-label="Merah"></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pilih lawan (kartu 7: tukar tangan) -->
+        <div id="n-target-modal" class="n-ask hidden">
+            <div class="n-ask-box">
+                <h2 id="n-target-title" class="n-ask-title">Tukar tangan dengan siapa?</h2>
+                <div id="n-target-list" class="n-target-list"></div>
+                <button class="n-ask-cancel" onclick="nmCancelAsk()">Batal</button>
+            </div>
+        </div>
+
+        <!-- Layar akhir -->
+        <div id="n-over-modal" class="over-modal hidden">
+            <div class="bg-gray-800 p-6 md:p-10 rounded-xl border-4 border-red-600 text-center w-full max-w-lg shadow-[0_0_50px_rgba(220,38,38,0.35)]">
+                <h1 id="n-winner-text" class="text-4xl md:text-5xl mb-2 text-yellow-400 font-bold">Player Menang!</h1>
+                <p id="n-win-by" class="text-sm mb-1 text-red-300 font-bold"></p>
+                <p id="n-score-text" class="text-2xl mb-4 font-black text-green-400">Total Skor: 0 Poin</p>
+                <div class="bg-gray-900 border border-gray-700 rounded-lg p-4 mb-6 text-left max-h-48 overflow-y-auto hide-scrollbar">
+                    <h3 class="text-gray-400 text-sm uppercase tracking-widest font-bold mb-2 border-b border-gray-700 pb-2">Rincian Poin</h3>
+                    <div id="n-score-breakdown" class="text-sm text-gray-200 space-y-2"></div>
+                </div>
+                <div id="n-over-series" class="over-series hidden"></div>
+                <div id="n-over-actions" class="over-actions"></div>
+            </div>
+        </div>
+
+        <!-- Atas: lawan -->
+        <div class="row-top w-full pt-2 pb-2 px-3 flex items-end">
+            <div id="n-opps" class="opp-area"></div>
+        </div>
+
+        <!-- Tengah: meja -->
+        <div class="row-mid flex flex-row items-center justify-center relative w-full px-2">
+            <div class="table-line"></div>
+            <div id="n-dir-ring" class="dir-ring"><img src="img/ui/direction.png" alt="" draggable="false"></div>
+
+            <div id="n-timer" class="turn-timer tt-ok"><span id="n-time">15.00</span></div>
+
+            <!-- Di bawah timer: tulisan giliran + tombol ambil hukuman -->
+            <div class="turn-info">
+                <span id="n-turn-ind" class="text-lg md:text-2xl font-black text-gray-400 transition-colors">Menunggu...</span>
+                <button onclick="nmTakePenalty()" id="n-btn-pen" class="hidden">Ambil kartu</button>
+            </div>
+
+            <!-- Kiri-bawah: profil | tengah: UNO | kanan-bawah: tombol tangkap -->
+            <div class="table-bottom">
+                <div class="tb-left">
+                    <div id="n-me-avatar"></div>
+                    <div id="n-mercy-me" class="hidden">0/25</div>
+                </div>
+                <button id="n-btn-uno" class="uno-btn" onpointerdown="event.preventDefault();nmUno()" aria-label="UNO">UNO!</button>
+                <div class="tb-right">
+                    <button id="n-btn-catch" class="catch-btn" onpointerdown="event.preventDefault();nmCatchAny()" aria-label="Tangkap pemain yang lupa UNO"><span>UNO</span><img src="img/effects/hammer.png" alt="" draggable="false"></button>
+                </div>
+            </div>
+
+            <!-- Meja: tumpukan ambil (satu) | tumpukan buangan (tengah) | tumpukan hukuman -->
+            <div class="table-grid">
+                <div class="deck-slot deck-slot-l">
+                    <div onclick="nmDraw()" id="n-draw" class="uno-card draw-pile"></div>
+                    <span class="deck-count"><span id="n-count">0</span></span>
+                </div>
+                <div class="center-slot">
+                    <div id="n-discard" class="relative"></div>
+                    <div id="n-badge" class="color-badge">Warna: -</div>
+                </div>
+                <div class="deck-slot deck-slot-r">
+                    <div id="n-stack" class="hidden"><img src="img/nomercy/fx/stack.png" alt=""><b id="n-stack-n">+0</b><small id="n-stack-note"></small></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bawah: tangan kartu -->
+        <div class="row-bot flex flex-col items-center justify-start w-full relative player-panel">
+            <div id="n-hand" class="flex gap-2 overflow-x-auto w-full max-w-6xl items-center h-full px-4 md:px-6 hide-scrollbar"></div>
+        </div>
+    </div>
+
         <script>
         // Penjaga: tampilkan penyebab jelas di layar jika file JS gagal dimuat
         (function () {
@@ -737,6 +862,6 @@
             }, 8000);
         })();
     </script>
-    <script type="module" src="js/main.js?v=20261112-0623"></script>
+    <script type="module" src="js/main.js?v=20261114-0107"></script>
 </body>
 </html>
