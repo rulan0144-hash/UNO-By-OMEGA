@@ -1,6 +1,6 @@
 import { isBusy, whenIdle } from './animations.js';
 import { S, cloneState, fx, nameOf } from '../../core/state.js';
-import { needsColor, needsTarget } from './deck.js';
+import { needsColor, needsTarget, pointOf } from './deck.js';
 import { actorUid, canCallUno, drawUntilPlayable, hasPlayable, isCatchable, isMyTurn, isOut, isPlayableIn, normalizeUno, penalize, pickRouletteColor, playCardOn, resolveRoulette, rouletteDraw, takePenalty, tallyRound } from './rules.js';
 import { chooseTimeoutPlay } from './bot.js';
 import { askColor, askTarget, closeAsks, handleGameOver, renderGame } from './ui.js';
@@ -13,6 +13,7 @@ export async function updateRemoteState(newState, extra = {}) {
     if (!S.currentRoomCode) return;
     if (newState.logs.length > 30) newState.logs = newState.logs.slice(-30);
     normalizeUno(newState, S.roomData && S.roomData.gameState && S.roomData.gameState.hands);
+    if (S.localMode) endIfHumanOut(newState);
     if (newState.winner && !extra.status) extra = { ...extra, status: 'finished' };   // menang karena Mercy / kartu terakhir
     if (extra.status === 'finished') tallyRound(newState);
     if (!S.localMode) {
@@ -22,6 +23,20 @@ export async function updateRemoteState(newState, extra = {}) {
     S.roomData = { ...S.roomData, ...extra, gameState: newState };
     renderGame();
     if (S.roomData.status === 'finished') handleGameOver(); else scheduleBot();
+}
+
+// OFFLINE (vs Komputer): begitu PEMAIN tersingkir (Mercy), ronde langsung selesai tanpa menunggu bot saling bermain.
+// Pemenang = lawan hidup dengan kartu paling sedikit (seri: poin kartu paling kecil, lalu urutan meja). Menu akhir (Main Lagi /
+// Lanjut ke Ronde N / Beranda) muncul setelah animasi Mercy selesai. Poin dihitung seperti biasa (+250 untuk yang tersingkir).
+function endIfHumanOut(st) {
+    const me = S.currentUser && S.currentUser.uid;
+    if (!me || st.winner || !isOut(st, me)) return;
+    const alive = S.roomData.players.filter(p => !isOut(st, p.uid));
+    if (!alive.length) return;
+    const score = (u) => st.hands[u].reduce((a, c) => a + pointOf(c), 0);
+    alive.sort((a, b) => st.hands[a.uid].length - st.hands[b.uid].length || score(a.uid) - score(b.uid));
+    st.winner = alive[0].uid; st.winBy = 'out'; st.pending = null; st.forced = null;
+    st.logs.push(`<b>${nameOf(me)}</b> tersingkir: ronde selesai, <b>${nameOf(st.winner)}</b> menang!`);
 }
 
 // Menerapkan SATU keputusan (bot.js: decide / chooseTimeoutPlay) ke state. `again(s)` menghasilkan keputusan berikutnya
@@ -149,6 +164,7 @@ window.nmUno = () => {
 
 // Ketuk profil lawan yang bertanda palu -> langsung tertangkap
 window.nmCatch = (uid) => {
+    if (isOut(S.roomData.gameState, S.currentUser.uid)) return;   // pemain tersingkir hanya menonton
     const s = cloneState();
     if (!isCatchable(s, uid)) return showToast("Tidak bisa ditangkap (sudah bilang UNO atau kartunya bukan 1 lagi).");
     penalize(s, uid, S.currentUser.uid);
@@ -157,7 +173,7 @@ window.nmCatch = (uid) => {
 
 // Tombol tangkap di kanan-bawah: tangkap pemain pertama (urut dari pemain setelah kita) yang lupa UNO.
 window.nmCatchAny = () => {
-    if (!S.roomData || S.roomData.status !== 'playing') return;
+    if (!S.roomData || S.roomData.status !== 'playing' || isOut(S.roomData.gameState, S.currentUser.uid)) return;
     const s = cloneState();
     const me = S.currentUser.uid, pl = S.roomData.players;
     const myIdx = pl.findIndex(p => p.uid === me);

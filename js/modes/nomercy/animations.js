@@ -229,7 +229,7 @@ async function draw({ uid, n, pen, sides, cards, roul }) {
     const mine = uid === S.currentUser?.uid;
     const kids = mine ? [...$('n-hand').children] : [];
     const jobs = [];
-    if (pen) sfx('draw2');
+    // (suara hukuman tidak diputar lagi di sini: bunyi Draw sudah dimainkan banner saat kartunya dikeluarkan)
     const base = kids.length - Math.max(n, cur ? cur.me : n);
     for (let i = 0; i < count; i++) {
         sfx(roul ? 'rtap' : 'draw', i * 0.22);   // Roulette: ketukan tegang, lalu denting naik bila warnanya cocok / nada rendah bila bukan

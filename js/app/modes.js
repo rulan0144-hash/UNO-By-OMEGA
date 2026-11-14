@@ -41,7 +41,7 @@ export const MODES = [
         bots: { min: 1, max: 9, def: 3 }
     },
     {
-        id: 'nomercy', group: 'other', ready: true, online: false,
+        id: 'nomercy', group: 'other', ready: true,
         name: "UNO Show 'Em No Mercy",
         desc: 'Brutal dan tanpa ampun: tumpuk Draw sampai +10, buang semua warna, dan tersingkir bila memegang 25 kartu!',
         theme: 'nomercy', logo: 'img/ui/logo-nomercy.png', tag: 'Brutal. Kejam. Tanpa ampun.', badge: 'img/ui/badge-players-nomercy.png',

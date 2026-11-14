@@ -1,4 +1,4 @@
-// Pintu masuk mode UNO Show 'Em No Mercy: mendaftarkan diri ke beranda. Saat ini hanya vs Komputer (online menyusul).
+// Pintu masuk mode UNO Show 'Em No Mercy: mendaftarkan diri ke beranda (vs Komputer dan online 2-6 pemain).
 import './actions.js';
 import './local.js';
 import './pause.js';
@@ -26,7 +26,7 @@ registerMode('nomercy', {
         document.getElementById('bot-count').value = String(n);
         window.startNmLocal();
     },
-    // blok online disiapkan supaya tombol Beranda/Main Lagi/ronde bekerja; lobi online baru aktif setelah modes.js memakai online (bukan false)
+    // online: lobi + sinkron Firestore dipakai bersama lewat classic/online.js; blok ini memberi tahu layar, render, layar akhir, bagi kartu, dan keluar
     online: {
         screen: 'nm-screen', render: renderGame, gameOver: handleGameOver, deal: dealGame,
         leave: () => window.nmLeave()

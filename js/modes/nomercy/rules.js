@@ -190,13 +190,21 @@ export function resolveRoulette(state, color) {
     if (!p || p.kind !== 'roulette') return 0;
     if (!p.color) pickRouletteColor(state, color);
     const uid = p.victim, roul = p.color, got = [], sides = [];
+    const start = state.fx && state.fx.list ? state.fx.list.length : 0;
     for (let guard = 0; state.pending && guard < 400; guard++) {
         const r = rouletteDraw(state, undefined, true);
         if (!r) break;
         if (r.card) { got.push(r.card); sides.push(r.side); }
         if (r.done) break;
     }
-    if (got.length) fx(state, { t: 'draw', uid, n: got.length, cards: got, sides, roul });
+    if (got.length) {
+        // Urutan animasi: kartu Roulette diambil DULU, baru (bila korban mencapai 25) banner Mercy + kartu kembali ke tumpukan.
+        // checkMercy sudah mencatat peristiwa 'mercy' di dalam loop, jadi peristiwa draw disisipkan SEBELUM peristiwa mercy itu.
+        const ev = { t: 'draw', uid, n: got.length, cards: got, sides, roul };
+        const list = state.fx && state.fx.list;
+        const at = list ? list.findIndex((e, i) => i >= start && e.t === 'mercy') : -1;
+        if (at >= 0) list.splice(at, 0, ev); else fx(state, ev);
+    }
     return got.length;
 }
 

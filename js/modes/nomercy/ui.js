@@ -351,7 +351,8 @@ export function handleGameOver() {
             </div>`;
     });
     $('n-winner-text').innerText = (winnerUid === S.currentUser.uid) ? 'Kamu Menang!' : `${winnerObj ? winnerObj.name : '?'} Menang!`;
-    $('n-win-by').innerText = state.winBy === 'mercy' ? 'Semua lawan tersingkir (Mercy)!' : '';
+    const meOut = isOut(state, S.currentUser.uid) && winnerUid !== S.currentUser.uid;
+    $('n-win-by').innerText = meOut ? 'Kamu tersingkir (Mercy)!' : (state.winBy === 'mercy' ? 'Semua lawan tersingkir (Mercy)!' : '');
     $('n-score-text').innerText = `Total Skor: ${state.roundPts || 0} Poin`;
     $('n-score-breakdown').innerHTML = breakdownHTML || '<div class="text-center text-gray-500">Tidak ada sisa poin.</div>';
     fillOver('n-', winnerUid, state.roundPts || 0);   // papan skor ronde + tombol Lanjut ronde / Main Lagi / Beranda
@@ -362,7 +363,7 @@ export function handleGameOver() {
     if (S.winSoundKey === key) return;
     S.winSoundKey = key;
     stopMusic(0.4);
-    whenIdle().then(() => sayAsync('Uno game!')).then(() => {
+    whenIdle().then(() => (state.winBy === 'out' ? null : sayAsync('Uno game!'))).then(() => {   // tersingkir: tanpa teriakan "Uno game!" (tak ada yang menghabiskan kartu)
         if (S.winSoundKey !== key || !S.roomData || S.roomData.status !== 'finished') return;
         S.winShown = key;
         $('n-over-modal').classList.remove('hidden');

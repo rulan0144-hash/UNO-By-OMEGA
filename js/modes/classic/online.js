@@ -94,6 +94,7 @@ export function renderLobby() {
         return `<li class="border-b border-gray-700 py-2">👤 ${esc(p.name)}${isMe}${isHost}</li>`;
     }).join('');
     document.getElementById('player-count').innerText = S.roomData.players.length;
+    const pm = document.getElementById('player-max'); if (pm) pm.innerText = maxPlayersOf(S.roomData.mode);   // batas pemain sesuai mode (Flex 8, No Mercy 6, lainnya 10)
     renderLobbyRounds();   // pilihan jumlah ronde (host bisa ubah, pemain lain hanya melihat)
 
     const isHost = S.roomData.hostId === S.currentUser.uid;
