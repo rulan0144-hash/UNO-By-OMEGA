@@ -6,7 +6,7 @@ import { syncTimer } from './timer.js';
 import { S, esc } from '../../core/state.js';
 import { NAMES, HEX, MERCY_LIMIT, cardSrc, backSrc } from './deck.js';
 import { actorUid, canCallUno, hasPlayable, isCatchable, isMyTurn, isOut, isPlayableIn } from './rules.js';
-import { applyHold, handleFx, heldColor, heldMercy, resetFx, shownCount, shownHand, whenIdle } from './animations.js';
+import { applyHold, handleFx, heldColor, heldCut, heldMercy, isBusy, resetFx, shownCount, shownHand, whenIdle } from './animations.js';
 import { sfx, sayAsync, startMusic, stopMusic } from '../../core/sound.js';
 import { go } from '../../app/router.js';
 import { fillOver } from '../../core/series.js';
@@ -94,28 +94,34 @@ export function renderGame() {
     }
     fitOpponents(oppArea);
 
-    // Tumpukan ambil (satu) + tumpukan hukuman Draw
-    const dk = $('n-draw');
-    dk.innerHTML = state.deck.length ? backHTML() : '<div class="deck-void"></div>';
-    dk.classList.toggle('deck-empty', state.deck.length === 0);
-    dk.classList.toggle('deck-ready', myTurn && (!pend || pend.kind === 'draw') && !state.forced && (!!pend || !hasPlayable(state, me)));
-    $('n-count').innerText = state.deck.length;
-    const stk = $('n-stack');
-    if (pend && pend.kind === 'draw') {
-        if (stk.classList.contains('hidden')) { const im = stk.querySelector('img'); im.style.animation = 'none'; void im.offsetWidth; im.style.animation = ''; }
-        stk.classList.remove('hidden');
-        $('n-stack-n').innerText = '+' + pend.n;
+    // Dua tumpukan ambil (kiri 'L' / kanan 'R', seperti mode lain). Color Roulette: setelah warna dipilih, korban mengetuk tumpukan sampai dapat warna itu.
+    const rouletteDrawing = !!(pend && pend.kind === 'roulette' && pend.color);
+    const canTap = myTurn && !state.forced && (rouletteDrawing || (!pend && !hasPlayable(state, me)) || (pend && pend.kind === 'draw'));
+    [['n-draw-l', 'n-count-l', state.deck], ['n-draw-r', 'n-count-r', state.deckR || []]].forEach(([id, cid, deck]) => {
+        const el = $(id);
+        el.innerHTML = deck.length ? backHTML() : '<div class="deck-void"></div>';
+        el.classList.toggle('deck-empty', deck.length === 0);
+        el.classList.toggle('deck-ready', canTap && deck.length > 0);
+        $(cid).innerText = deck.length;
+    });
+    // Tulisan STACK di tengah meja (menggantikan gambar tumpukan di samping): jumlah hukuman Draw yang sedang menumpuk. Muncul setelah animasi selesai.
+    const stk = $('n-stack-txt');
+    if (pend && pend.kind === 'draw' && !isBusy()) {
+        const label = '+' + pend.n;
+        if (stk.classList.contains('hidden') || $('n-stack-n').innerText !== label) { stk.classList.remove('hidden'); stk.classList.remove('stack-pop'); void stk.offsetWidth; stk.classList.add('stack-pop'); }
+        $('n-stack-n').innerText = label;
         $('n-stack-note').innerText = pend.count > 1 ? `ditumpuk ${pend.count}x` : '';
     } else stk.classList.add('hidden');
 
     // Tumpukan buangan (kartu teratas bercahaya sesuai warna yang berlaku)
-    const pile = state.discardPile, n = pile.length, top = pile[n - 1];
+    const cut = heldCut();   // Discard All sedang beranimasi: kartu yang dibuang + kartu Discard All belum tampak di tumpukan
+    const pile = cut ? state.discardPile.slice(0, Math.max(1, state.discardPile.length - cut)) : state.discardPile, n = pile.length, top = pile[n - 1];
     if (top) {
         let stack = '';
         for (let i = Math.max(0, n - 5); i < n - 1; i++) {
             stack += `<div class="uno-card pile-card" style="--dx:${((i * 29) % 9) - 4}px;--dy:${((i * 17) % 7) - 3}px;--rot:${pileRot(i)}deg">${generateCardHTML(pile[i])}</div>`;
         }
-        const glowC = state.currentColor;
+        const glowC = heldColor() || state.currentColor;
         const glow = glowC && HEX[glowC] ? ' glow-c' : '';
         stack += `<div class="uno-card pile-card pile-top${glow}" style="--dx:0px;--dy:0px;--rot:${pileRot(n - 1)}deg;--glow:${HEX[glowC] || '#fff'}">${generateCardHTML(top)}</div>`;
         $('n-discard').innerHTML = `<div class="pile-wrap">${stack}</div>`;
@@ -177,7 +183,7 @@ export function renderGame() {
         ti.className = 'text-lg md:text-2xl font-black text-red-400';
     } else if (aUid === me) {
         let msg = 'Giliran Kamu!';
-        if (pend && pend.kind === 'roulette') msg = 'Pilih warna!';
+        if (pend && pend.kind === 'roulette') msg = pend.color ? `Ketuk tumpukan sampai dapat ${NAMES[pend.color]}! (${pend.got || 0})` : 'Pilih warna!';
         else if (pend && pend.kind === 'draw') { msg = `Tumpuk Draw ≥ +${pend.top} atau ambil ${pend.n}!`; btnPen.textContent = `Ambil ${pend.n} kartu`; btnPen.classList.remove('hidden'); }
         else if (state.forced && state.forced.uid === me) msg = 'Kartu baru wajib dimainkan!';
         else if (!hasPlayable(state, me)) msg = 'Tidak ada yang cocok: ketuk tumpukan!';

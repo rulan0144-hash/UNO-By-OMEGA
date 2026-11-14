@@ -12,7 +12,7 @@ const ok = (cond, msg) => { checks++; if (!cond) { fails++; console.log('GAGAL:'
 const mkPlayers = (n) => Array.from({ length: n }, (_, i) => ({ uid: 'p' + i, name: 'P' + i }));
 const proto = D.buildDeck();
 const card = (img) => { const c = proto.find(x => x.img === img); if (!c) throw new Error('kartu tak ada: ' + img); return JSON.parse(JSON.stringify(c)); };
-const total = (st) => st.deck.length + st.discardPile.length + st.setAside.length + Object.values(st.hands).reduce((a, h) => a + h.length, 0);
+const total = (st) => st.deck.length + (st.deckR || []).length + st.discardPile.length + st.setAside.length + Object.values(st.hands).reduce((a, h) => a + h.length, 0);
 
 // ----- komposisi dek -----
 {
@@ -27,17 +27,17 @@ const total = (st) => st.deck.length + st.discardPile.length + st.setAside.lengt
     ok(D.pointOf(card('Red-7')) === 7 && D.pointOf(card('Red-Skip')) === 20 && D.pointOf(card('Blue-DiscardAll')) === 20 && D.pointOf(card('Black-WildDrawTen')) === 50 && D.pointOf(card('Black-WildColorRoulette')) === 50, 'poin kartu');
 }
 
-function setup(n, hands, topImg, color) {
+function setup(n, hands = [], topImg, color) {
     S.roomData = { players: mkPlayers(n), status: 'playing', gameState: null };
     S.currentUser = { uid: 'p0' };
     const st = D.dealGame(S.roomData.players);
     st.fx = { id: 'x', list: [] };
-    const all = [...st.deck, ...Object.values(st.hands).flat(), ...st.discardPile];
+    const all = [...st.deck, ...st.deckR, ...Object.values(st.hands).flat(), ...st.discardPile];
     S.roomData.players.forEach((p, i) => { st.hands[p.uid] = (hands[i] && hands[i].length ? hands[i] : ['Red-1', 'Red-2', 'Red-3']).map(card); });
     st.discardPile = [card(topImg || 'Red-5')]; st.currentColor = color || st.discardPile[0].c;
     st.turnIndex = 0; st.direction = 1;
     const used = new Set([...Object.values(st.hands).flat(), ...st.discardPile].map(c => c.id));
-    const rest = all.filter(c => !used.has(c.id)); D.shuffle(rest); st.deck = rest;
+    const rest = all.filter(c => !used.has(c.id)); D.shuffle(rest); st.deck = rest; st.deckR = [];   // uji unit: satu tumpukan saja (urutan kartu bisa ditentukan putTop); dua tumpukan diuji terpisah di bawah
     S.roomData.gameState = st;
     return st;
 }
@@ -51,6 +51,7 @@ for (let k = 0; k < 50; k++) {
     const st = D.dealGame(players);
     ok(players.every(p => st.hands[p.uid].length === 7), 'bagi 7 kartu');
     ok(total(st) === 168 && st.discardPile.length === 1, 'total 168 + 1 kartu buangan');
+    ok(Math.abs(st.deck.length - st.deckR.length) <= 1 && st.deck.length > 0, 'DUA tumpukan ambil: dibagi rata kiri/kanan');
     ok(/^[0-9]$/.test(st.discardPile[0].v) && D.COLORS.includes(st.currentColor), 'kartu pembuka berupa angka dengan warna');
 }
 // Kecocokan
@@ -88,12 +89,48 @@ for (let k = 0; k < 50; k++) {
     play(st, 'p2', 'Black-WildDrawTen', { color: 'Green' }); ok(st.pending.n === 20 && st.pending.count === 3 && st.turnIndex === 3, '+10 menumpuk: 20');
     const h = st.hands.p3.length; R.takePenalty(st, 'p3'); ok(st.hands.p3.length === h + 20 && st.turnIndex === 0 && !st.pending, 'korban ambil 20, giliran lanjut ke p0');
 }
-// Color Roulette
+// Color Roulette: korban memilih warna, lalu MENGETUK tumpukan satu per satu sampai muncul warna itu
 {
     const st = setup(3, [['Black-WildColorRoulette', 'Red-1']]); play(st, 'p0', 'Black-WildColorRoulette');
-    ok(st.pending.kind === 'roulette' && R.actorUid(st) === 'p1', 'Roulette: korban memilih warna'); ok(R.legalPlays(st, 'p1').length === 0, 'Roulette tidak bisa ditumpuk');
+    ok(st.pending.kind === 'roulette' && R.actorUid(st) === 'p1' && !st.pending.color, 'Roulette: korban memilih warna'); ok(R.legalPlays(st, 'p1').length === 0, 'Roulette tidak bisa ditumpuk');
+    ok(R.rouletteDraw(st, 'L') === null, 'belum memilih warna: tidak bisa mengetuk tumpukan');
     putTop(st, ['Black-WildDrawSix', 'Red-2', 'Blue-3', 'Blue-4']); const h = st.hands.p1.length; const t = total(st);
-    R.resolveRoulette(st, 'Blue'); ok(st.hands.p1.length === h + 3 && st.currentColor === 'Blue' && st.turnIndex === 2 && !st.pending && total(st) === t, 'Roulette: ambil sampai Biru (Wild tidak dihitung): 3 kartu; lewat giliran');
+    ok(R.pickRouletteColor(st, 'Blue') && st.pending.color === 'Blue' && st.currentColor === 'Blue' && st.pending && R.actorUid(st) === 'p1', 'Roulette: warna dipilih, korban masih harus mengambil');
+    ok(!R.pickRouletteColor(st, 'Red') && st.pending.color === 'Blue', 'warna tidak bisa diganti setelah dipilih');
+    let r = R.rouletteDraw(st, 'L'); ok(r.card.img === 'Black-WildDrawSix' && !r.done && st.pending && st.hands.p1.length === h + 1, 'ketukan 1: Wild tidak dihitung, lanjut');
+    r = R.rouletteDraw(st, 'L'); ok(r.card.img === 'Red-2' && !r.done, 'ketukan 2: warna lain, lanjut');
+    r = R.rouletteDraw(st, 'L'); ok(r.card.img === 'Blue-3' && r.done && !st.pending, 'ketukan 3: Biru muncul -> selesai (kartu Biru ikut diambil)');
+    ok(st.hands.p1.length === h + 3 && st.turnIndex === 2 && total(st) === t, 'Roulette: ambil 3 kartu; giliran korban dilewati; total tetap');
+    ok(st.fx.list.filter(e => e.t === 'draw' && e.n === 1).length >= 3, 'tiap ketukan = satu peristiwa draw (animasi satu kartu)');
+    // jalan pintas otomatis (bot / waktu habis)
+    const s2 = setup(3, [['Black-WildColorRoulette', 'Red-1']]); play(s2, 'p0', 'Black-WildColorRoulette'); putTop(s2, ['Red-2', 'Blue-3', 'Blue-4']); const h2 = s2.hands.p1.length;
+    R.resolveRoulette(s2, 'Blue'); ok(s2.hands.p1.length === h2 + 2 && s2.currentColor === 'Blue' && s2.turnIndex === 2 && !s2.pending, 'jalan pintas: pilih warna + ambil sampai Biru');
+    ok(s2.fx.list.filter(e => e.t === 'draw').length === 1 && s2.fx.list.find(e => e.t === 'draw').n === 2, 'jalan pintas: SATU peristiwa draw berisi semua kartu');
+    // sudah memilih warna, lalu waktu habis: sisanya otomatis
+    const s3 = setup(3, [['Black-WildColorRoulette', 'Red-1']]); play(s3, 'p0', 'Black-WildColorRoulette'); putTop(s3, ['Red-2', 'Red-3', 'Green-3']); R.pickRouletteColor(s3, 'Green'); R.rouletteDraw(s3, 'R');
+    const h3 = s3.hands.p1.length; R.resolveRoulette(s3, 'Red'); ok(s3.hands.p1.length === h3 + 2 && s3.currentColor === 'Green' && !s3.pending, 'waktu habis di tengah: warna TETAP Hijau, sisanya diambil otomatis');
+    // tersingkir di tengah mengetuk (24 -> 25 kartu)
+    const big = ['Blue-1', 'Blue-2', 'Blue-3', 'Blue-4', 'Blue-5', 'Blue-6', 'Blue-7', 'Blue-8', 'Blue-9', 'Yellow-1', 'Yellow-2', 'Yellow-3', 'Yellow-4', 'Yellow-5', 'Yellow-6', 'Yellow-7', 'Yellow-8', 'Yellow-9', 'Green-1', 'Green-2', 'Green-3', 'Green-4', 'Green-5'];
+    const s4 = setup(3, [['Black-WildColorRoulette', 'Red-1'], big, ['Green-8']]); play(s4, 'p0', 'Black-WildColorRoulette'); putTop(s4, ['Green-0', 'Yellow-0']); ok(s4.hands.p1.length === 23, 'siap: korban 23 kartu');
+    R.pickRouletteColor(s4, 'Red'); R.rouletteDraw(s4, 'L'); ok(!R.isOut(s4, 'p1') && s4.hands.p1.length === 24 && s4.pending, '24 kartu: belum tersingkir, masih mengetuk');
+    R.rouletteDraw(s4, 'L'); ok(R.isOut(s4, 'p1') && !s4.pending && !R.isOut(s4, S.roomData.players[s4.turnIndex].uid) && total(s4) === 168, 'kartu ke-25: tersingkir di tengah Roulette; giliran pindah; total tetap');
+    ok(s4.fx.list.some(e => e.t === 'mercy' && e.uid === 'p1' && e.n === 25 && e.cards.length === 25), 'peristiwa mercy memuat jumlah & kartu (untuk animasi kembali ke tumpukan)');
+}
+// Dua tumpukan ambil
+{
+    const st = setup(3); const all = [...st.deck]; D.splitDeck(st, all); ok(st.deck.length + st.deckR.length === all.length && Math.abs(st.deck.length - st.deckR.length) <= 1, 'splitDeck membagi rata');
+    const l = st.deck.length, r = st.deckR.length;
+    let g = D.drawFrom(st, 1, 'R'); ok(g.sides[0] === 'R' && st.deckR.length === r - 1 && st.deck.length === l, 'ambil dari tumpukan KANAN bila dipilih');
+    g = D.drawFrom(st, 1, 'L'); ok(g.sides[0] === 'L' && st.deck.length === l - 1, 'ambil dari tumpukan KIRI bila dipilih');
+    st.deckR = []; g = D.drawFrom(st, 2, 'R'); ok(g.cards.length === 2 && g.sides.every(x => x === 'L'), 'tumpukan pilihan kosong -> otomatis ambil dari yang lain');
+    const s2 = setup(3); D.splitDeck(s2, [...s2.deck]); const t = total(s2); g = D.drawFrom(s2, 6); ok(new Set(g.sides).size === 2, 'tanpa pilihan: bergantian antar tumpukan'); ok(total(s2) + g.cards.length === t, 'total tetap');
+    const s3 = setup(3); s3.discardPile.unshift(...s3.deck.splice(0, 40)); s3.deck.splice(0, s3.deck.length); s3.deckR = []; const t3 = total(s3);
+    g = D.drawFrom(s3, 3); ok(g.cards.length === 3 && s3.deck.length + s3.deckR.length > 0 && Math.abs(s3.deck.length + 0 - s3.deckR.length) <= 3, 'kedua tumpukan habis: buangan dikocok lalu DIBAGI RATA lagi'); ok(total(s3) + g.cards.length === t3, 'total tetap setelah kocok');
+}
+// Discard All: kartu yang dibuang ikut dicatat untuk animasi
+{
+    const st = setup(3, [['Red-DiscardAll', 'Red-1', 'Red-2', 'Blue-3']], 'Red-5'); play(st, 'p0', 'Red-DiscardAll');
+    const b = st.fx.list.find(e => e.t === 'banner' && e.k === 'discardall'); ok(b && b.n === 2 && b.cards.length === 2 && b.cards.every(c => c.c === 'Red'), 'Discard All: banner memuat kartu yang dibuang (2 kartu Merah)');
 }
 // Wild Reverse Draw 4
 {
@@ -157,14 +194,19 @@ for (let k = 0; k < 50; k++) {
 // ===== simulasi acak =====
 function botAct(st) {
     const uid = R.actorUid(st), hand = st.hands[uid];
-    if (st.pending && st.pending.kind === 'roulette') { R.resolveRoulette(st, D.COLORS[Math.floor(Math.random() * 4)]); return; }
+    if (st.pending && st.pending.kind === 'roulette') {
+        if (Math.random() < 0.5) { R.resolveRoulette(st, D.COLORS[Math.floor(Math.random() * 4)]); return; }
+        if (!st.pending.color) R.pickRouletteColor(st, D.COLORS[Math.floor(Math.random() * 4)]);
+        else R.rouletteDraw(st, Math.random() < 0.5 ? 'L' : 'R');   // mengetuk satu per satu (satu langkah simulasi = satu ketukan)
+        return;
+    }
     const legal = R.legalPlays(st, uid);
     if (st.pending && st.pending.kind === 'draw') {
         if (legal.length && Math.random() < 0.8) playIdx(st, uid, legal[Math.floor(Math.random() * legal.length)]); else R.takePenalty(st, uid);
         return;
     }
     if (legal.length) { playIdx(st, uid, legal[Math.floor(Math.random() * legal.length)]); return; }
-    const r = R.drawUntilPlayable(st, uid);
+    const r = R.drawUntilPlayable(st, uid, Math.random() < 0.5 ? 'L' : 'R');
     if (r.found && !st.winner) { const i = st.hands[uid].findIndex(c => c.id === r.found.id); playIdx(st, uid, i); }
 }
 function playIdx(st, uid, i) {

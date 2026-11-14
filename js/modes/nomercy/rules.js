@@ -1,7 +1,8 @@
 // Mesin aturan UNO Show 'Em No Mercy (murni, tanpa DOM). Aturan: ATURAN-NOMERCY.md.
 // state: deck, discardPile, hands, turnIndex, direction, currentColor, out{uid:true} (tersingkir), setAside[], pending, forced, winner.
 //   pending = { kind:'draw', n, top, count } -> hukuman Draw bertumpuk; pemain giliran (turnIndex) boleh menumpuk (Draw >= top) atau takePenalty().
-//   pending = { kind:'roulette', by, victim } -> korban memilih warna lewat resolveRoulette().
+//   pending = { kind:'roulette', by, victim, color, got } -> korban memilih warna (pickRouletteColor), lalu MENGETUK tumpukan satu per satu (rouletteDraw)
+//     sampai muncul kartu berwarna itu; resolveRoulette() = jalan pintas otomatis (bot / waktu habis).
 //   forced  = { uid, id } -> kartu hasil ambil yang WAJIB dimainkan.
 import { S, fx, nameOf } from '../../core/state.js';
 import { drawFrom, drawValue, isDrawCard, isNumber, needsColor, needsTarget, pointOf, NAMES, MERCY_LIMIT, KNOCKOUT_BONUS } from './deck.js';
@@ -67,12 +68,12 @@ function refreshUno(state, uid) {                                  // setelah ta
 }
 
 // ---------- ambil kartu & Mercy ----------
-export function giveCards(state, uid, n, pen = false) {
-    const got = drawFrom(state, n);
+export function giveCards(state, uid, n, pen = false, side) {
+    const got = drawFrom(state, n, side);
     state.hands[uid] = state.hands[uid].concat(got.cards);
     state.unoCalled[uid] = false;
     if (state.forgot) delete state.forgot[uid];
-    if (got.cards.length) fx(state, { t: 'draw', uid, n: got.cards.length, cards: got.cards, pen });
+    if (got.cards.length) fx(state, { t: 'draw', uid, n: got.cards.length, cards: got.cards, sides: got.sides, pen });
     return got.cards.length;
 }
 
@@ -82,10 +83,11 @@ export function checkMercy(state) {
     alivePlayers(state).forEach(p => {
         if (state.hands[p.uid].length >= MERCY_LIMIT) {
             state.out[p.uid] = true; gone.push(p.uid);
-            state.setAside = (state.setAside || []).concat(state.hands[p.uid]); state.hands[p.uid] = [];
+            const lost = state.hands[p.uid];
+            state.setAside = (state.setAside || []).concat(lost); state.hands[p.uid] = [];
             state.unoCalled[p.uid] = false; if (state.forgot) delete state.forgot[p.uid];
             state.logs.push(`<b>${nameOf(p.uid)}</b> memegang 25 kartu: TERSINGKIR (Mercy)!`);
-            fx(state, { t: 'mercy', uid: p.uid });
+            fx(state, { t: 'mercy', uid: p.uid, n: lost.length, cards: lost });   // kartu ikut dicatat: animasi 'kartu kembali ke tumpukan'
         }
     });
     if (gone.length && !state.winner) {
@@ -106,16 +108,16 @@ export function penalize(state, uid, byUid) {
 
 // Tidak punya kartu cocok: ambil satu per satu sampai dapat yang bisa dimainkan -> kartu itu WAJIB dimainkan (state.forced).
 // Mengembalikan { drawn, found, eliminated }.
-export function drawUntilPlayable(state, uid) {
-    const pIdx = idxOf(uid), drawn = []; let found = null;
+export function drawUntilPlayable(state, uid, side) {
+    const pIdx = idxOf(uid), drawn = [], sides = []; let found = null;
     for (;;) {
-        const got = drawFrom(state, 1);
+        const got = drawFrom(state, 1, side);
         if (!got.cards.length) break;
-        const c = got.cards[0]; state.hands[uid].push(c); drawn.push(c);
+        const c = got.cards[0]; state.hands[uid].push(c); drawn.push(c); sides.push(got.sides[0]);
         if (state.hands[uid].length >= MERCY_LIMIT) break;
         if (matches(state, c)) { found = c; break; }
     }
-    if (drawn.length) fx(state, { t: 'draw', uid, n: drawn.length, cards: drawn });
+    if (drawn.length) fx(state, { t: 'draw', uid, n: drawn.length, cards: drawn, sides });
     state.unoCalled[uid] = false; if (state.forgot) delete state.forgot[uid];
     state.logs.push(`<b>${nameOf(uid)}</b> mengambil ${drawn.length} kartu.`);
     const gone = checkMercy(state);
@@ -139,21 +141,62 @@ export function takePenalty(state, uid) {
     return n;
 }
 
-// Korban Wild Color Roulette memilih warna: buka kartu dari tumpukan sampai muncul warna itu (Wild tidak dihitung); semua masuk tangan; lewat giliran.
-export function resolveRoulette(state, color) {
-    const p = state.pending, uid = p.victim, pIdx = idxOf(uid), got = [];
-    for (;;) {
-        const r = drawFrom(state, 1);
-        if (!r.cards.length) break;
-        got.push(r.cards[0]);
-        if (r.cards[0].c === color) break;
-    }
-    state.pending = null; state.currentColor = color;
-    state.hands[uid] = state.hands[uid].concat(got); state.unoCalled[uid] = false; if (state.forgot) delete state.forgot[uid];
-    state.logs.push(`<b>${nameOf(uid)}</b> memilih ${NAMES[color]} dan mengambil ${got.length} kartu!`);
-    fx(state, { t: 'roulette', uid, color, cards: got });
+// ---------- Wild Color Roulette (dua tahap) ----------
+// 1) Korban memilih warna: pickRouletteColor. 2) Korban MENGETUK tumpukan ambil (kiri/kanan) satu per satu: rouletteDraw, sampai muncul kartu
+// berwarna itu (kartu Wild tidak dihitung); kartu pertama yang cocok ikut diambil, lalu giliran korban dilewati.
+export const rouletteColorOf = (st) => (st.pending && st.pending.kind === 'roulette' ? st.pending.color || null : null);
+
+export function pickRouletteColor(state, color) {
+    const p = state.pending;
+    if (!p || p.kind !== 'roulette' || p.color) return false;
+    p.color = color; p.got = 0; state.currentColor = color;
+    state.turnNo = (state.turnNo || 0) + 1;                         // mengulang hitungan 15 detik untuk tahap mengetuk tumpukan
+    state.logs.push(`<b>${nameOf(p.victim)}</b> memilih ${NAMES[color]} dan harus mengambil kartu sampai dapat ${NAMES[color]}!`);
+    fx(state, { t: 'roulette', uid: p.victim, color });
+    return true;
+}
+
+// Akhiri Roulette: giliran korban dilewati.
+function endRoulette(state, uid) {
+    const pIdx = idxOf(uid);
+    state.pending = null;
     state.turnIndex = nextAlive(state, pIdx); state.turnNo = (state.turnNo || 0) + 1;
     checkMercy(state);
+}
+
+// Satu ketukan: buka SATU kartu dari tumpukan `side`. Mengembalikan { card, side, done, eliminated }.
+export function rouletteDraw(state, side, silent = false) {
+    const p = state.pending;
+    if (!p || p.kind !== 'roulette' || !p.color) return null;
+    const uid = p.victim, r = drawFrom(state, 1, side);
+    if (!r.cards.length) { state.logs.push('Tumpukan habis!'); endRoulette(state, uid); return { card: null, side: null, done: true, eliminated: false }; }
+    const c = r.cards[0];
+    state.hands[uid].push(c); p.got = (p.got || 0) + 1; state.turnNo = (state.turnNo || 0) + 1;   // tiap kartu mengulang hitungan 15 detik
+    state.unoCalled[uid] = false; if (state.forgot) delete state.forgot[uid];
+    if (!silent) fx(state, { t: 'draw', uid, n: 1, cards: [c], sides: r.sides });
+    const hit = c.c === p.color;
+    const gone = state.hands[uid].length >= MERCY_LIMIT;
+    if (hit || gone) {
+        state.logs.push(`<b>${nameOf(uid)}</b> mengambil ${p.got} kartu (Color Roulette).`);
+        if (gone) { state.pending = null; state.turnNo = (state.turnNo || 0) + 1; checkMercy(state); }   // tersingkir: checkMercy memindahkan giliran
+        else endRoulette(state, uid);
+    }
+    return { card: c, side: r.sides[0], done: !state.pending, eliminated: !!gone };
+}
+
+// Jalan pintas (bot / waktu habis): pilih warna bila belum, lalu ambil sampai selesai. Semua kartu dicatat dalam SATU peristiwa 'draw'.
+export function resolveRoulette(state, color) {
+    const p = state.pending;
+    if (!p || p.kind !== 'roulette') return 0;
+    if (!p.color) pickRouletteColor(state, color);
+    const uid = p.victim, got = [], sides = [];
+    for (let guard = 0; state.pending && guard < 400; guard++) {
+        const r = rouletteDraw(state, undefined, true);
+        if (!r) break;
+        if (r.card) { got.push(r.card); sides.push(r.side); }
+        if (r.done) break;
+    }
+    if (got.length) fx(state, { t: 'draw', uid, n: got.length, cards: got, sides });
     return got.length;
 }
 
@@ -224,12 +267,12 @@ function applyEffect(state, card, pIdx, color, opts) {
             state.hands[me].forEach(c => (c.c === card.c ? drop : keep).push(c));
             state.hands[me] = keep;
             const top = state.discardPile.pop(); state.discardPile.push(...drop, top);   // kartu tambahan di BAWAH Discard All
-            state.logs.push(`Membuang ${drop.length} kartu ${NAMES[card.c]} lainnya!`); fxb({ n: drop.length });
+            state.logs.push(`Membuang ${drop.length} kartu ${NAMES[card.c]} lainnya!`); fxb({ n: drop.length, cards: drop });   // kartu yang dibuang ikut dicatat untuk animasi
             break;
         }
         case 'Wild Color Roulette': {
             const victim = nextAlive(state, pIdx);
-            state.pending = { kind: 'roulette', by: me, victim: pl[victim].uid }; state.turnIndex = victim;
+            state.pending = { kind: 'roulette', by: me, victim: pl[victim].uid, color: null, got: 0 }; state.turnIndex = victim;
             state.logs.push(`<b>${nameOf(pl[victim].uid)}</b> harus memilih warna (Color Roulette)!`); fxb({ target: pl[victim].uid });
             break;
         }

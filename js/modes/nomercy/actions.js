@@ -1,7 +1,7 @@
 import { isBusy, whenIdle } from './animations.js';
 import { S, cloneState, fx, nameOf } from '../../core/state.js';
 import { needsColor, needsTarget } from './deck.js';
-import { actorUid, canCallUno, drawUntilPlayable, hasPlayable, isCatchable, isMyTurn, isOut, isPlayableIn, normalizeUno, penalize, playCardOn, resolveRoulette, takePenalty, tallyRound } from './rules.js';
+import { actorUid, canCallUno, drawUntilPlayable, hasPlayable, isCatchable, isMyTurn, isOut, isPlayableIn, normalizeUno, penalize, pickRouletteColor, playCardOn, resolveRoulette, rouletteDraw, takePenalty, tallyRound } from './rules.js';
 import { chooseTimeoutPlay } from './bot.js';
 import { askColor, askTarget, closeAsks, handleGameOver, renderGame } from './ui.js';
 import { scheduleBot } from './local.js';
@@ -64,6 +64,7 @@ window.nmPlay = async (idx) => {
         let target, color;
         if (needsTarget(card) && st0.hands[me].length > 1) { target = await askTarget(st0); if (!target) return; }
         if (needsColor(card)) { color = await askColor('Pilih Warna'); if (!color) return; }
+        S.pendingHand = st0.hands[me].slice();   // tangan SEBELUM main: animasi Discard All menjaga kartu sewarna tetap di kipas sampai terbang
         await processPlayCard(idx, { color, target });
     } finally { busyAsk = false; }
 };
@@ -75,19 +76,26 @@ export async function processPlayCard(idx, opts) {
     await updateRemoteState(s);
 }
 
-// Ketuk tumpukan ambil. Ada hukuman Draw berjalan = ambil hukuman. Tidak ada kartu cocok = ambil sampai dapat kartu yang bisa dimainkan
-// (kartu itu WAJIB dimainkan). Ada kartu cocok = tidak boleh mengambil.
-window.nmDraw = () => {
+// Ketuk salah satu tumpukan ambil (side 'L' kiri / 'R' kanan, bebas memilih).
+//  - Color Roulette (warna sudah dipilih): SETIAP ketukan membuka satu kartu, terus sampai muncul warna yang dipilih.
+//  - Ada hukuman Draw berjalan = ambil hukuman. Tidak ada kartu cocok = ambil sampai dapat kartu yang bisa dimainkan (WAJIB dimainkan).
+//  - Ada kartu cocok = tidak boleh mengambil.
+window.nmDraw = (side) => {
     if (isBusy()) return showToast("Tunggu animasi selesai...");
     if (!isMyTurn()) return;
     const st = S.roomData.gameState, me = S.currentUser.uid;
     if (isOut(st, me)) return;
-    if (st.pending && st.pending.kind === 'roulette') return showToast("Pilih warna Color Roulette dulu.");
+    if (st.pending && st.pending.kind === 'roulette') {
+        if (!st.pending.color) { showToast("Pilih warna Color Roulette dulu."); return window.nmRouletteCheck && window.nmRouletteCheck(); }
+        const s = cloneState();
+        rouletteDraw(s, side);
+        return updateRemoteState(s);
+    }
     if (st.pending && st.pending.kind === 'draw') return window.nmTakePenalty();
     if (st.forced && st.forced.uid === me) { sfx('nope'); return showToast("Kartu yang baru diambil WAJIB dimainkan."); }
     if (hasPlayable(st, me)) { sfx('nope'); return showToast("Kamu punya kartu yang cocok: wajib dimainkan!"); }
     const s = cloneState();
-    const r = drawUntilPlayable(s, me);
+    const r = drawUntilPlayable(s, me, side);
     if (r.found) showToast("Kartu ini cocok: WAJIB dimainkan.");
     else if (r.eliminated) showToast("Kamu memegang 25 kartu: tersingkir!");
     updateRemoteState(s);
@@ -103,22 +111,22 @@ window.nmTakePenalty = () => {
     updateRemoteState(s);
 };
 
-// Korban Color Roulette (pemain ini): ditawari memilih warna begitu semua animasi selesai
+// Korban Color Roulette (pemain ini): begitu semua animasi selesai ditawari memilih warna. Sesudahnya pemain MENGETUK tumpukan sendiri (nmDraw).
 let askingRoulette = false;
 window.nmRouletteCheck = () => {
     if (askingRoulette || !S.roomData || S.roomData.status !== 'playing') return;
     const st = S.roomData.gameState;
-    if (!(st.pending && st.pending.kind === 'roulette' && st.pending.victim === S.currentUser.uid) || isOut(st, S.currentUser.uid)) return;
+    if (!(st.pending && st.pending.kind === 'roulette' && !st.pending.color && st.pending.victim === S.currentUser.uid) || isOut(st, S.currentUser.uid)) return;
     askingRoulette = true;
     whenIdle().then(async () => {
         try {
             const st2 = S.roomData && S.roomData.gameState;
-            if (!st2 || !(st2.pending && st2.pending.kind === 'roulette' && st2.pending.victim === S.currentUser.uid)) return;
+            if (!st2 || !(st2.pending && st2.pending.kind === 'roulette' && !st2.pending.color && st2.pending.victim === S.currentUser.uid)) return;
             const color = await askColor('Roulette: pilih warna');
             if (!color) return;   // dibatalkan (waktu habis akan memilihkan)
             const s = cloneState();
-            if (!(s.pending && s.pending.kind === 'roulette')) return;
-            resolveRoulette(s, color);
+            if (!(s.pending && s.pending.kind === 'roulette' && !s.pending.color)) return;
+            pickRouletteColor(s, color);
             await updateRemoteState(s);
         } finally { askingRoulette = false; }
     });

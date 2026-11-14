@@ -1,4 +1,4 @@
-// Dek UNO Show 'Em No Mercy: 168 kartu, SATU tumpukan ambil, 2-6 pemain. Aturan: ATURAN-NOMERCY.md (bagian 6be-6bf MEMORI-UNO-BY-OMEGA.md).
+// Dek UNO Show 'Em No Mercy: 168 kartu, DUA tumpukan ambil (kiri 'L' & kanan 'R', seperti mode lain), 2-6 pemain. Aturan: ATURAN-NOMERCY.md (bagian 6be-6bf MEMORI-UNO-BY-OMEGA.md).
 // Kartu = { id, c: 'Red'|'Yellow'|'Green'|'Blue'|'Black', v, img }.
 // v: '0'..'9' | Skip | Reverse | Draw Two | Draw Four | Discard All | Skip Everyone | Wild Reverse Draw Four | Wild Draw Six | Wild Draw Ten | Wild Color Roulette
 import { emptyState, esc } from '../../core/state.js';
@@ -37,7 +37,7 @@ export function allCardSrcs() {
     const imgs = [];
     COLORS.forEach(c => COLOR_DECK.forEach(d => imgs.push(`img/nomercy/cards/${c}-${d[1]}.png`)));
     BLACK_DECK.forEach(d => imgs.push(`img/nomercy/cards/Black-${d[1]}.png`));
-    return [...imgs, backSrc(), 'img/nomercy/fx/mercy.png', 'img/nomercy/fx/stack.png'];
+    return [...imgs, backSrc(), 'img/nomercy/fx/mercy.png'];
 }
 
 // Poin kartu sisa (skor opsional resmi): angka = nilai muka, aksi berwarna 20, aksi hitam 50.
@@ -65,28 +65,44 @@ export function dealGame(players) {
     let first = deck.pop();
     while (!isNumber(first)) { deck.unshift(first); first = deck.pop(); }
     const state = {
-        ...emptyState(), turnIndex: starter, deck, deckR: [], discardPile: [first], hands, currentColor: first.c,
+        ...emptyState(), turnIndex: starter, deck: [], deckR: [], discardPile: [first], hands, currentColor: first.c,
         out: {}, setAside: [], pending: null, forced: null, winner: null,
         logs: [`Permainan dimulai! Giliran pertama: <b>${esc(players[starter].name)}</b> (diacak).`],
         fx: { id: 'deal' + Math.random().toString(36).slice(2), list: [{ t: 'deal' }] }
     };
+    splitDeck(state, deck);
     return state;
 }
 
-// Ambil kartu dari tumpukan ambil. Bila habis: kocok buangan (kecuali kartu teratas) + tangan pemain tersingkir yang disisihkan.
-export function drawFrom(state, count) {
-    const cards = [];
+// Bagi sisa kartu rata ke dua tumpukan ambil: kiri (state.deck) dan kanan (state.deckR).
+export function splitDeck(state, cards) {
+    const half = Math.ceil(cards.length / 2);
+    state.deck = cards.slice(0, half);
+    state.deckR = cards.slice(half);
+}
+
+// Ambil kartu. side 'L'/'R' = pilihan pemain; tanpa side = tumpukan yang isinya lebih banyak (jadi bergantian). Tumpukan pilihan kosong -> ambil dari yang lain.
+// Bila KEDUA tumpukan habis: kocok buangan (kecuali kartu teratas) + tangan pemain tersingkir yang disisihkan, lalu bagi rata lagi.
+// Mengembalikan { cards, sides } (sides[i] = 'L'|'R' tumpukan asal kartu ke-i, untuk animasi).
+export function drawFrom(state, count, side) {
+    if (!state.deckR) state.deckR = [];
+    const cards = [], sides = [];
     for (let i = 0; i < count; i++) {
-        if (state.deck.length === 0) {
+        if (state.deck.length === 0 && state.deckR.length === 0) {
             const rest = state.discardPile.length > 1 ? state.discardPile.splice(0, state.discardPile.length - 1) : [];
             const pool = rest.concat(state.setAside || []);
             state.setAside = [];
             if (!pool.length) break;
             shuffle(pool);
-            state.deck = pool;
+            splitDeck(state, pool);
             state.logs.push('Tumpukan dikocok ulang.');
         }
-        cards.push(state.deck.pop());
+        let s = side;
+        if (s !== 'L' && s !== 'R') s = state.deck.length >= state.deckR.length ? 'L' : 'R';
+        if (s === 'L' && state.deck.length === 0) s = 'R';
+        if (s === 'R' && state.deckR.length === 0) s = 'L';
+        cards.push(s === 'L' ? state.deck.pop() : state.deckR.pop());
+        sides.push(s);
     }
-    return { cards };
+    return { cards, sides };
 }

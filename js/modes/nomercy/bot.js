@@ -1,6 +1,6 @@
 // Otak bot UNO Show 'Em No Mercy (murni, tanpa DOM, diuji di alat/sim_nomercy.mjs). Dipakai local.js (vs Komputer) dan timeoutTurn.
 // decide(st, players, uid) -> SATU keputusan; penerap (UI/sim) menjalankannya lewat rules.js:
-//   { type:'roulette', color }  -> resolveRoulette(st, color)
+//   { type:'roulette', color }  -> resolveRoulette(st, color)   (jalan pintas: pilih warna lalu ambil sampai selesai; bila warna sudah dipilih, hanya melanjutkan mengambil)
 //   { type:'penalty' }          -> takePenalty(st, uid)            (tidak menumpuk Draw)
 //   { type:'draw' }             -> drawUntilPlayable(st, uid), lalu decide() lagi (kartu hasil ambil wajib dimainkan)
 //   { type:'play', idx, color, target } -> playCardOn(st, uid, idx, { color, target, callUno })
@@ -107,7 +107,7 @@ function scorePlay(st, players, uid, i) {
 
 export function decide(st, players, uid) {
     const hand = st.hands[uid];
-    if (st.pending && st.pending.kind === 'roulette') return { type: 'roulette', color: chooseRouletteColor(st, uid) };
+    if (st.pending && st.pending.kind === 'roulette') return { type: 'roulette', color: st.pending.color || chooseRouletteColor(st, uid) };
     if (st.forced && st.forced.uid === uid) return buildPlay(st, players, uid, hand.findIndex(c => c.id === st.forced.id));
     if (st.pending && st.pending.kind === 'draw') return decideStack(st, players, uid);
     const legal = legalPlays(st, uid);
@@ -120,7 +120,7 @@ export function decide(st, players, uid) {
 // Waktu habis (pemain manusia): main kartu legal bernilai terkecil; hukuman Draw -> ambil; tak ada kartu -> ambil.
 export function chooseTimeoutPlay(st, players, uid) {
     const hand = st.hands[uid];
-    if (st.pending && st.pending.kind === 'roulette') return { type: 'roulette', color: chooseRouletteColor(st, uid) };
+    if (st.pending && st.pending.kind === 'roulette') return { type: 'roulette', color: st.pending.color || chooseRouletteColor(st, uid) };   // sudah memilih warna: sisanya diambil otomatis
     if (st.forced && st.forced.uid === uid) return buildPlay(st, players, uid, hand.findIndex(c => c.id === st.forced.id));
     if (st.pending && st.pending.kind === 'draw') return { type: 'penalty' };
     const legal = legalPlays(st, uid);

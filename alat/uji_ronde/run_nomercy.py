@@ -40,9 +40,11 @@ async def main(bots, turns):
         check(await vis(page, 'nm-screen'), 'layar No Mercy tampil')
         await asyncio.sleep(9)   # hitung mundur + pembagian kartu
         await page.screenshot(path='/tmp/nm_start.png')
-        st = await page.evaluate("() => { const g = window.__S.roomData.gameState; return { hand: g.hands['local-me'].length, players: window.__S.roomData.players.length, mode: window.__S.roomData.mode, total: Object.values(g.hands).reduce((a, h) => a + h.length, 0) + g.deck.length + g.discardPile.length }; }")
+        st = await page.evaluate("() => { const g = window.__S.roomData.gameState; return { hand: g.hands['local-me'].length, players: window.__S.roomData.players.length, mode: window.__S.roomData.mode, total: Object.values(g.hands).reduce((a, h) => a + h.length, 0) + g.deck.length + g.deckR.length + g.discardPile.length, two: g.deck.length > 0 && g.deckR.length > 0 }; }")
         check(st['hand'] == 7 and st['players'] == bots + 1 and st['mode'] == 'nomercy', 'bagi 7 kartu, %d pemain, mode nomercy' % st['players'])
         check(st['total'] == 168, 'total kartu 168 (%d)' % st['total'])
+        check(st['two'], 'DUA tumpukan ambil terisi')
+        check(await page.evaluate("() => !!document.getElementById('n-draw-l') && !!document.getElementById('n-draw-r') && !document.getElementById('n-stack')"), 'dua deck di meja, tanpa widget stack samping')
         seen = set(); shots = set()
         await page.evaluate("async () => { window.__A = await import('./js/modes/nomercy/animations.js'); window.__R = await import('./js/modes/nomercy/rules.js'); }")
         for i in range(turns):
@@ -63,6 +65,8 @@ async def main(bots, turns):
                 if await vis(page, 'n-color-modal'):
                     if 'roul' not in shots: await page.screenshot(path='/tmp/nm_roulette.png'); shots.add('roul')
                     await page.evaluate("() => nmPickColor('Green')"); seen.add('roulette')
+                else:   # warna sudah dipilih: korban MENGETUK tumpukan satu per satu sampai dapat warnanya
+                    await page.evaluate("() => nmDraw(Math.random() < 0.5 ? 'L' : 'R')"); seen.add('roulette-tap')
                 continue
             if info['legal']:
                 await page.evaluate("(i) => nmPlay(i)", info['legal'][0]); await asyncio.sleep(0.5)
@@ -75,7 +79,7 @@ async def main(bots, turns):
             elif info['pend'] == 'draw':
                 await page.evaluate("() => nmTakePenalty()"); seen.add('penalty')
             else:
-                await page.evaluate("() => nmDraw()"); seen.add('draw'); await asyncio.sleep(2.5)
+                await page.evaluate("() => nmDraw(Math.random() < 0.5 ? 'L' : 'R')"); seen.add('draw'); await asyncio.sleep(2.5)
             if 'mid' not in shots and i > 10: await page.screenshot(path='/tmp/nm_mid.png'); shots.add('mid')
         print('terlihat:', sorted(seen))
         # kartu tidak cocok tidak boleh ambil bila ada kartu cocok (kebijakan resmi) dan sebaliknya: dicek lewat mesin di simulasi
@@ -83,7 +87,7 @@ async def main(bots, turns):
         ok = await page.evaluate("""async () => { const S = window.__S; if (S.roomData.status !== 'playing') return 'skip';
           const R = await import('./js/modes/nomercy/rules.js'), A = await import('./js/modes/nomercy/actions.js'), st = await import('./js/core/state.js');
           const s = st.cloneState(); const u = 'bot1'; if (s.out[u]) return 'skip';
-          while (s.hands[u].length < 24) s.hands[u].push(s.deck.pop());
+          while (s.hands[u].length < 24) s.hands[u].push((s.deck.length ? s.deck.pop() : s.deckR.pop()));
           R.giveCards(s, u, 2); R.checkMercy(s); await A.updateRemoteState(s); return s.out[u] ? 'out' : 'fail'; }""")
         if ok != 'skip': check(ok == 'out', 'Mercy: bot 1 tersingkir saat 25 kartu')
         await asyncio.sleep(4); await page.screenshot(path='/tmp/nm_mercy.png')

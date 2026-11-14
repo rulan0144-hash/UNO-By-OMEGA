@@ -60,7 +60,7 @@
 @keyframes nm-stack-bump { 0% { transform: scale(1); } 35% { transform: scale(1.22); } 100% { transform: scale(1); } }
 #n-hand.nm-hand-in { animation: nm-hand-in .6s cubic-bezier(.2, .9, .3, 1.1); }
 @keyframes nm-hand-in { 0% { opacity: 0; transform: translateY(28px) scale(.92); } 100% { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { 
+/* kartu tangan baru muncul satu per satu (animasi tukar 7 / oper 0). Catatan: blok @media yang dulu terbuka di sini tidak pernah ditutup sehingga SEMUA gaya sesudahnya hanya berlaku saat 'kurangi gerak' aktif; sudah diperbaiki. Gerak dikurangi lewat JS (reduce). */
 #n-hand .nm-card-in { animation: nm-card-in .35s ease-out; }
 @keyframes nm-card-in { 0% { opacity: 0; translate: 0 36px; } 100% { opacity: 1; translate: 0 0; } }
 
@@ -76,18 +76,28 @@
 #n-mercy-me.mercy-danger { background: #dc2626; animation: nm-danger .6s ease-in-out infinite alternate; }
 #n-mercy-me.hidden { display: none; }
 
-/* tumpukan hukuman di slot kanan meja */
-#n-stack { position: relative; width: calc(86px * var(--s, 1)); margin: 0 auto; text-align: center; pointer-events: none; transform: translateY(calc(-22px * var(--s, 1))); }
-#n-stack.hidden { visibility: hidden; }
-#n-stack img { width: 100%; display: block; filter: drop-shadow(0 4px 8px rgba(0,0,0,.7)); animation: nm-stack-pop .5s ease-out; }
-#n-stack b { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-62%); font-size: calc(30px * max(var(--s, 1), .8)); color: #fff; -webkit-text-stroke: 3px #000; paint-order: stroke fill; font-weight: 900; line-height: 1; }
-#n-stack small { display: block; margin-top: -4px; font-size: calc(12px * max(var(--s, 1), .8)); font-weight: 800; color: #fde68a; text-shadow: 0 2px 0 #000; }
-@keyframes nm-stack-pop { 0% { transform: scale(.3); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
+/* tulisan STACK +N di tengah meja (di atas tumpukan buangan): jumlah hukuman Draw yang sedang menumpuk */
+.center-slot { overflow: visible; }
+#n-stack-txt { position: absolute; left: 50%; top: 50%; z-index: 14; transform: translate(-50%, -50%); text-align: center; pointer-events: none; line-height: 1; white-space: nowrap; }
+#n-stack-txt.hidden { display: none; }
+#n-stack-txt small { display: block; font-weight: 900; letter-spacing: .14em; color: #fde68a; font-size: calc(12px * max(var(--s, 1), .8)); text-shadow: 0 2px 0 #000, 0 0 6px rgba(0,0,0,.8); }
+#n-stack-txt b { display: block; font-size: calc(38px * max(var(--s, 1), .8)); font-weight: 900; color: #fff; -webkit-text-stroke: 4px #000; paint-order: stroke fill; text-shadow: 0 0 14px rgba(239,68,68,.85); }
+#n-stack-txt.stack-pop { animation: nm-stack-pop .45s ease-out; }
+@keyframes nm-stack-pop { 0% { transform: translate(-50%, -50%) scale(.4); } 60% { transform: translate(-50%, -50%) scale(1.25); } 100% { transform: translate(-50%, -50%) scale(1); } }
 
 /* tombol ambil hukuman (menggantikan tombol Lewati) */
 #n-btn-pen { background: linear-gradient(#ef4444, #991b1b); color: #fff; font-weight: 900; border: 2px solid #fff; border-radius: 999px; touch-action: manipulation; font-size: calc(14px * max(var(--s, 1), .75)); padding: calc(8px * var(--s, 1)) calc(14px * var(--s, 1)); text-shadow: 0 1px 0 #000; }
 #n-btn-pen:active { transform: translateY(2px); }
 #n-btn-pen.hidden { display: none; }
-#n-draw.deck-ready { animation: nm-deck-pulse 1s ease-in-out infinite; }
+#n-draw-l.deck-ready, #n-draw-r.deck-ready { animation: nm-deck-pulse 1s ease-in-out infinite; }
 @keyframes nm-deck-pulse { 0%, 100% { filter: drop-shadow(0 0 0 #facc15); } 50% { filter: drop-shadow(0 0 12px #facc15); } }
 .nm-mercy-note { font-size: 12px; opacity: .85; }
+
+/* ===== Mercy: pemain tersingkir menghilang, lalu kartunya terbang kembali ke tumpukan ===== */
+.nm-vanish { animation: nm-vanish .7s ease-in forwards; }
+@keyframes nm-vanish { 0% { opacity: 1; transform: scale(1); filter: none; } 25% { opacity: 1; transform: scale(1.12); filter: drop-shadow(0 0 12px #ef4444); } 100% { opacity: 0; transform: scale(.55); filter: grayscale(1); } }
+#n-opps .opp-profile.opp-out { animation: nm-out-in .6s ease-out; }
+@keyframes nm-out-in { from { opacity: 0; } to { opacity: .5; } }
+
+/* ===== Discard All: kartu melayang di atas tumpukan, kartu sewarna menumpuk di belakangnya ===== */
+.fly-card.nm-float { filter: drop-shadow(0 12px 14px rgba(0,0,0,.65)); }
