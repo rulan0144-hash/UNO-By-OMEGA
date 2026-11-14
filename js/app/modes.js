@@ -39,6 +39,14 @@ export const MODES = [
         theme: 'allwild', logo: 'img/ui/logo-allwild.png', tag: 'Semua kartu adalah Wild!', badge: 'img/ui/badge-players-allwild.png',
         art: ['img/allwild/Black-Wild.png', 'img/allwild/Black-WildSkip.png', 'img/allwild/Black-WildDrawTwo.png', 'img/allwild/Black-WildForcedSwap.png', 'img/allwild/Black-WildDrawFour.png'],
         bots: { min: 1, max: 9, def: 3 }
+    },
+    {
+        id: 'nomercy', group: 'other', ready: false,
+        name: "UNO Show 'Em No Mercy",
+        desc: 'Brutal dan tanpa ampun: tumpuk Draw sampai +10, buang semua warna, dan tersingkir bila memegang 25 kartu!',
+        theme: 'nomercy', logo: 'img/ui/logo-nomercy.png', tag: 'Brutal. Kejam. Tanpa ampun.', badge: 'img/ui/badge-players-nomercy.png',
+        art: ['img/nomercy/cards/Yellow-DrawTwo.png', 'img/nomercy/cards/Black-WildReverseDrawFour.png', 'img/nomercy/cards/Blue-SkipEveryone.png', 'img/nomercy/cards/Red-DiscardAll.png', 'img/nomercy/cards/Black-WildDrawTen.png'],
+        bots: { min: 1, max: 5, def: 3 }
     }
 ];
 
