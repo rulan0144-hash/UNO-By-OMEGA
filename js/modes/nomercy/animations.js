@@ -219,7 +219,7 @@ async function play(ev) {
     const t2 = document.querySelector('#n-discard .pile-top');
     if (t2 && hold.pile === 0) t2.style.visibility = '';
     hold.colorFrom = null; paintColor(ev.color);
-    if (ev.card.v !== 'Wild Color Roulette') sfx('c_' + ev.color);
+    if (ev.card.c === 'Black' && ev.card.v !== 'Wild Color Roulette') sfx('c_' + ev.color);   // warna diucapkan HANYA bila kartu hitam (Wild +N) mengganti warna; Roulette: diucapkan saat korban memilih
 }
 
 // Kartu ditarik: terbang dari tumpukan (punggung kartu) ke tangan / profil pemain
@@ -413,7 +413,7 @@ async function dall(ev) {
     await Promise.all(moves);
     sfx('slap');
     done();   // Discard All memakai hold.cut (bukan hold.pile), jadi tidak ada hitungan plays yang dikurangi
-    sfx('c_' + ev.color);
+    // (kartu Discard All berwarna: warna tidak diucapkan)
     [top, ...parts].forEach(m => m.el.remove());
 }
 
