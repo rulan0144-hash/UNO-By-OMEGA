@@ -144,9 +144,9 @@ const backEl = () => `<div class="uno-card"><img class="card-img" src="${backSrc
 
 // ---- Banner di tengah layar. Berkas: img/nomercy/fx/<jenis>-<Warna>.png (jenis tanpa warna untuk kartu hitam = cadangan) ----
 const FILE = { revdraw4: 'wildrev4' };
-// Bunyi sementara memakai efek yang sudah ada (bunyi khusus No Mercy menyusul di tahap suara).
-const SND = { uno: 'uno', skip: 'skip', reverse: 'reverse', draw2: 'draw2', draw4: 'draw4', revdraw4: 'draw4', draw6: 'draw6', draw10: 'draw6',
-    skipall: 'skipall', discardall: 'reset', roulette: 'power', mercy: 'catch' };
+// Bunyi tiap banner (dibuat di core/sound.js; Draw 10, Reverse Draw 4, Mercy, Discard All, Roulette punya bunyi & suara sendiri).
+const SND = { uno: 'uno', skip: 'skip', reverse: 'reverse', draw2: 'draw2', draw4: 'draw4', revdraw4: 'revdraw4', draw6: 'draw6', draw10: 'draw10',
+    skipall: 'skipall', discardall: 'discardall', roulette: 'roulette', mercy: 'mercy' };
 const NOCOLOR = ['roulette'];
 async function banner(ev) {
     const k = ev.k;
@@ -223,7 +223,7 @@ async function play(ev) {
 }
 
 // Kartu ditarik: terbang dari tumpukan (punggung kartu) ke tangan / profil pemain
-async function draw({ uid, n, pen, sides }) {
+async function draw({ uid, n, pen, sides, cards, roul }) {
     const decks = { L: deckRect('L'), R: deckRect('R') };
     const count = Math.min(n, 8);
     const mine = uid === S.currentUser?.uid;
@@ -232,9 +232,9 @@ async function draw({ uid, n, pen, sides }) {
     if (pen) sfx('draw2');
     const base = kids.length - Math.max(n, cur ? cur.me : n);
     for (let i = 0; i < count; i++) {
-        sfx('draw', i * 0.22);
+        sfx(roul ? 'rtap' : 'draw', i * 0.22);   // Roulette: ketukan tegang, lalu denting naik bila warnanya cocok / nada rendah bila bukan
         const to = mine ? (clampRect(rectOf(kids[base + i])) || posOfPlayer(uid)) : posOfPlayer(uid);
-        jobs.push(fly(backEl(), decks[sides && sides[i] === 'R' ? 'R' : 'L'], to, { delay: i * 220 }).then(() => land(uid)));
+        jobs.push(fly(backEl(), decks[sides && sides[i] === 'R' ? 'R' : 'L'], to, { delay: i * 220 }).then(() => { land(uid); if (roul && cards && cards[i]) sfx(cards[i].c === roul ? 'rhit' : 'rmiss'); }));
     }
     for (let i = count; i < n; i++) land(uid);   // sisa (lebih dari 8) langsung dianggap tiba
     await Promise.all(jobs);
@@ -273,13 +273,13 @@ async function deal(state) {
 // pairs = [{ from, to }] berjalan bersamaan: 7 = A->B dan B->A (saling berpapasan); 0 = tiap pemain -> pemain di sebelahnya (searah putaran).
 // Selama itu tampilan memegang tangan LAMA (hold.hands); tangan sendiri: kartu hilang tepat saat terbang, kartu baru MUNCUL satu per satu saat mendarat.
 const ringOf = (uid) => uid === S.currentUser?.uid ? $('n-me-avatar') : $('nprof-' + uid);
-async function exchange(pairs) {
+async function exchange(pairs, snd = 'swap') {
     const me = S.currentUser?.uid;
     const MAXC = 5, GAP = 130, DUR = 950;
     const uids = [...new Set(pairs.flatMap(p => [p.from, p.to]))];
     const glow = (on) => uids.forEach(u => { const r = ringOf(u); if (r) r.classList.toggle('nm-swap-glow', on); });
     const oldN = (u) => (hold.hands && hold.hands[u] ? hold.hands[u].length : 0);
-    sfx('swap');
+    sfx(snd);   // 7 = 'swap' ("Swap!"), 0 = 'pass' ("Pass!")
     glow(true);
     const launch = (uid, n, from, to) => {
         const kids = uid === me ? [...$('n-hand').children] : [];
@@ -342,7 +342,7 @@ function pass(ev, state) {
     const pl = S.roomData.players;
     const alive = (ev._alive || pl.map(p => p.uid)).map(u => ({ uid: u }));      // daftar pemain yang ikut dioper (dicatat handleFx)
     const n = alive.length, d = ev.dir || 1;
-    return exchange(alive.map((p, i) => ({ from: p.uid, to: alive[((i + d) % n + n) % n].uid })));
+    return exchange(alive.map((p, i) => ({ from: p.uid, to: alive[((i + d) % n + n) % n].uid })), 'pass');
 }
 
 // Discard All: kartu Discard All melayang di atas tumpukan, semua kartu sewarna milik pemain itu terbang menumpuk di BELAKANGNYA,

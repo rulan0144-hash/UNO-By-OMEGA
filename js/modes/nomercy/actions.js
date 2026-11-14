@@ -122,6 +122,7 @@ window.nmRouletteCheck = () => {
         try {
             const st2 = S.roomData && S.roomData.gameState;
             if (!st2 || !(st2.pending && st2.pending.kind === 'roulette' && !st2.pending.color && st2.pending.victim === S.currentUser.uid)) return;
+            sfx('spin');
             const color = await askColor('Roulette: pilih warna');
             if (!color) return;   // dibatalkan (waktu habis akan memilihkan)
             const s = cloneState();

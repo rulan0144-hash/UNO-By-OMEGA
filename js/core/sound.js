@@ -314,8 +314,79 @@ SFX.power = function () {
 SFX.allflip = SFX.power;           // Wild All Flip: nada Power + kata "All flip!"
 SFX.reset = SFX.power;             // semua Power merah -> kembali hijau: nada Power + kata "Reset!"
 
+// ---- Efek khusus UNO Show 'Em No Mercy (nuansa lebih gelap & berat) ----
+// +10: delapan nada gergaji menanjak, sirene naik, lalu ledakan sangat dalam
+SFX.draw10 = function () {
+    duck(2.4, 0.25);
+    for (let i = 0; i < 8; i++) tone({ f: note(52 + i * 2), type: 'sawtooth', t: i * 0.07, dur: 0.14, vol: 0.17, filter: { f: 2800 } });
+    tone({ f: 380, f2: 1900, type: 'sawtooth', t: 0.5, dur: 0.5, vol: 0.15, filter: { f: 3000 } });
+    tone({ f: note(31), f2: note(19), type: 'sine', t: 0.95, dur: 1.1, vol: 0.8 });
+    tone({ f: note(43), type: 'sawtooth', t: 0.95, dur: 0.8, vol: 0.15, filter: { f: 600 }, vib: 7 });
+    noise({ t: 0.95, dur: 1.1, vol: 0.5, type: 'lowpass', f: 4000, f2: 120 });
+};
+// Wild Reverse Draw 4: desis balik arah (naik lalu turun), lalu hantaman +4
+SFX.revdraw4 = function () {
+    duck(1.8);
+    noise({ dur: 0.32, vol: 0.2, f: 500, f2: 4000, q: 1.2 });
+    noise({ t: 0.32, dur: 0.32, vol: 0.2, f: 4000, f2: 500, q: 1.2 });
+    [55, 59, 62, 67].forEach((m, i) => tone({ f: note(m), type: 'sawtooth', t: 0.6 + i * 0.08, dur: 0.15, vol: 0.18, filter: { f: 1600 } }));
+    tone({ f: note(43), f2: note(31), type: 'sine', t: 0.95, dur: 0.6, vol: 0.55 });
+    noise({ t: 0.95, dur: 0.4, vol: 0.25, type: 'lowpass', f: 2500, f2: 250 });
+};
+// Kartu 0 (oper): putaran desis berurutan searah jarum jam, lalu "tuk"
+SFX.pass = function () {
+    duck(1.4);
+    for (let i = 0; i < 4; i++) {
+        noise({ t: i * 0.13, dur: 0.2, vol: 0.15, f: 700 + i * 500, f2: 1600 + i * 600, q: 1.2 });
+        tone({ f: note(60 + i * 3), f2: note(66 + i * 3), type: 'triangle', t: i * 0.13, dur: 0.16, vol: 0.13 });
+    }
+    tone({ f: note(84), type: 'sine', t: 0.62, dur: 0.3, vol: 0.22 });
+    noise({ t: 0.62, dur: 0.06, vol: 0.15, f: 3000, q: 1 });
+};
+// MERCY: lonceng kematian (nada dasar + sisa nada sumbang) dan dentuman rendah menurun
+SFX.mercy = function () {
+    duck(2.6, 0.2);
+    tone({ f: note(45), type: 'sine', dur: 1.8, vol: 0.5, vib: 3 });
+    tone({ f: note(45) * 2.76, type: 'sine', dur: 1.2, vol: 0.14 });
+    tone({ f: note(45) * 5.4, type: 'sine', dur: 0.7, vol: 0.07 });
+    [57, 53, 48, 43].forEach((m, i) => tone({ f: note(m), type: 'sawtooth', t: 0.35 + i * 0.22, dur: 0.3, vol: 0.14, filter: { f: 900 } }));
+    tone({ f: 90, f2: 28, type: 'sine', t: 1.1, dur: 1.2, vol: 0.8 });
+    noise({ t: 1.1, dur: 1, vol: 0.4, type: 'lowpass', f: 2000, f2: 100 });
+};
+// Discard All: desis mengumpulkan, tik kartu menurun, lalu "gedebuk" saat semuanya jatuh ke tumpukan
+SFX.discardall = function () {
+    duck(1.9);
+    noise({ dur: 0.9, vol: 0.16, f: 400, f2: 3800, q: 1.3 });
+    for (let i = 0; i < 5; i++) noise({ t: 0.15 + i * 0.12, dur: 0.05, vol: 0.18, f: 3600 - i * 350, q: 1.2 });
+    tone({ f: note(55), f2: note(43), type: 'sawtooth', t: 0.95, dur: 0.4, vol: 0.14, filter: { f: 900 } });
+};
+// Color Roulette: roda berputar (klik makin lambat) lalu "ting"
+SFX.roulette = function () {
+    duck(1.8);
+    let t = 0, gap = 0.035;
+    for (let i = 0; i < 22; i++) { tone({ f: 900 + (i % 5) * 110, type: 'square', t, dur: 0.03, vol: 0.11 }); t += gap; gap *= 1.1; }
+    tone({ f: note(88), type: 'sine', t: t + 0.05, dur: 0.35, vol: 0.2 });
+};
+SFX.rtap = function () {      // ketukan tumpukan saat Roulette: kartu dibuka (tegang)
+    noise({ dur: 0.07, vol: 0.14, type: 'highpass', f: 3000 });
+    tone({ f: 500, f2: 900, type: 'triangle', dur: 0.08, vol: 0.1 });
+};
+SFX.rmiss = function () { tone({ f: 220, f2: 150, type: 'sawtooth', dur: 0.14, vol: 0.12, filter: { f: 800 } }); };   // bukan warnanya
+SFX.rhit = function () {      // dapat warna yang dicari: denting naik
+    duck(0.7);
+    [[84, 0], [91, 0.08], [96, 0.16]].forEach(([m, t]) => tone({ f: note(m), type: 'sine', t, dur: 0.22, vol: 0.26 }));
+    noise({ t: 0.16, dur: 0.2, vol: 0.08, type: 'highpass', f: 6500 });
+};
+// Stack bertambah: dentuman + dua nada yang makin tinggi makin banyak yang ditumpuk (arg = jumlah kartu yang ditumpuk)
+SFX.stackup = function (n = 1) {
+    const m = 58 + Math.min(10, Math.max(1, n)) * 2;
+    tone({ f: 110, f2: 55, type: 'sine', dur: 0.16, vol: 0.45 });
+    tone({ f: note(m), type: 'square', dur: 0.11, vol: 0.16, filter: { f: 2600 } });
+    tone({ f: note(m + 7), type: 'square', t: 0.07, dur: 0.14, vol: 0.14, filter: { f: 2600 } });
+};
+
 // getaran singkat di HP (Android) untuk momen besar
-const VIBE = { catch: [60, 40, 120], draw4: [80, 40, 80], draw6: [100, 50, 100, 50, 200], win: [80, 60, 80, 60, 240], challengeWrong: [150] };
+const VIBE = { catch: [60, 40, 120], draw4: [80, 40, 80], draw6: [100, 50, 100, 50, 200], draw10: [100, 40, 100, 40, 100, 40, 300], mercy: [100, 50, 250], discardall: [40, 30, 40, 30, 140], win: [80, 60, 80, 60, 240], challengeWrong: [150] };
 
 // ---------------------------------------------------------------- suara perkataan
 // Memakai suara bawaan perangkat (speechSynthesis), jadi tidak perlu file audio.
@@ -351,7 +422,13 @@ const VOICE = {
     awtarget2: ['Draw two!', 1.2, 1.0, 0.5],
     power: ['Flex power!', 1.2, 1.0, 0.25],
     allflip: ['All flip!', 1.2, 1.0, 0.25],
-    reset: ['Reset!', 1.2, 1.0, 0.25]
+    reset: ['Reset!', 1.2, 1.0, 0.25],
+    draw10: ['Draw ten!', 0.9, 0.95, 0.05],
+    revdraw4: ['Reverse draw four!', 1.1, 1.0, 0.05],
+    pass: ['Pass!', 1.2, 1.0, 0.05],
+    mercy: ['No mercy!', 0.7, 0.85, 0.35],
+    discardall: ['Discard all!', 1.1, 1.0, 0.05],
+    roulette: ['Color roulette!', 1.1, 1.0, 0.05]
 };
 let voiceObj = null;
 function pickVoice() {
@@ -600,7 +677,38 @@ function playAllWildStep(n, at) {
     if (s === 7 && bar % 4 === 3) noise({ t: off + WSTEP * 0.5, dur: 0.14, vol: 0.14, f: 2200, q: 0.6, bus: musicBus });                      // gebrakan tiap 4 birama
 }
 
+// ---- Lagu UNO Show 'Em No Mercy: gelap & agresif (136 bpm, D minor, 16 birama): bass gergaji berdenyut, kick 4 ketukan, sirene tipis, melodi pulse tajam ----
+const NSTEP = 60 / 136 / 2;
+const NCH = { Dm: [38, [62, 65, 69]], Bb: [34, [58, 62, 65]], Gm: [43, [58, 62, 67]], A: [45, [61, 64, 69]], C: [36, [60, 64, 67]] };
+const NCHORDS = ['Dm', 'Dm', 'Bb', 'A', 'Dm', 'Dm', 'Gm', 'A', 'Dm', 'Bb', 'C', 'A', 'Gm', 'Bb', 'A', 'A'].map(k => NCH[k]);
+const NMELODY = [
+    [74, -1, 77, -1, 81, -1, 77, 74], [76, -1, 77, -1, 74, -1, 69, -1], [77, -1, 74, -1, 70, -1, 74, 77], [73, -1, 76, -1, 81, -1, 76, 73],
+    [74, -1, 77, 81, 86, -1, 81, 77], [84, -1, 81, -1, 77, -1, 74, -1], [79, -1, 77, -1, 74, -1, 70, 74], [73, 76, 81, -1, 85, -1, 81, 76],
+    [86, -1, -1, 81, 77, -1, 81, -1], [82, -1, -1, 77, 74, -1, 77, -1], [84, -1, 79, -1, 76, -1, 79, 84], [85, -1, 81, -1, 76, -1, 73, -1],
+    [79, -1, 82, -1, 86, -1, 82, 79], [77, -1, 82, -1, 86, -1, 82, 77], [73, -1, 76, 81, 85, -1, 88, -1], [85, -1, 81, -1, 76, -1, 73, 0]
+];
+const NTOTAL = NCHORDS.length * 8;
+function playNoMercyStep(n, at) {
+    const bar = Math.floor(n / 8), s = n % 8, off = at - ctx.currentTime;
+    const [root, ch] = NCHORDS[bar];
+    if (s === 0) ch.forEach(c => tone({ f: mtof(c), type: 'sawtooth', t: off, dur: NSTEP * 7.5, vol: 0.035, atk: 0.2, bus: musicBus, filter: { f: 900 } }));   // pad gelap
+    tone({ f: mtof(root), type: 'sawtooth', t: off, dur: NSTEP * 0.85, vol: s === 0 ? 0.3 : (s % 2 ? 0.1 : 0.17), bus: musicBus, filter: { f: s === 0 ? 650 : 480 } });   // bass berdenyut tiap not 1/8
+    const m = NMELODY[bar][s];
+    if (m > 0) {
+        let len = 1;
+        while (s + len < 8 && NMELODY[bar][s + len] === -1) len++;
+        tone({ f: mtof(m), wave: 'pulse', t: off, dur: NSTEP * len * 0.88, vol: 0.12, bus: musicBus, filter: { f: 3200 }, vib: len > 1 ? 5 : 0 });
+        tone({ f: mtof(m - 12), type: 'sawtooth', t: off, dur: NSTEP * len * 0.7, vol: 0.04, bus: musicBus, filter: { f: 1400 } });
+    }
+    if (s % 2 === 0) tone({ f: 125, f2: 40, type: 'sine', t: off, dur: 0.17, vol: 0.68, bus: musicBus });                                    // kick 4 ketukan
+    if (s === 2 || s === 6) noise({ t: off, dur: 0.12, vol: 0.2, f: 2000, q: 0.6, bus: musicBus });                                           // snare
+    if (s % 2 === 1) noise({ t: off, dur: 0.03, vol: 0.08, type: 'highpass', f: 8500, bus: musicBus });                                       // hi-hat
+    if (s === 7 && bar % 4 === 3) { noise({ t: off + NSTEP * 0.5, dur: 0.3, vol: 0.16, f: 700, f2: 4000, q: 1.2, bus: musicBus }); }       // desis naik tiap 4 birama
+    if (s === 0 && bar % 8 === 0) tone({ f: mtof(86), f2: mtof(74), type: 'sine', t: off, dur: 1.4, vol: 0.05, bus: musicBus, vib: 5 });      // sirene tipis
+}
+
 const TRACKS = {
+    nomercy: { step: NSTEP, total: NTOTAL, play: playNoMercyStep },
     flex: { step: XSTEP, total: XTOTAL, play: playFlexStep },
     allwild: { step: WSTEP, total: WTOTAL, play: playAllWildStep },
     menu: { step: MSTEP, total: MTOTAL, play: playMenuStep },

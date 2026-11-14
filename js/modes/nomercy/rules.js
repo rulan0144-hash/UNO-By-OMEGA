@@ -173,7 +173,7 @@ export function rouletteDraw(state, side, silent = false) {
     const c = r.cards[0];
     state.hands[uid].push(c); p.got = (p.got || 0) + 1; state.turnNo = (state.turnNo || 0) + 1;   // tiap kartu mengulang hitungan 15 detik
     state.unoCalled[uid] = false; if (state.forgot) delete state.forgot[uid];
-    if (!silent) fx(state, { t: 'draw', uid, n: 1, cards: [c], sides: r.sides });
+    if (!silent) fx(state, { t: 'draw', uid, n: 1, cards: [c], sides: r.sides, roul: p.color });
     const hit = c.c === p.color;
     const gone = state.hands[uid].length >= MERCY_LIMIT;
     if (hit || gone) {
@@ -189,14 +189,14 @@ export function resolveRoulette(state, color) {
     const p = state.pending;
     if (!p || p.kind !== 'roulette') return 0;
     if (!p.color) pickRouletteColor(state, color);
-    const uid = p.victim, got = [], sides = [];
+    const uid = p.victim, roul = p.color, got = [], sides = [];
     for (let guard = 0; state.pending && guard < 400; guard++) {
         const r = rouletteDraw(state, undefined, true);
         if (!r) break;
         if (r.card) { got.push(r.card); sides.push(r.side); }
         if (r.done) break;
     }
-    if (got.length) fx(state, { t: 'draw', uid, n: got.length, cards: got, sides });
+    if (got.length) fx(state, { t: 'draw', uid, n: got.length, cards: got, sides, roul });
     return got.length;
 }
 

@@ -108,7 +108,7 @@ export function renderGame() {
     const stk = $('n-stack-txt');
     if (pend && pend.kind === 'draw' && !isBusy()) {
         const label = '+' + pend.n;
-        if (stk.classList.contains('hidden') || $('n-stack-n').innerText !== label) { stk.classList.remove('hidden'); stk.classList.remove('stack-pop'); void stk.offsetWidth; stk.classList.add('stack-pop'); }
+        if (stk.classList.contains('hidden') || $('n-stack-n').innerText !== label) { stk.classList.remove('hidden'); stk.classList.remove('stack-pop'); void stk.offsetWidth; stk.classList.add('stack-pop'); sfx('stackup', 0, pend.count); }
         $('n-stack-n').innerText = label;
         $('n-stack-note').innerText = pend.count > 1 ? `ditumpuk ${pend.count}x` : '';
     } else stk.classList.add('hidden');
