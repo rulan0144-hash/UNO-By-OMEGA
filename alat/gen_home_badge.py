@@ -1,4 +1,4 @@
-# Lencana jumlah pemain + umur untuk poster beranda: img/ui/badge-players.png (gelap, Klasik) dan badge-players-flip.png (kuning, Flip), badge-players-flex.png (putih, 2-8 pemain, Flex), badge-players-allwild.png (merah, ikon putih, 2-10, All Wild).
+# Lencana jumlah pemain + umur untuk poster beranda: img/ui/badge-players.png (gelap, Klasik) dan badge-players-flip.png (kuning, Flip), badge-players-flex.png (putih, 2-8 pemain, Flex), badge-players-allwild.png (merah, ikon putih, 2-10, All Wild), badge-players-nomercy.png (hitam bertepi merah, 2-6, No Mercy).
 # Isi: ikon orang banyak + "2-10" | ikon satu orang + "7+".   Pakai: python3 gen_home_badge.py [folder_img_ui]
 import os, sys
 from playwright.sync_api import sync_playwright
@@ -23,7 +23,8 @@ def badge(bg1, bg2, edge, fg, count='2-10'):
 jobs = [('badge-players.png', badge('#2b2b2b', '#0d0d0d', '#ffffff', '#ffffff')),
         ('badge-players-flip.png', badge('#fff27a', '#ffd60a', '#3b1d00', '#2a1600')),
         ('badge-players-flex.png', badge('#ffffff', '#eef0f2', '#9aa3ab', '#1f2937', '2-8')),
-        ('badge-players-allwild.png', badge('#f04a4a', '#c41e22', '#ffffff', '#ffffff'))]
+        ('badge-players-allwild.png', badge('#f04a4a', '#c41e22', '#ffffff', '#ffffff')),
+        ('badge-players-nomercy.png', badge('#1c1c1c', '#050505', '#e01616', '#ffffff', '2-6'))]
 with sync_playwright() as p:
     b = p.chromium.launch()
     for name, svg in jobs:
